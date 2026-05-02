@@ -896,9 +896,80 @@ export const abandonedCarts = mysqlTable("abandonedCarts", {
 export type AbandonedCart = typeof abandonedCarts.$inferSelect;
 export type InsertAbandonedCart = typeof abandonedCarts.$inferInsert;
 
-// ─────────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════
+// MÓDULO PAGAMENTOS — TRANSAÇÕES (PIX + Cartão)
+// Integração futura: Mercado Pago / Pagar.me
+// ═════════════════════════════════════════════════════════════════════
+
+export const paymentTransactions = mysqlTable("paymentTransactions", {
+  id: serial("id").primaryKey(),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }).notNull(),
+  customerId: bigint("customerId", { mode: "number", unsigned: true }).notNull(),
+  gateway: mysqlEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
+  gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
+  gatewayPaymentId: varchar("gatewayPaymentId", { length: 255 }),
+  type: mysqlEnum("type", ["pix", "credit_card", "debit_card", "boleto", "wallet"]).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
+  installments: int("installments").default(1),
+  installmentAmount: decimal("installmentAmount", { precision: 10, scale: 2 }),
+  interestRate: decimal("interestRate", { precision: 5, scale: 2 }).default("0"),
+  status: mysqlEnum("status", ["pending", "processing", "approved", "rejected", "cancelled", "refunded", "chargeback"])
+    .default("pending")
+    .notNull(),
+  pixQrCode: text("pixQrCode"),
+  pixQrCodeText: text("pixQrCodeText"),
+  pixExpirationAt: timestamp("pixExpirationAt"),
+  cardLastFour: varchar("cardLastFour", { length: 4 }),
+  cardBrand: varchar("cardBrand", { length: 20 }),
+  cardHolderName: varchar("cardHolderName", { length: 255 }),
+  errorMessage: text("errorMessage"),
+  errorCode: varchar("errorCode", { length: 50 }),
+  refundedAt: timestamp("refundedAt"),
+  refundedAmount: decimal("refundedAmount", { precision: 12, scale: 2 }).default("0"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("pt_order_idx").on(table.orderId),
+  index("pt_customer_idx").on(table.customerId),
+  index("pt_status_idx").on(table.status),
+  index("pt_gateway_idx").on(table.gatewayTransactionId),
+  index("pt_type_idx").on(table.type),
+]);
+
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = typeof paymentTransactions.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
+// MÓDULO FRETE — COTAÇÕES (Kangu API)
+// ═════════════════════════════════════════════════════════════════════
+
+export const shippingQuotes = mysqlTable("shippingQuotes", {
+  id: serial("id").primaryKey(),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
+  zipCode: varchar("zipCode", { length: 20 }).notNull(),
+  addressState: varchar("addressState", { length: 2 }),
+  addressCity: varchar("addressCity", { length: 100 }),
+  carrier: varchar("carrier", { length: 100 }),
+  service: varchar("service", { length: 100 }),
+  serviceCode: varchar("serviceCode", { length: 50 }),
+  cost: decimal("cost", { precision: 10, scale: 2 }).notNull(),
+  estimatedDays: int("estimatedDays"),
+  totalWeightKg: decimal("totalWeightKg", { precision: 8, scale: 3 }),
+  isSelected: boolean("isSelected").default(false),
+  rawResponse: json("rawResponse"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("sq_order_idx").on(table.orderId),
+  index("sq_zip_idx").on(table.zipCode),
+]);
+
+export type ShippingQuote = typeof shippingQuotes.$inferSelect;
+export type InsertShippingQuote = typeof shippingQuotes.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
 // MÓDULO CONFIGURAÇÃO — LOG DE AUDITORIA
-// ─────────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════
 
 export const auditLogs = mysqlTable("auditLogs", {
   id: serial("id").primaryKey(),
