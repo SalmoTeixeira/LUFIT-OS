@@ -38,6 +38,16 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        lufit: {
+          teal: '#2DD4A8',
+          dark: '#111111',
+          light: '#F8F8F8',
+          gray: '#666666',
+          lime: '#C8FF00',
+          red: '#E53935',
+          white: '#FFFFFF',
+          black: '#000000',
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -49,6 +59,10 @@ module.exports = {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      fontFamily: {
+        sans: ['Roboto', 'sans-serif'],
+        heading: ['Montserrat', 'sans-serif'],
+      },
       borderRadius: {
         xl: "calc(var(--radius) + 4px)",
         lg: "var(--radius)",
@@ -58,6 +72,8 @@ module.exports = {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        card: "0 2px 8px rgba(0,0,0,0.08)",
+        hover: "0 8px 24px rgba(0,0,0,0.12)",
       },
       keyframes: {
         "accordion-down": {
