@@ -2,6 +2,7 @@ import { authRouter } from "./auth-router";
 import { dashboardRouter } from "./dashboard-router";
 import { orderRouter } from "./order-router";
 import { productRouter } from "./product-router";
+import { inventoryRouter } from "./inventory-router";
 import { cartRouter } from "./cart-router";
 import { createRouter, publicQuery } from "./middleware";
 
@@ -11,6 +12,7 @@ export const appRouter = createRouter({
   dashboard: dashboardRouter,
   order: orderRouter,
   product: productRouter,
+  inventory: inventoryRouter,
   cart: cartRouter,
 });
 

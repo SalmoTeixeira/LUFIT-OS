@@ -17,7 +17,7 @@ export default function TopBar() {
   }, []);
 
   return (
-    <div className="bg-lufit-dark text-white relative">
+    <div className="bg-lufit-dark text-white relative z-[60]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Left - Phone */}
@@ -50,7 +50,7 @@ export default function TopBar() {
             </button>
             
             {loginOpen && (
-              <div className="absolute top-full right-0 mt-2 w-44 bg-white text-gray-900 rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
+              <div className="absolute top-full right-0 mt-2 w-44 bg-white text-gray-900 rounded-xl shadow-2xl border border-gray-100 py-2 z-[70]">
                 <Link 
                   to="/login" 
                   className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-sm"
