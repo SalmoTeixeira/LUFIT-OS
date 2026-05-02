@@ -1,70 +1,6 @@
 import { useState } from 'react';
+import { trpc } from '@/providers/trpc';
 import { MessageCircle, Ticket, Mail, Clock, ExternalLink } from 'lucide-react';
-
-/* ── Tipos ── */
-interface AbandonedCart {
-  id: string;
-  customer: string;
-  email: string;
-  phone: string;
-  total: number;
-  items: { name: string; image: string }[];
-  hoursAgo: number;
-}
-
-/* ── Dados mock ── */
-const mockCarts: AbandonedCart[] = [
-  {
-    id: 'A-001',
-    customer: 'Ana Carolina Silva',
-    email: 'ana.silva@email.com',
-    phone: '(11) 98765-4321',
-    total: 259.90,
-    items: [
-      { name: 'Legging Energy Preta', image: '/produtos/legging-1.jpg' },
-      { name: 'Top Cropped Rosa', image: '/produtos/top-1.jpg' },
-      { name: 'Shorts Biker', image: '/produtos/short-1.jpg' },
-    ],
-    hoursAgo: 2,
-  },
-  {
-    id: 'A-002',
-    customer: 'Bruna Mendes',
-    email: 'bruna.m@email.com',
-    phone: '(21) 99876-5432',
-    total: 349.50,
-    items: [
-      { name: 'Conjunto Fitness', image: '/produtos/conjunto-1.jpg' },
-      { name: 'Legging Turquesa', image: '/produtos/legging-3.jpg' },
-    ],
-    hoursAgo: 5,
-  },
-  {
-    id: 'A-003',
-    customer: 'Carolina Dias',
-    email: 'carol.dias@email.com',
-    phone: '(31) 98765-1234',
-    total: 189.90,
-    items: [
-      { name: 'Top Energy Azul', image: '/produtos/top-3.jpg' },
-      { name: 'Bermuda Corsário', image: '/produtos/short-2.jpg' },
-    ],
-    hoursAgo: 1,
-  },
-  {
-    id: 'A-004',
-    customer: 'Daniela Rocha',
-    email: 'dani.rocha@email.com',
-    phone: '(41) 99999-8888',
-    total: 499.90,
-    items: [
-      { name: 'Jaqueta Corta Vento', image: '/produtos/casaco-1.jpg' },
-      { name: 'Legging Energy Preta', image: '/produtos/legging-1.jpg' },
-      { name: 'Top Básico Branco', image: '/produtos/top-4.jpg' },
-    ],
-    hoursAgo: 8,
-  },
-];
 
 /* ── Cores semânticas por tempo ── */
 function getBorderColor(hours: number): string {
@@ -90,16 +26,22 @@ function generateWhatsAppMessage(customer: string, total: number): string {
 }
 
 /* ── Card individual ── */
-function CartCard({ cart }: { cart: AbandonedCart }) {
+function CartCard({ cart }: { cart: any }) {
   const [copied, setCopied] = useState(false);
-  const borderColor = getBorderColor(cart.hoursAgo);
-  const badge = getBadgeColor(cart.hoursAgo);
-  const discount = getCupomDiscount(cart.total);
-  const cupomCode = `VOLTEI${cart.total >= 200 ? '15' : '10'}${cart.customer.split(' ')[0].toUpperCase().substring(0, 4)}`;
+  const items = (cart.items ?? []) as { name: string; quantity: number; price: number }[];
+  const total = Number(cart.totalValue ?? 0);
+  const hoursAgo = Math.max(1, Math.round((Date.now() - new Date(cart.lastActionAt).getTime()) / 3600000));
+
+  const borderColor = getBorderColor(hoursAgo);
+  const badge = getBadgeColor(hoursAgo);
+  const discount = getCupomDiscount(total);
+  const cupomCode = `VOLTEI${total >= 200 ? '15' : '10'}${(cart.customerName || 'CLI').split(' ')[0].toUpperCase().substring(0, 4)}`;
 
   const handleWhatsApp = () => {
-    const msg = generateWhatsAppMessage(cart.customer, cart.total);
-    const url = `https://wa.me/${cart.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+    const msg = generateWhatsAppMessage(cart.customerName || '', total);
+    const phone = (cart.customerPhone || '').replace(/\D/g, '');
+    if (!phone) return;
+    const url = `https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
   };
 
@@ -114,9 +56,9 @@ function CartCard({ cart }: { cart: AbandonedCart }) {
   const handleEmail = () => {
     const subject = encodeURIComponent('Sua LUFIT está te esperando! 💚');
     const body = encodeURIComponent(
-      `Olá ${cart.customer.split(' ')[0]},\n\nNotamos que você deixou R$ ${cart.total.toFixed(2).replace('.', ',')} em produtos no carrinho.\n\nUse o cupom ${cupomCode} e ganhe ${discount} de desconto!\n\n[Recuperar carrinho]\n\nAtenciosamente,\nEquipe LUFIT`
+      `Olá ${(cart.customerName || '').split(' ')[0]},\n\nNotamos que você deixou R$ ${total.toFixed(2).replace('.', ',')} em produtos no carrinho.\n\nUse o cupom ${cupomCode} e ganhe ${discount} de desconto!\n\n[Recuperar carrinho]\n\nAtenciosamente,\nEquipe LUFIT`
     );
-    window.open(`mailto:${cart.email}?subject=${subject}&body=${body}`);
+    window.open(`mailto:${cart.customerEmail}?subject=${subject}&body=${body}`);
   };
 
   return (
@@ -124,8 +66,8 @@ function CartCard({ cart }: { cart: AbandonedCart }) {
       {/* Header: nome + badge + tempo */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white truncate">{cart.customer}</p>
-          <p className="text-[11px] text-[#6E6E80] truncate">{cart.email}</p>
+          <p className="text-sm font-semibold text-white truncate">{cart.customerName}</p>
+          <p className="text-[11px] text-[#6E6E80] truncate">{cart.customerEmail}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${badge.bg} ${badge.text}`}>
@@ -133,7 +75,7 @@ function CartCard({ cart }: { cart: AbandonedCart }) {
           </span>
           <span className="flex items-center gap-0.5 text-[10px] text-[#6E6E80]">
             <Clock className="h-2.5 w-2.5" />
-            há {cart.hoursAgo}h
+            há {hoursAgo}h
           </span>
         </div>
       </div>
@@ -141,21 +83,21 @@ function CartCard({ cart }: { cart: AbandonedCart }) {
       {/* Produtos + valor */}
       <div className="mt-3 flex items-center gap-3">
         <div className="flex -space-x-2">
-          {cart.items.slice(0, 3).map((item, idx) => (
+          {items.slice(0, 3).map((item, idx) => (
             <div
               key={idx}
               className="h-10 w-10 rounded-lg border-2 border-[#14141E] bg-[#1E1E2E] flex items-center justify-center overflow-hidden"
             >
-              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+              <span className="text-[8px] text-[#6E6E80] text-center leading-tight px-0.5">{item.name.slice(0, 8)}</span>
             </div>
           ))}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs text-[#A0A0B0] truncate">
-            {cart.items.length} {cart.items.length === 1 ? 'item' : 'itens'}
+            {items.length} {items.length === 1 ? 'item' : 'itens'}
           </p>
           <p className="text-sm font-bold text-white">
-            R$ {cart.total.toFixed(2).replace('.', ',')}
+            R$ {total.toFixed(2).replace('.', ',')}
           </p>
         </div>
       </div>
@@ -196,8 +138,16 @@ function CartCard({ cart }: { cart: AbandonedCart }) {
 
 /* ── Widget principal ── */
 export default function AbandonedCartsWidget() {
-  const highValueCarts = mockCarts.filter(c => c.total > 150);
-  const totalAtRisk = highValueCarts.reduce((s, c) => s + c.total, 0);
+  const { data: carts, isLoading } = trpc.cart.list.useQuery({ limit: 10 });
+
+  const highValueCarts = (carts ?? []).filter((c: any) => Number(c.totalValue) > 150);
+  const totalAtRisk = highValueCarts.reduce((s: number, c: any) => s + Number(c.totalValue), 0);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5 h-[500px] animate-pulse" />
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5 flex flex-col h-full">
@@ -218,7 +168,7 @@ export default function AbandonedCartsWidget() {
 
       {/* Lista de cards */}
       <div className="flex-1 space-y-3 overflow-y-auto pr-1" style={{ maxHeight: 420 }}>
-        {highValueCarts.map(cart => (
+        {highValueCarts.map((cart: any) => (
           <CartCard key={cart.id} cart={cart} />
         ))}
       </div>

@@ -1,37 +1,17 @@
+import { trpc } from '@/providers/trpc';
 import {
   Package, Truck, Mail, RotateCcw, CheckCircle2,
 } from 'lucide-react';
-
-/* ── Tipos ── */
-interface Order {
-  id: string;
-  customer: string;
-  email: string;
-  total: number;
-  status: 'paid' | 'pending' | 'shipped' | 'separacao' | 'cancelled';
-  payment: string;
-  time: string;
-}
-
-/* ── Dados mock ── */
-const orders: Order[] = [
-  { id: 'PED-8472', customer: 'Ana Carolina S.', email: 'ana.silva@email.com', total: 189.98, status: 'paid', payment: 'Pix', time: 'há 2 min' },
-  { id: 'PED-8471', customer: 'Daniela Rocha', email: 'dani.rocha@email.com', total: 99.90, status: 'pending', payment: 'Boleto', time: 'há 15 min' },
-  { id: 'PED-8470', customer: 'Eduarda Lima', email: 'edu.lima@email.com', total: 349.95, status: 'paid', payment: 'CC', time: 'há 32 min' },
-  { id: 'PED-8469', customer: 'Gabriela Alves', email: 'gabi.alves@email.com', total: 219.98, status: 'separacao', payment: 'Pix', time: 'há 1h' },
-  { id: 'PED-8468', customer: 'Fernanda Souza', email: 'fer.souza@email.com', total: 79.90, status: 'cancelled', payment: 'CC', time: 'há 2h' },
-  { id: 'PED-8467', customer: 'Helena Costa', email: 'helena.c@email.com', total: 159.90, status: 'shipped', payment: 'CC', time: 'há 3h' },
-  { id: 'PED-8466', customer: 'Isabela Martins', email: 'isa.martins@email.com', total: 299.97, status: 'paid', payment: 'Pix', time: 'há 4h' },
-  { id: 'PED-8465', customer: 'Juliana Pereira', email: 'ju.pereira@email.com', total: 89.90, status: 'pending', payment: 'Boleto', time: 'há 5h' },
-];
 
 /* ── Status config ── */
 const statusConfig: Record<string, { label: string; dot: string; text: string }> = {
   paid: { label: 'Pago', dot: 'bg-[#00E676]', text: 'text-[#00E676]' },
   pending: { label: 'Pendente', dot: 'bg-[#FF9100]', text: 'text-[#FF9100]' },
+  processing: { label: 'Separação', dot: 'bg-[#FF9100]', text: 'text-[#FF9100]' },
   shipped: { label: 'Enviado', dot: 'bg-[#00B0FF]', text: 'text-[#00B0FF]' },
-  separacao: { label: 'Separação', dot: 'bg-[#FF9100]', text: 'text-[#FF9100]' },
+  delivered: { label: 'Entregue', dot: 'bg-[#00E676]', text: 'text-[#00E676]' },
   cancelled: { label: 'Cancelado', dot: 'bg-[#FF1744]', text: 'text-[#FF1744]' },
+  refunded: { label: 'Reembolsado', dot: 'bg-[#6E6E80]', text: 'text-[#6E6E80]' },
 };
 
 /* ── Ações por status ── */
@@ -56,7 +36,7 @@ function OrderActions({ status }: { status: string }) {
         { icon: CheckCircle2, label: 'Confirmar entrega', color: 'text-[#00E676]', hover: 'hover:bg-[#00E676]/10' },
       );
       break;
-    case 'separacao':
+    case 'processing':
       actions.push(
         { icon: Package, label: 'Etiqueta', color: 'text-[#FF9100]', hover: 'hover:bg-[#FF9100]/10' },
         { icon: Truck, label: 'Despachar', color: 'text-[#00B0FF]', hover: 'hover:bg-[#00B0FF]/10' },
@@ -87,8 +67,40 @@ function OrderActions({ status }: { status: string }) {
   );
 }
 
+function timeAgo(date: Date | string | null): string {
+  if (!date) return '-';
+  const d = new Date(date);
+  const diffMs = Date.now() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'agora';
+  if (diffMin < 60) return `há ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `há ${diffH}h`;
+  const diffD = Math.floor(diffH / 24);
+  return `há ${diffD}d`;
+}
+
 /* ── Componente principal ── */
 export default function RecentOrdersTable() {
+  const { data: orders, isLoading } = trpc.order.recent.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5 h-[400px] animate-pulse" />
+    );
+  }
+
+  const rows = (orders ?? []).map((o: any) => ({
+    id: o.orderNumber,
+    customer: o.customer?.name || 'Cliente',
+    email: o.customer?.email || '',
+    total: Number(o.total),
+    status: o.status,
+    payment: o.paymentMethod === 'credit_card' ? 'CC' : o.paymentMethod === 'PIX' ? 'Pix' : 'Boleto',
+    time: timeAgo(o.createdAt),
+    raw: o,
+  }));
+
   return (
     <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5">
       {/* Header */}
@@ -102,7 +114,7 @@ export default function RecentOrdersTable() {
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-[10px] text-[#00E676]">
             <span className="h-1.5 w-1.5 rounded-full bg-[#00E676] animate-pulse" />
-            3 pendentes
+            {rows.filter((r) => r.status === 'pending').length} pendentes
           </span>
         </div>
       </div>
@@ -121,8 +133,8 @@ export default function RecentOrdersTable() {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order, idx) => {
-              const cfg = statusConfig[order.status];
+            {rows.map((order, idx) => {
+              const cfg = statusConfig[order.status] || statusConfig.pending;
               const isFirst = idx === 0;
 
               return (
@@ -177,7 +189,7 @@ export default function RecentOrdersTable() {
       {/* Footer */}
       <div className="mt-4 pt-3 border-t border-[#1E1E2E] flex items-center justify-between">
         <p className="text-[10px] text-[#6E6E80]">
-          Mostrando {orders.length} pedidos recentes
+          Mostrando {rows.length} pedidos recentes
         </p>
         <button className="text-[11px] font-medium text-[#2DD4A8] hover:text-[#2DD4A8]/80 transition-colors">
           Ver todos os pedidos →

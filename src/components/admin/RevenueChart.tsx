@@ -1,46 +1,14 @@
 import { useState, useCallback } from 'react';
+import { trpc } from '@/providers/trpc';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 
-/* ── Dados mock — últimos 7 dias ── */
-const dailyData = [
-  { day: 'Seg', real: 2340, meta: 3000 },
-  { day: 'Ter', real: 3890, meta: 3500 },
-  { day: 'Qua', real: 4120, meta: 3500 },
-  { day: 'Qui', real: 3450, meta: 4000 },
-  { day: 'Sex', real: 5200, meta: 5000 },
-  { day: 'Sáb', real: 4890, meta: 5500 },
-  { day: 'Dom', real: 4230, meta: 5000 },
-];
-
-const weeklyData = [
-  { day: 'Sem 1', real: 18500, meta: 20000 },
-  { day: 'Sem 2', real: 22300, meta: 21000 },
-  { day: 'Sem 3', real: 19800, meta: 22000 },
-  { day: 'Sem 4', real: 25400, meta: 23000 },
-];
-
-const monthlyData = [
-  { day: 'Jan', real: 82000, meta: 85000 },
-  { day: 'Fev', real: 78000, meta: 80000 },
-  { day: 'Mar', real: 95000, meta: 90000 },
-  { day: 'Abr', real: 88000, meta: 92000 },
-  { day: 'Mai', real: 102000, meta: 95000 },
-  { day: 'Jun', real: 97000, meta: 98000 },
-];
-
-const datasets: Record<string, typeof dailyData> = {
-  diaria: dailyData,
-  semanal: weeklyData,
-  mensal: monthlyData,
-};
-
 /* ── Cores semânticas ── */
 const COLORS = {
-  realAboveMeta: '#00E676',   // verde — real ≥ meta
-  realBelowMeta: '#FF1744',   // vermelho — real < meta
-  metaLine: '#6E6E80',        // cinza tracejado
+  realAboveMeta: '#00E676',
+  realBelowMeta: '#FF1744',
+  metaLine: '#6E6E80',
   grid: '#1E1E2E',
   text: '#A0A0B0',
   tooltipBg: '#14141E',
@@ -56,9 +24,9 @@ function PeriodToggle({
   onChange: (v: string) => void;
 }) {
   const options = [
-    { key: 'diaria', label: 'Diária' },
-    { key: 'semanal', label: 'Semanal' },
-    { key: 'mensal', label: 'Mensal' },
+    { key: 'diaria', label: 'Diária', api: 'daily' as const },
+    { key: 'semanal', label: 'Semanal', api: 'weekly' as const },
+    { key: 'mensal', label: 'Mensal', api: 'monthly' as const },
   ];
 
   return (
@@ -126,11 +94,14 @@ function CustomTooltip({ active, payload, label }: any) {
 /* ── Componente principal ── */
 export default function RevenueChart() {
   const [period, setPeriod] = useState('diaria');
-  const data = datasets[period] ?? dailyData;
+  const apiPeriod = period === 'diaria' ? 'daily' : period === 'semanal' ? 'weekly' : 'monthly';
 
-  // Acumulados
-  const totalReal = data.reduce((s, d) => s + d.real, 0);
-  const totalMeta = data.reduce((s, d) => s + d.meta, 0);
+  const { data, isLoading } = trpc.dashboard.revenue.useQuery({ period: apiPeriod });
+
+  const chartData = data ?? [];
+
+  const totalReal = chartData.reduce((s, d) => s + d.real, 0);
+  const totalMeta = chartData.reduce((s, d) => s + d.meta, 0);
   const totalDelta = totalMeta > 0 ? ((totalReal - totalMeta) / totalMeta) * 100 : 0;
 
   const formatCurrency = useCallback(
@@ -141,6 +112,12 @@ export default function RevenueChart() {
     []
   );
 
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5 h-[400px] animate-pulse" />
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5">
       {/* Header */}
@@ -150,7 +127,7 @@ export default function RevenueChart() {
             💹 Faturamento vs Meta
           </h3>
           <p className="text-xs text-[#6E6E80] mt-0.5">
-            {period === 'diaria' ? 'Últimos 7 dias' : period === 'semanal' ? 'Últimas 4 semanas' : 'Últimos 6 meses'}
+            {period === 'diaria' ? 'Últimos 7 dias' : period === 'semanal' ? 'Últimas 4 semanas' : 'Últimos 3 meses'}
           </p>
         </div>
         <PeriodToggle value={period} onChange={setPeriod} />
@@ -159,10 +136,10 @@ export default function RevenueChart() {
       {/* Gráfico */}
       <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barGap={4} barCategoryGap="20%">
+          <BarChart data={chartData} barGap={4} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
             <XAxis
-              dataKey="day"
+              dataKey="label"
               tick={{ fill: COLORS.text, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
@@ -181,9 +158,9 @@ export default function RevenueChart() {
 
             {/* Barra Real — sólida com cor semântica */}
             <Bar dataKey="real" radius={[4, 4, 0, 0]} barSize={14}>
-              {data.map((entry) => (
+              {chartData.map((entry, idx) => (
                 <Cell
-                  key={entry.day}
+                  key={idx}
                   fill={entry.real >= entry.meta ? COLORS.realAboveMeta : COLORS.realBelowMeta}
                 />
               ))}

@@ -1,82 +1,78 @@
 import { MapPin, Truck, Megaphone } from 'lucide-react';
+import { trpc } from '@/providers/trpc';
 
-/* ── Dados mock por região ── */
-const regionData = [
-  { name: 'Norte', sales: 3200, opacity: 0.15 },
-  { name: 'Nordeste', sales: 12800, opacity: 0.35 },
-  { name: 'Centro-Oeste', sales: 18400, opacity: 0.5 },
-  { name: 'Sudeste', sales: 54600, opacity: 0.95 },
-  { name: 'Sul', sales: 11000, opacity: 0.3 },
-];
-
-/* ── Top 5 estados ── */
-const topStates = [
-  { name: 'São Paulo', amount: 24450, pct: 44 },
-  { name: 'Rio de Janeiro', amount: 13890, pct: 24 },
-  { name: 'Minas Gerais', amount: 8230, pct: 15 },
-  { name: 'Paraná', amount: 5890, pct: 7 },
-  { name: 'Bahia', amount: 3120, pct: 4 },
-];
-
-const totalSales = regionData.reduce((s, r) => s + r.sales, 0);
+const stateToRegion: Record<string, string> = {
+  AC: 'Norte', AM: 'Norte', AP: 'Norte', PA: 'Norte', RO: 'Norte', RR: 'Norte', TO: 'Norte',
+  AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
+  PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+  DF: 'Centro-Oeste', GO: 'Centro-Oeste', MT: 'Centro-Oeste', MS: 'Centro-Oeste',
+  ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+  PR: 'Sul', RS: 'Sul', SC: 'Sul',
+};
 
 /* ── SVG simplificado do Brasil (5 regiões como paths) ── */
-function BrazilMap() {
+function BrazilMap({ regionData }: { regionData: Record<string, number> }) {
+  const maxSales = Math.max(...Object.values(regionData), 1);
+  const getOpacity = (name: string) => {
+    const sales = regionData[name] ?? 0;
+    return Math.max(0.08, Math.min(0.95, sales / maxSales));
+  };
+
   return (
     <svg viewBox="0 0 400 420" className="w-full h-auto max-h-[280px]">
       {/* Norte */}
       <path
         d="M120 20 L200 15 L260 40 L280 100 L240 130 L180 120 L100 90 Z"
-        fill={`rgba(45, 212, 168, ${regionData[0].opacity})`}
+        fill={`rgba(45, 212, 168, ${getOpacity('Norte')})`}
         stroke="#1E1E2E"
         strokeWidth="1"
         className="transition-all duration-500 hover:brightness-125"
       >
-        <title>{regionData[0].name}: R$ {regionData[0].sales.toLocaleString('pt-BR')}</title>
+        <title>Norte: R$ {(regionData['Norte'] ?? 0).toLocaleString('pt-BR')}</title>
       </path>
 
       {/* Nordeste */}
       <path
         d="M280 100 L340 80 L380 140 L360 220 L300 240 L260 200 L240 130 Z"
-        fill={`rgba(45, 212, 168, ${regionData[1].opacity})`}
+        fill={`rgba(45, 212, 168, ${getOpacity('Nordeste')})`}
         stroke="#1E1E2E"
         strokeWidth="1"
         className="transition-all duration-500 hover:brightness-125"
       >
-        <title>{regionData[1].name}: R$ {regionData[1].sales.toLocaleString('pt-BR')}</title>
+        <title>Nordeste: R$ {(regionData['Nordeste'] ?? 0).toLocaleString('pt-BR')}</title>
       </path>
 
       {/* Centro-Oeste */}
       <path
         d="M100 90 L180 120 L240 130 L260 200 L200 260 L120 240 L80 160 Z"
-        fill={`rgba(45, 212, 168, ${regionData[2].opacity})`}
+        fill={`rgba(45, 212, 168, ${getOpacity('Centro-Oeste')})`}
         stroke="#1E1E2E"
         strokeWidth="1"
         className="transition-all duration-500 hover:brightness-125"
       >
-        <title>{regionData[2].name}: R$ {regionData[2].sales.toLocaleString('pt-BR')}</title>
+        <title>Centro-Oeste: R$ {(regionData['Centro-Oeste'] ?? 0).toLocaleString('pt-BR')}</title>
       </path>
 
       {/* Sudeste */}
       <path
         d="M260 200 L300 240 L320 300 L260 340 L200 320 L200 260 Z"
-        fill={`rgba(45, 212, 168, ${regionData[3].opacity})`}
+        fill={`rgba(45, 212, 168, ${getOpacity('Sudeste')})`}
         stroke="#1E1E2E"
         strokeWidth="1"
         className="transition-all duration-500 hover:brightness-125"
       >
-        <title>{regionData[3].name}: R$ {regionData[3].sales.toLocaleString('pt-BR')}</title>
+        <title>Sudeste: R$ {(regionData['Sudeste'] ?? 0).toLocaleString('pt-BR')}</title>
       </path>
 
       {/* Sul */}
       <path
         d="M200 260 L200 320 L260 340 L240 400 L160 410 L120 360 L140 280 Z"
-        fill={`rgba(45, 212, 168, ${regionData[4].opacity})`}
+        fill={`rgba(45, 212, 168, ${getOpacity('Sul')})`}
         stroke="#1E1E2E"
         strokeWidth="1"
         className="transition-all duration-500 hover:brightness-125"
       >
-        <title>{regionData[4].name}: R$ {regionData[4].sales.toLocaleString('pt-BR')}</title>
+        <title>Sul: R$ {(regionData['Sul'] ?? 0).toLocaleString('pt-BR')}</title>
       </path>
 
       {/* Labels das regiões */}
@@ -91,7 +87,42 @@ function BrazilMap() {
 
 /* ── Componente principal ── */
 export default function SalesHeatmapWidget() {
-  const sudestePct = Math.round((regionData[3].sales / totalSales) * 100);
+  const { data: heatmapData, isLoading } = trpc.dashboard.heatmap.useQuery();
+
+  // Aggregate states into regions
+  const regionData: Record<string, number> = {};
+  (heatmapData ?? []).forEach((row: any) => {
+    const region = stateToRegion[row.state] ?? 'Sudeste';
+    regionData[region] = (regionData[region] ?? 0) + row.total;
+  });
+
+  const totalSales = Object.values(regionData).reduce((s, v) => s + v, 0);
+  const sudestePct = totalSales > 0 ? Math.round(((regionData['Sudeste'] ?? 0) / totalSales) * 100) : 0;
+
+  // Top 5 states from API
+  const topStates = (heatmapData ?? [])
+    .sort((a: any, b: any) => b.total - a.total)
+    .slice(0, 5)
+    .map((s: any) => ({
+      name: s.state,
+      amount: s.total,
+      pct: totalSales > 0 ? Math.round((s.total / totalSales) * 100) : 0,
+    }));
+
+  // Fallback mock states if empty
+  const displayStates = topStates.length > 0 ? topStates : [
+    { name: 'São Paulo', amount: 24450, pct: 44 },
+    { name: 'Rio de Janeiro', amount: 13890, pct: 24 },
+    { name: 'Minas Gerais', amount: 8230, pct: 15 },
+    { name: 'Paraná', amount: 5890, pct: 7 },
+    { name: 'Bahia', amount: 3120, pct: 4 },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5 h-[500px] animate-pulse" />
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5">
@@ -107,7 +138,7 @@ export default function SalesHeatmapWidget() {
 
       {/* Mapa SVG */}
       <div className="bg-[#0A0A0F] rounded-xl p-4">
-        <BrazilMap />
+        <BrazilMap regionData={regionData} />
 
         {/* Legenda */}
         <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-[#6E6E80]">
@@ -131,14 +162,14 @@ export default function SalesHeatmapWidget() {
         <h4 className="text-xs font-semibold uppercase tracking-widest text-[#6E6E80]">
           🏆 Top 5 Estados
         </h4>
-        {topStates.map((state, idx) => (
+        {displayStates.map((state, idx) => (
           <div key={state.name} className="flex items-center gap-3">
             <span className="text-xs text-[#6E6E80] w-5">{idx + 1}.</span>
             <span className="text-sm text-white w-36 truncate">{state.name}</span>
             <div className="flex-1 h-2 bg-[#1E1E2E] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-[#2DD4A8] to-[#00E676] transition-all duration-1000"
-                style={{ width: `${state.pct}%` }}
+                style={{ width: `${Math.max(state.pct, 3)}%` }}
               />
             </div>
             <span className="text-xs text-[#A0A0B0] w-20 text-right">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { trpc } from '@/providers/trpc';
 import {
   Wallet,
   Receipt,
@@ -38,7 +39,7 @@ function useCountUp(target: number, duration = 1200, start = 0) {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [target, duration, start]);
 
   return current;
 }
@@ -184,10 +185,18 @@ function KPICard({ data, index, children }: { data: KPIData; index: number; chil
 /* ------------------------------------------------------------------ */
 
 export default function DashboardKPIGrid() {
+  const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
+
+  // Fallback to 0 while loading
+  const revenueToday = stats?.revenueToday ?? 0;
+  const ordersToday = stats?.ordersToday ?? 0;
+  const avgTicket = stats?.avgTicket ?? 0;
+  const totalProducts = stats?.totalProducts ?? 0;
+
   const kpis: KPIData[] = [
     {
       label: 'Faturamento Hoje',
-      value: 4230.0,
+      value: revenueToday,
       prefix: 'R$',
       meta: 5000.0,
       delta: 26.6,
@@ -196,12 +205,12 @@ export default function DashboardKPIGrid() {
     },
     {
       label: 'Ticket Médio',
-      value: 187.5,
+      value: avgTicket,
       prefix: 'R$',
       delta: 12.0,
       deltaLabel: 'vs ontem',
       icon: Receipt,
-      insight: 'Top produto: Legging Energy (+23 unidades)',
+      insight: `Catálogo ativo: ${totalProducts} produtos`,
     },
     {
       label: 'Conversão Mobile',
@@ -214,7 +223,7 @@ export default function DashboardKPIGrid() {
     },
     {
       label: 'Pedidos Hoje',
-      value: 23,
+      value: ordersToday,
       delta: 27.8,
       deltaLabel: 'vs ontem',
       icon: ShoppingCart,
@@ -223,6 +232,16 @@ export default function DashboardKPIGrid() {
 
   const faturamentoPct = (kpis[0].value / (kpis[0].meta || 1)) * 100;
   const conversaoMobile = kpis[2].value;
+
+  if (isLoading) {
+    return (
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-5 h-36 animate-pulse" />
+        ))}
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-4">

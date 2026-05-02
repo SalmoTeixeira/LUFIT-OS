@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut,
   Search, Plus, Pencil, Trash2, ChevronLeft, ChevronRight,
@@ -17,6 +18,41 @@ import {
 } from '@/components/ui/table';
 import Dashboard from '@/components/admin/Dashboard';
 import { products as defaultProducts, type Product } from '@/data/products';
+
+/* ── Auth Guard ── */
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { user, isLoading, isAuthenticated } = useAuth({
+    redirectOnUnauthenticated: true,
+    redirectPath: '/admin/login',
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+        <div className="animate-pulse text-[#2DD4A8] text-sm">Carregando...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <p className="text-white font-semibold">Acesso restrito</p>
+          <p className="text-[#6E6E80] text-sm">Você precisa estar logado como administrador.</p>
+          <button
+            onClick={() => window.location.href = '/#/admin/login'}
+            className="px-4 py-2 rounded-lg bg-[#2DD4A8] text-black text-xs font-semibold"
+          >
+            Login Admin
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 /* ── Types ── */
 interface Order { id: string; customer: string; email: string; date: string; total: number; status: 'pending'|'paid'|'shipped'|'delivered'|'cancelled'; items: number; payment: string; }
@@ -97,6 +133,7 @@ export default function AdminPage() {
   };
 
   return (
+    <AdminGuard>
     <div className="min-h-screen bg-[#0A0A0F] flex">
       {/* Sidebar */}
       <aside className="w-64 bg-[#14141E] text-white flex flex-col fixed h-full z-50 border-r border-[#1E1E2E]">
@@ -320,6 +357,7 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminGuard>
   );
 }
 
