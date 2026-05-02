@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createRouter, adminQuery } from "./middleware";
-import { getDashboardStats, getRevenueByPeriod, getSalesByState } from "./queries/dashboard";
+import { getDashboardStats, getRevenueByPeriod, getSalesByState, getWholesaleStats } from "./queries/dashboard";
 
 export const dashboardRouter = createRouter({
   stats: adminQuery.query(() => getDashboardStats()),
@@ -10,4 +10,6 @@ export const dashboardRouter = createRouter({
     .query(({ input }) => getRevenueByPeriod(input.period)),
 
   heatmap: adminQuery.query(() => getSalesByState()),
+
+  wholesale: adminQuery.query(() => getWholesaleStats()),
 });

@@ -22,6 +22,7 @@ import {
   supplierBankAccounts,
   salesReps,
   commissions,
+  wholesalePricingRules,
   orders,
   orderItems,
   abandonedCarts,
@@ -49,7 +50,7 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products),
 }));
 
-// ── Products ─ Variations / Orders / PriceHistory (1:N) ──────────────
+// ── Products ─ WholesalePricingRules (1:N) ───────────────────────────
 export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, {
     fields: [products.categoryId],
@@ -60,6 +61,14 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   purchaseOrderItems: many(purchaseOrderItems),
   priceHistory: many(priceHistory),
   stockMovements: many(stockMovements),
+  wholesaleRules: many(wholesalePricingRules),
+}));
+
+export const wholesalePricingRulesRelations = relations(wholesalePricingRules, ({ one }) => ({
+  product: one(products, {
+    fields: [wholesalePricingRules.productId],
+    references: [products.id],
+  }),
 }));
 
 // ── ProductVariations ─ Product / StockMovements / OrderItems (N:1) ──
