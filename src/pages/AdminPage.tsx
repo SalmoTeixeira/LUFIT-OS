@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut,
+  LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Boxes,
   Search, Plus, Pencil, Trash2, ChevronLeft, ChevronRight,
   CheckCircle2, XCircle, Clock, Truck, CreditCard,
   Save, AlertCircle, Image,
@@ -17,6 +17,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import Dashboard from '@/components/admin/Dashboard';
+import InventoryManager from '@/components/admin/InventoryManager';
 import { products as defaultProducts, type Product } from '@/data/products';
 
 /* ── Auth Guard ── */
@@ -81,6 +82,7 @@ const mockCustomers: Customer[] = [
 
 const sidebarItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'inventory', label: 'Estoque', icon: Boxes },
   { id: 'products', label: 'Produtos', icon: Package },
   { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
   { id: 'customers', label: 'Clientes', icon: Users },
@@ -171,6 +173,9 @@ export default function AdminPage() {
         <div className="p-8">
           {/* DASHBOARD */}
           {activeTab === 'dashboard' && <Dashboard />}
+
+          {/* INVENTORY */}
+          {activeTab === 'inventory' && <InventoryManager />}
 
           {/* PRODUCTS */}
           {activeTab === 'products' && (
