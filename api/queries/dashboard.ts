@@ -131,3 +131,42 @@ export async function getSalesByState() {
       orders: Number(r.count ?? 0),
     }));
 }
+
+export async function getWholesaleStats() {
+  const db = getDb();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  // Wholesale revenue (last 30 days)
+  const [wholesaleRev] = await db
+    .select({ total: sum(orders.total), count: count() })
+    .from(orders)
+    .where(and(eq(orders.isWholesale, true), eq(orders.status, "paid"), gte(orders.createdAt, thirtyDaysAgo)));
+
+  // Retail revenue (last 30 days)
+  const [retailRev] = await db
+    .select({ total: sum(orders.total), count: count() })
+    .from(orders)
+    .where(and(eq(orders.isWholesale, false), eq(orders.status, "paid"), gte(orders.createdAt, thirtyDaysAgo)));
+
+  // Total wholesale customers
+  const [wholesaleCust] = await db
+    .select({ count: count() })
+    .from(customers)
+    .where(eq(customers.isWholesale, true));
+
+  // Total VIP customers
+  const [vipCust] = await db
+    .select({ count: count() })
+    .from(customers)
+    .where(eq(customers.isVip, true));
+
+  return {
+    wholesaleRevenue30d: Number(wholesaleRev?.total ?? 0),
+    wholesaleOrders30d: Number(wholesaleRev?.count ?? 0),
+    retailRevenue30d: Number(retailRev?.total ?? 0),
+    retailOrders30d: Number(retailRev?.count ?? 0),
+    wholesaleCustomers: Number(wholesaleCust?.count ?? 0),
+    vipCustomers: Number(vipCust?.count ?? 0),
+  };
+}

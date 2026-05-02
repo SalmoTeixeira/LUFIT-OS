@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createRouter, adminQuery } from "./middleware";
 import { getProducts, getProductById, createProduct, updateProduct, deleteProduct, getCategories } from "./queries/products";
+import { getWholesaleRulesByProduct, createWholesaleRule, deleteWholesaleRule } from "./queries/wholesale";
 
 export const productRouter = createRouter({
   list: adminQuery
@@ -20,7 +21,7 @@ export const productRouter = createRouter({
     .query(({ input }) => getProductById(input.id)),
 
   create: adminQuery
-    .input(z.any()) // validated at db level
+    .input(z.any())
     .mutation(({ input }) => createProduct(input)),
 
   update: adminQuery
@@ -32,4 +33,17 @@ export const productRouter = createRouter({
     .mutation(({ input }) => deleteProduct(input.id)),
 
   categories: adminQuery.query(() => getCategories()),
+
+  // ── Wholesale Pricing Rules ──
+  wholesaleRules: adminQuery
+    .input(z.object({ productId: z.number() }))
+    .query(({ input }) => getWholesaleRulesByProduct(input.productId)),
+
+  createWholesaleRule: adminQuery
+    .input(z.any())
+    .mutation(({ input }) => createWholesaleRule(input)),
+
+  deleteWholesaleRule: adminQuery
+    .input(z.object({ id: z.number() }))
+    .mutation(({ input }) => deleteWholesaleRule(input.id)),
 });
