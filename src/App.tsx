@@ -23,6 +23,8 @@ import AtacadoPage from '@/pages/AtacadoPage';
 import AdminPage from '@/pages/AdminPage';
 import AdminLoginPage from '@/pages/Login';
 import NotFoundPage from '@/pages/NotFound';
+import CheckoutPage from '@/pages/CheckoutPage';
+import RegisterPage from '@/pages/RegisterPage';
 import ConceitoPraiaPage from '@/pages/ConceitoPraiaPage';
 import ConceitoFitnessPage from '@/pages/ConceitoFitnessPage';
 import ConceitoMasculinoPage from '@/pages/ConceitoMasculinoPage';
@@ -65,6 +67,8 @@ function App() {
           <Route path="/atacado" element={<Layout><AtacadoPage /></Layout>} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/cadastro" element={<RegisterPage />} />
           <Route path="/not-found" element={<NotFoundPage />} />
           <Route path="/conceito/praia" element={<Layout><ConceitoPraiaPage /></Layout>} />
           <Route path="/conceito/fitness" element={<Layout><ConceitoFitnessPage /></Layout>} />

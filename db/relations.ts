@@ -26,6 +26,8 @@ import {
   orders,
   orderItems,
   abandonedCarts,
+  paymentTransactions,
+  shippingQuotes,
   auditLogs,
 } from "./schema";
 
@@ -355,6 +357,26 @@ export const priceHistoryRelations = relations(priceHistory, ({ one }) => ({
 export const abandonedCartsRelations = relations(abandonedCarts, ({ one }) => ({
   convertedOrder: one(orders, {
     fields: [abandonedCarts.convertedOrderId],
+    references: [orders.id],
+  }),
+}));
+
+// ── PaymentTransactions ─ Order / Customer (N:1) ──────────────────
+export const paymentTransactionsRelations = relations(paymentTransactions, ({ one }) => ({
+  order: one(orders, {
+    fields: [paymentTransactions.orderId],
+    references: [orders.id],
+  }),
+  customer: one(customers, {
+    fields: [paymentTransactions.customerId],
+    references: [customers.id],
+  }),
+}));
+
+// ── ShippingQuotes ─ Order (N:1) ────────────────────────────────────
+export const shippingQuotesRelations = relations(shippingQuotes, ({ one }) => ({
+  order: one(orders, {
+    fields: [shippingQuotes.orderId],
     references: [orders.id],
   }),
 }));
