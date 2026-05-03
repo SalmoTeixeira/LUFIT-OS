@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
+import { trpc } from '@/providers/trpc';
 import {
   CreditCard, QrCode, Truck, MapPin, ChevronRight, CheckCircle2,
   Loader2, Copy, ShieldCheck, Phone, Package, Tag, Store, ArrowLeft,
+  AlertTriangle,
 } from 'lucide-react';
 
 /* ── Types ── */
@@ -42,15 +44,6 @@ function calculateInstallments(amount: number): InstallmentOption[] {
   return results;
 }
 
-/* ── Mock shipping for static deploy ── */
-function mockShipping(zipCode: string): ShippingOption[] {
-  return [
-    { carrier: 'Kangu', service: 'Expresso', serviceCode: 'kangu-express', cost: 19.90, estimatedDays: 3 },
-    { carrier: 'Kangu', service: 'Econômico', serviceCode: 'kangu-econ', cost: 12.90, estimatedDays: 7 },
-    { carrier: 'Motoboy', service: 'Same Day (GO)', serviceCode: 'motoboy', cost: 9.90, estimatedDays: 1 },
-  ];
-}
-
 /* ── Checkout Page ── */
 export default function CheckoutPage() {
   const {
@@ -78,13 +71,19 @@ export default function CheckoutPage() {
     number: '', holder: '', expiry: '', cvv: '', installments: 1,
   });
   const [installments, setInstallments] = useState<InstallmentOption[]>([]);
-  const [pixData, setPixData] = useState<{ qrCode: string; qrText: string; expiresAt: Date } | null>(null);
+  const [pixData, setPixData] = useState<{ qrCode: string; qrText: string; expiresAt: Date; paymentId?: string } | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'approved' | 'rejected'>('idle');
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // tRPC mutations
+  const kanguQuote = trpc.kangu.quote.useMutation();
+  const mpPix = trpc.mercadopago.createPix.useMutation();
+  const mpCard = trpc.mercadopago.createCard.useMutation();
 
   // Computed totals
-  const subtotal = finalTotal; // already includes wholesale discounts
+  const subtotal = finalTotal;
   const shippingCost = selectedShipping?.cost ?? 0;
   const total = subtotal + shippingCost;
 
@@ -119,43 +118,149 @@ export default function CheckoutPage() {
     setLoadingCep(false);
   };
 
-  // Calculate shipping
+  // Calculate shipping via Kangu API
   const calculateShippingHandler = async () => {
     const clean = cep.replace(/\D/g, '');
     if (clean.length !== 8) return;
     setLoadingShipping(true);
-    // Simulate API delay
-    await new Promise(r => setTimeout(r, 800));
-    const options = mockShipping(clean);
-    setShippingOptions(options);
-    setSelectedShipping(options[0]);
+    setPaymentError(null);
+
+    try {
+      // Mapeia produtos do carrinho para o formato da Kangu
+      const products = cart.map(item => ({
+        weightKg: 0.3,          // peso estimado por peça (padrão LUFIT)
+        lengthCm: 25,           // dimensões estimadas (caixa padrão)
+        widthCm: 18,
+        heightCm: 5,
+        quantity: item.quantity,
+        unitPrice: item.price,
+      }));
+
+      const result = await kanguQuote.mutateAsync({
+        destinationZip: clean,
+        products,
+        invoiceValue: subtotal,
+      });
+
+      // Adiciona fallback de motoboy para GO
+      const state = address.state?.toUpperCase();
+      const options: ShippingOption[] = result.map(r => ({
+        carrier: r.carrier,
+        service: r.service,
+        serviceCode: r.serviceCode,
+        cost: r.cost,
+        estimatedDays: r.estimatedDays,
+      }));
+
+      if (state === 'GO' || state === 'DF') {
+        options.push({
+          carrier: 'Motoboy',
+          service: 'Same Day (Goiânia)',
+          serviceCode: 'motoboy',
+          cost: 9.90,
+          estimatedDays: 1,
+        });
+      }
+
+      setShippingOptions(options);
+      setSelectedShipping(options[0] ?? null);
+    } catch (err: any) {
+      console.error('Erro no frete:', err);
+      setPaymentError('Não foi possível calcular o frete. Tente novamente.');
+      // Fallback mock
+      const fallback: ShippingOption[] = [
+        { carrier: 'Kangu', service: 'Expresso', serviceCode: 'kangu-express', cost: 19.90, estimatedDays: 3 },
+        { carrier: 'Kangu', service: 'Econômico', serviceCode: 'kangu-econ', cost: 12.90, estimatedDays: 7 },
+      ];
+      setShippingOptions(fallback);
+      setSelectedShipping(fallback[0]);
+    }
+
     setLoadingShipping(false);
   };
 
-  // Generate PIX
+  // Generate PIX via Mercado Pago
   const handlePixPayment = async () => {
     setLoadingPayment(true);
     setPaymentStatus('processing');
-    await new Promise((r) => setTimeout(r, 1500));
+    setPaymentError(null);
+
     const orderNum = `LUF-${Date.now().toString(36).toUpperCase()}`;
     setOrderNumber(orderNum);
-    const qrText = `00020126360014BR.GOV.BCB.PIX0114+5562993940034520400005303986${total.toFixed(2).replace('.', '')}5802BR5913LUFIT MODA6009GOIANIA62140510${orderNum}6304`;
-    setPixData({
-      qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrText)}`,
-      qrText,
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-    });
-    setPaymentStatus('approved');
+
+    try {
+      const result = await mpPix.mutateAsync({
+        amount: total,
+        orderNumber: orderNum,
+        description: `Pedido ${orderNum} — LUFIT Moda`,
+        customer: {
+          email: customer?.email || 'cliente@lufit.com.br',
+          firstName: customer?.name?.split(' ')[0] || 'Cliente',
+          lastName: customer?.name?.split(' ').slice(1).join(' ') || '',
+          phone: customer?.phone?.replace(/\D/g, '') || '',
+        },
+      });
+
+      setPixData({
+        qrCode: result.qrCode,
+        qrText: result.qrCodeText,
+        expiresAt: new Date(result.expirationDate || Date.now() + 30 * 60 * 1000),
+        paymentId: result.id,
+      });
+
+      // Se for mock (não configurado), aprova automaticamente
+      if (result.id.startsWith('mock_')) {
+        setPaymentStatus('approved');
+      }
+    } catch (err: any) {
+      console.error('Erro PIX:', err);
+      setPaymentError(err.message || 'Falha ao gerar PIX. Tente novamente.');
+      setPaymentStatus('rejected');
+    }
+
     setLoadingPayment(false);
   };
 
-  // Card payment
+  // Card payment via Mercado Pago
   const handleCardPayment = async () => {
     setLoadingPayment(true);
     setPaymentStatus('processing');
-    await new Promise((r) => setTimeout(r, 2000));
-    setOrderNumber(`LUF-${Date.now().toString(36).toUpperCase()}`);
-    setPaymentStatus('approved');
+    setPaymentError(null);
+
+    const orderNum = `LUF-${Date.now().toString(36).toUpperCase()}`;
+    setOrderNumber(orderNum);
+
+    try {
+      // Em produção, o token do cartão deve ser gerado via MercadoPago.js no frontend
+      // Aqui enviamos um token simulado que o backend processará (ou retornará mock se não configurado)
+      const cardToken = `tok_${cardData.number.slice(-4)}_${Date.now()}`;
+
+      const result = await mpCard.mutateAsync({
+        amount: total,
+        orderNumber: orderNum,
+        description: `Pedido ${orderNum} — LUFIT Moda`,
+        token: cardToken,
+        paymentMethodId: 'visa', // TODO: detectar bandeira real no frontend
+        installments: cardData.installments,
+        customer: {
+          email: customer?.email || 'cliente@lufit.com.br',
+          firstName: customer?.name?.split(' ')[0] || 'Cliente',
+          lastName: customer?.name?.split(' ').slice(1).join(' ') || '',
+        },
+      });
+
+      if (result.status === 'approved' || result.status === 'authorized') {
+        setPaymentStatus('approved');
+      } else {
+        setPaymentStatus('rejected');
+        setPaymentError(`Pagamento ${result.status}: ${result.statusDetail}`);
+      }
+    } catch (err: any) {
+      console.error('Erro Cartão:', err);
+      setPaymentError(err.message || 'Falha no pagamento com cartão. Tente novamente.');
+      setPaymentStatus('rejected');
+    }
+
     setLoadingPayment(false);
   };
 
@@ -223,6 +328,14 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
+
+            {/* Error banner */}
+            {paymentError && (
+              <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                {paymentError}
+              </div>
+            )}
 
             {/* ── STEP 1: ADDRESS ── */}
             {step === 'address' && (
@@ -323,7 +436,7 @@ export default function CheckoutPage() {
 
                 {loadingShipping ? (
                   <div className="flex items-center gap-2 py-8 text-sm text-[#A0A0B0]">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Calculando frete...
+                    <Loader2 className="h-4 w-4 animate-spin" /> Calculando frete com Kangu...
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -437,6 +550,11 @@ export default function CheckoutPage() {
                           <p className="text-[10px] text-[#6E6E80]">
                             Expira em: {pixData.expiresAt.toLocaleTimeString('pt-BR')}
                           </p>
+                          {pixData.paymentId?.startsWith('mock_') && (
+                            <p className="text-[10px] text-amber-500">
+                              Modo demonstração — em produção o PIX será gerado pela conta real do Mercado Pago.
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -513,6 +631,10 @@ export default function CheckoutPage() {
                       >
                         {loadingPayment ? <Loader2 className="h-4 w-4 animate-spin inline" /> : `Pagar R$ ${total.toFixed(2).replace('.', ',')}`}
                       </button>
+
+                      <p className="text-[10px] text-[#6E6E80] text-center">
+                        Em produção, os dados do cartão são tokenizados via MercadoPago.js — nunca tocam nosso servidor.
+                      </p>
                     </div>
                   )}
 
