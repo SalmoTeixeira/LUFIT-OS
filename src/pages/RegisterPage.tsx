@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '@/contexts/StoreContext';
 import {
   User, MapPin, Instagram, Facebook, Linkedin,
   Globe, CheckCircle2, Loader2, ArrowRight, Store,
@@ -20,6 +21,7 @@ const socialIcons: Record<string, React.ElementType> = {
 /* ── Register Page ── */
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { setCustomer } = useStore();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -65,8 +67,16 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real scenario, this would call a customer.create mutation
-    // For now, simulate success
+    // Save customer profile to StoreContext
+    setCustomer({
+      name: form.name,
+      email: form.email,
+      phone: form.phone || form.whatsapp,
+      isWholesale: form.isWholesale,
+      isVip: false,
+      socialNetworkType: form.socialNetworkType,
+      socialNetworkHandle: form.socialNetworkHandle,
+    });
     setSuccess(true);
   };
 
@@ -81,8 +91,19 @@ export default function RegisterPage() {
           </div>
           <h2 className="text-xl font-bold text-white">Cadastro Realizado!</h2>
           <p className="text-sm text-[#A0A0B0]">
-            Bem-vindo(a) à LUFIT! Seu cadastro foi criado com sucesso. Agora você pode finalizar suas compras.
+            {form.isWholesale
+              ? 'Bem-vindo(a) ao Atacado LUFIT! Seu cadastro de revendedor foi criado. Adicione itens ao carrinho e o desconto será aplicado automaticamente por código de produto.'
+              : 'Bem-vindo(a) à LUFIT! Seu cadastro foi criado com sucesso. Agora você pode finalizar suas compras.'}
           </p>
+          {form.isWholesale && (
+            <div className="bg-lufit-teal/10 border border-lufit-teal/20 rounded-lg p-3 text-xs text-lufit-teal text-left space-y-1">
+              <p className="font-semibold">Suas regras de desconto:</p>
+              <p>12 peças do mesmo código = 5% OFF</p>
+              <p>24 peças do mesmo código = 10% OFF</p>
+              <p>48+ peças do mesmo código = 15% OFF</p>
+              <p className="text-[10px] text-gray-500 mt-1">*Cores e tamanhos podem variar dentro do mesmo código.</p>
+            </div>
+          )}
           <div className="flex gap-3 pt-4">
             <button
               onClick={() => navigate('/checkout')}
@@ -328,8 +349,8 @@ export default function RegisterPage() {
                   <span className="text-sm font-semibold text-white">Sou Revendedor/Atacado</span>
                 </div>
                 <p className="text-xs text-[#6E6E80] mt-1">
-                  Marque esta opção se você compra para revender. Você terá acesso a descontos escalonados:
-                  5% (12 peças), 10% (24 peças), 15% (48+ peças).
+                  Marque esta opção se você compra para revender. Descontos escalonados por CÓDIGO DE PRODUTO (mesmo código, cores/tamanhos variados):
+                  5% OFF (12 peças), 10% OFF (24 peças), 15% OFF (48+ peças).
                 </p>
               </div>
             </label>

@@ -21,11 +21,20 @@ import InventoryManager from '@/components/admin/InventoryManager';
 import { products as defaultProducts, type Product } from '@/data/products';
 
 /* ── Auth Guard ── */
+const ADMIN_DEMO_KEY = 'lufit_admin_demo';
+
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading, isAuthenticated } = useAuth({
     redirectOnUnauthenticated: true,
     redirectPath: '/admin/login',
   });
+
+  // Demo bypass for static deployment testing
+  const isDemo = typeof window !== 'undefined' && localStorage.getItem(ADMIN_DEMO_KEY) === 'true';
+
+  if (isDemo) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
