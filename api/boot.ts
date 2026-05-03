@@ -11,6 +11,15 @@ import { Paths } from "@contracts/constants";
 const app = new Hono<{ Bindings: HttpBindings }>();
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
+
+// Health check for Railway deploy monitoring
+app.get("/api/health", (c) => c.json({
+  status: "ok",
+  service: "lufit-os",
+  version: "1.0.0",
+  timestamp: new Date().toISOString(),
+}));
+
 app.get(Paths.oauthCallback, createOAuthCallbackHandler());
 app.use("/api/trpc/*", async (c) => {
   return fetchRequestHandler({
