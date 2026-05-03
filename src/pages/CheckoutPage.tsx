@@ -126,10 +126,9 @@ export default function CheckoutPage() {
     setPaymentError(null);
 
     try {
-      // Mapeia produtos do carrinho para o formato da Kangu
       const products = cart.map(item => ({
-        weightKg: 0.3,          // peso estimado por peça (padrão LUFIT)
-        lengthCm: 25,           // dimensões estimadas (caixa padrão)
+        weightKg: 0.3,
+        lengthCm: 25,
         widthCm: 18,
         heightCm: 5,
         quantity: item.quantity,
@@ -142,9 +141,11 @@ export default function CheckoutPage() {
         invoiceValue: subtotal,
       });
 
-      // Adiciona fallback de motoboy para GO
       const state = address.state?.toUpperCase();
-      const options: ShippingOption[] = result.map(r => ({
+      const city = address.city?.toUpperCase();
+      const isGoiania = city?.includes('GOIÂNIA') || city?.includes('GOIANIA');
+
+      let options: ShippingOption[] = result.map(r => ({
         carrier: r.carrier,
         service: r.service,
         serviceCode: r.serviceCode,
@@ -152,25 +153,42 @@ export default function CheckoutPage() {
         estimatedDays: r.estimatedDays,
       }));
 
+      // Frete grátis: Goiânia >= 199 | Geral >= 499
+      const freeGoiania = isGoiania && subtotal >= 199;
+      const freeGeneral = subtotal >= 499;
+      if (freeGoiania || freeGeneral) {
+        options = options.map(o => ({ ...o, cost: 0 }));
+      }
+
+      // Motoboy para GO/DF
       if (state === 'GO' || state === 'DF') {
         options.push({
           carrier: 'Motoboy',
           service: 'Same Day (Goiânia)',
           serviceCode: 'motoboy',
-          cost: 9.90,
+          cost: freeGoiania || freeGeneral ? 0 : 9.90,
           estimatedDays: 1,
         });
       }
+
+      // Retirar na Loja — sempre grátis
+      options.unshift({
+        carrier: 'LUFIT',
+        service: 'Retirar na Loja',
+        serviceCode: 'pickup',
+        cost: 0,
+        estimatedDays: 0,
+      });
 
       setShippingOptions(options);
       setSelectedShipping(options[0] ?? null);
     } catch (err: any) {
       console.error('Erro no frete:', err);
       setPaymentError('Não foi possível calcular o frete. Tente novamente.');
-      // Fallback mock
       const fallback: ShippingOption[] = [
-        { carrier: 'Kangu', service: 'Expresso', serviceCode: 'kangu-express', cost: 19.90, estimatedDays: 3 },
-        { carrier: 'Kangu', service: 'Econômico', serviceCode: 'kangu-econ', cost: 12.90, estimatedDays: 7 },
+        { carrier: 'LUFIT', service: 'Retirar na Loja', serviceCode: 'pickup', cost: 0, estimatedDays: 0 },
+        { carrier: 'Kangu', service: 'Expresso', serviceCode: 'kangu-express', cost: subtotal >= 499 ? 0 : 19.90, estimatedDays: 3 },
+        { carrier: 'Kangu', service: 'Econômico', serviceCode: 'kangu-econ', cost: subtotal >= 499 ? 0 : 12.90, estimatedDays: 7 },
       ];
       setShippingOptions(fallback);
       setSelectedShipping(fallback[0]);
@@ -457,11 +475,11 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-white">{opt.service}</p>
-                          <p className="text-xs text-[#6E6E80]">{opt.carrier} • {opt.estimatedDays} dias úteis</p>
+                          <p className="text-xs text-[#6E6E80]">{opt.carrier}{opt.estimatedDays > 0 ? ` • ${opt.estimatedDays} dias úteis` : ' • Disponível imediatamente'}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-bold text-white">
-                            R$ {opt.cost.toFixed(2).replace('.', ',')}
+                          <p className={`text-sm font-bold ${opt.cost === 0 ? 'text-lufit-teal' : 'text-white'}`}>
+                            {opt.cost === 0 ? 'Grátis' : `R$ ${opt.cost.toFixed(2).replace('.', ',')}`}
                           </p>
                         </div>
                       </button>
@@ -721,7 +739,7 @@ export default function CheckoutPage() {
                     .map(g => (
                       <div key={g.productId} className="flex justify-between text-[11px] text-[#A0A0B0]">
                         <span className="truncate max-w-[180px]">{g.name} ({g.quantity}pç)</span>
-                        <span className="text-[#2DD4A8]">-{g.discountPercent}%</span>
+                        <span className="text-[#2DD4A8]">Desconto</span>
                       </div>
                     ))}
                 </div>
@@ -740,8 +758,8 @@ export default function CheckoutPage() {
                 )}
                 <div className="flex justify-between text-[#A0A0B0]">
                   <span>Frete</span>
-                  <span className={shippingCost === 0 ? 'text-[#6E6E80]' : 'text-white'}>
-                    {shippingCost === 0 ? 'Calcular' : `R$ ${shippingCost.toFixed(2).replace('.', ',')}`}
+                  <span className={shippingCost === 0 ? 'text-lufit-teal font-semibold' : 'text-white'}>
+                    {shippingCost === 0 ? 'Grátis' : `R$ ${shippingCost.toFixed(2).replace('.', ',')}`}
                   </span>
                 </div>
                 {selectedShipping && (

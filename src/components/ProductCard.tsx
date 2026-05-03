@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useStore } from '@/contexts/StoreContext';
@@ -10,39 +11,57 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { toggleWishlist, isInWishlist } = useStore();
   const inWishlist = isInWishlist(product.id);
+  const [imgHover, setImgHover] = useState(false);
 
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
+  const hasPromo = product.oldPrice && product.oldPrice > product.price;
+  const pixPrice = product.price * 0.9; // 10% desconto Pix
 
   return (
     <div className="group relative bg-white rounded-lg overflow-hidden shadow-card hover:shadow-hover transition-all duration-300">
-      {/* Image */}
-      <Link to={`/produto/${product.id}`} className="block relative aspect-[3/4] overflow-hidden bg-gray-100">
+      {/* Image with hover flip effect */}
+      <Link
+        to={`/produto/${product.id}`}
+        className="block relative aspect-[3/4] overflow-hidden bg-gray-100"
+        onMouseEnter={() => setImgHover(true)}
+        onMouseLeave={() => setImgHover(false)}
+      >
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className={`w-full h-full object-cover absolute inset-0 transition-all duration-500 ${
+            imgHover && product.images && product.images.length > 1
+              ? 'opacity-0 scale-105'
+              : 'opacity-100 scale-100'
+          }`}
         />
-        
-        {/* Badges */}
+        {product.images && product.images.length > 1 && (
+          <img
+            src={product.images[1]}
+            alt={`${product.name} - verso`}
+            className={`w-full h-full object-cover absolute inset-0 transition-all duration-500 ${
+              imgHover ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+            }`}
+          />
+        )}
+
+        {/* Minimal badges — NO % OFF tags */}
         <div className="absolute top-2 left-2 flex flex-col gap-1.5">
           {product.isNew && (
-            <span className="bg-lufit-teal text-white text-[10px] font-bold px-2 py-1 rounded">
-              NOVO
+            <span className="bg-lufit-teal text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">
+              Novo
             </span>
           )}
-          {product.isSale && discount > 0 && (
-            <span className="bg-lufit-red text-white text-[10px] font-bold px-2 py-1 rounded">
-              -{discount}%
+          {hasPromo && (
+            <span className="bg-lufit-dark text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">
+              Promo
             </span>
           )}
         </div>
 
-        {/* Quick Actions */}
+        {/* Wishlist heart */}
         <div className="absolute top-2 right-2">
           <button
-            onClick={e => {
+            onClick={(e) => {
               e.preventDefault();
               toggleWishlist(product.id);
             }}
@@ -68,7 +87,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Rating */}
         <div className="flex items-center gap-1 mt-1.5">
           <div className="flex">
-            {[1, 2, 3, 4, 5].map(star => (
+            {[1, 2, 3, 4, 5].map((star) => (
               <svg
                 key={star}
                 className={`w-3 h-3 ${
@@ -85,21 +104,31 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-xs text-gray-500">({product.reviewCount})</span>
         </div>
 
-        {/* Price */}
-        <div className="flex items-baseline gap-2 mt-2">
-          <span className="text-base font-bold text-lufit-teal">
-            R$ {product.price.toFixed(2).replace('.', ',')}
-          </span>
-          {product.oldPrice && (
-            <span className="text-xs text-gray-400 line-through">
-              R$ {product.oldPrice.toFixed(2).replace('.', ',')}
+        {/* Price — clean, no pollution */}
+        <div className="mt-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold text-lufit-dark">
+              R$ {product.price.toFixed(2).replace('.', ',')}
             </span>
-          )}
+            {hasPromo && (
+              <span className="text-xs text-gray-400 line-through">
+                R$ {product.oldPrice!.toFixed(2).replace('.', ',')}
+              </span>
+            )}
+          </div>
+          {/* Pix price line */}
+          <p className="text-xs text-lufit-teal font-medium mt-0.5">
+            R$ {pixPrice.toFixed(2).replace('.', ',')} no Pix
+          </p>
+          {/* Installment info — sem juros até termos taxa Mercado Pago */}
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            até 12x no cartão
+          </p>
         </div>
 
-        {/* Sizes */}
+        {/* Sizes preview */}
         <div className="flex gap-1 mt-2">
-          {product.sizes.slice(0, 4).map(size => (
+          {product.sizes.slice(0, 4).map((size) => (
             <span
               key={size}
               className="text-[10px] font-medium text-gray-500 border border-gray-200 rounded px-1.5 py-0.5"
@@ -108,7 +137,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           ))}
           {product.sizes.length > 4 && (
-            <span className="text-[10px] text-gray-400">+{product.sizes.length - 4}</span>
+            <span className="text-[10px] text-gray-400">
+              +{product.sizes.length - 4}
+            </span>
           )}
         </div>
       </div>

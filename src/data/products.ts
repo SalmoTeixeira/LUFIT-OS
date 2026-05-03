@@ -16,6 +16,8 @@ export interface Product {
   isNew?: boolean;
   isSale?: boolean;
   sku: string;
+  barcode?: string;
+  ean?: string;
 }
 
 export interface Category {

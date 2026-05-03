@@ -9,7 +9,7 @@ const subcategorias = [
 ];
 
 const destaquesFitness = [
-  { id: '1', name: 'Legging Energy Poliamida Preta', price: 90.99, oldPrice: 139.99, image: '/produtos/legging-1.jpg', tag: '-35%' },
+  { id: '1', name: 'Legging Energy Poliamida Preta', price: 90.99, oldPrice: 139.99, image: '/produtos/legging-1.jpg', tag: 'Promo' },
   { id: '3', name: 'Legging Turquesa Scrunch Butt', price: 109.90, image: '/produtos/legging-3.jpg', tag: 'NEW' },
   { id: '5', name: 'Conjunto Fitness Estampado', price: 149.90, oldPrice: 199.90, image: '/produtos/conjunto-1.jpg', tag: 'SALE' },
   { id: '7', name: 'Bermuda Biker Coral', price: 79.90, image: '/produtos/short-1.jpg', tag: 'HOT' },

@@ -1,13 +1,16 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus, Trash2, ShoppingBag, Tag, ArrowRight, Store } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, Tag, ArrowRight, Store, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface CartDrawerProps {
   open: boolean;
   onClose: () => void;
 }
+
+const FRETE_GRATIS_GERAL = 499;
+const FRETE_GRATIS_GOIANIA = 199;
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
   const {
@@ -17,6 +20,11 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
   const hasDiscount = discountTotal > 0;
   const isWholesale = customer?.isWholesale ?? false;
+
+  const freteRestanteGeral = Math.max(0, FRETE_GRATIS_GERAL - cartTotal);
+  const freteRestanteGoi = Math.max(0, FRETE_GRATIS_GOIANIA - cartTotal);
+  const freteGratisGeral = cartTotal >= FRETE_GRATIS_GERAL;
+  const freteGratisGoi = cartTotal >= FRETE_GRATIS_GOIANIA;
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
@@ -45,6 +53,34 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         ) : (
           <>
             <div className="flex-1 overflow-auto py-4 space-y-4">
+              {/* Frete Grátis info */}
+              <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Truck className={`w-4 h-4 ${freteGratisGeral || freteGratisGoi ? 'text-lufit-teal' : 'text-gray-400'}`} />
+                  <span className={`text-xs font-semibold ${freteGratisGeral || freteGratisGoi ? 'text-lufit-teal' : 'text-gray-600'}`}>
+                    {freteGratisGeral ? 'Frete Grátis Brasil!' : freteGratisGoi ? 'Frete Grátis Goiânia!' : 'Complete para Frete Grátis'}
+                  </span>
+                </div>
+                {!freteGratisGeral && (
+                  <>
+                    <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-lufit-dark transition-all duration-500"
+                        style={{ width: `${Math.min(100, (cartTotal / FRETE_GRATIS_GERAL) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-400">
+                      {freteGratisGoi
+                        ? `Goiânia: Frete Grátis já garantido. Falta R$ ${freteRestanteGeral.toFixed(2).replace('.', ',')} para Frete Grátis no Brasil.`
+                        : `Faltam R$ ${freteRestanteGoi.toFixed(2).replace('.', ',')} para Frete Grátis em Goiânia e R$ ${freteRestanteGeral.toFixed(2).replace('.', ',')} para o Brasil.`}
+                    </p>
+                  </>
+                )}
+                {freteGratisGeral && (
+                  <p className="text-[10px] text-lufit-teal">Sua compra qualifica para entrega sem custo em todo o Brasil!</p>
+                )}
+              </div>
+
               {/* Wholesale badge */}
               {isWholesale && (
                 <div className="bg-lufit-teal/10 border border-lufit-teal/20 rounded-lg px-3 py-2 flex items-center gap-2">
@@ -56,7 +92,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               )}
 
               {/* Cart items */}
-              {cart.map(item => (
+              {cart.map((item) => (
                 <div key={item.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
                   <img
                     src={item.image}
@@ -69,7 +105,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                       Cor: {item.color} | Tam: {item.size}
                     </p>
                     {item.sku && <p className="text-[10px] text-gray-400 mt-0.5">SKU: {item.sku}</p>}
-                    <p className="text-sm font-bold text-lufit-teal mt-1">
+                    <p className="text-sm font-bold text-lufit-dark mt-1">
                       R$ {item.price.toFixed(2).replace('.', ',')}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
@@ -97,22 +133,22 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 </div>
               ))}
 
-              {/* Wholesale breakdown */}
-              {hasDiscount && (
+              {/* Wholesale breakdown — apenas para atacado */}
+              {hasDiscount && isWholesale && (
                 <div className="bg-lufit-teal/5 border border-lufit-teal/20 rounded-lg p-3 space-y-2">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                     <Tag className="w-4 h-4 text-lufit-teal" />
                     Descontos Atacado
                   </div>
                   {wholesaleGroups
-                    .filter(g => g.discountPercent > 0)
-                    .map(g => (
+                    .filter((g) => g.discountPercent > 0)
+                    .map((g) => (
                       <div key={g.productId} className="flex items-center justify-between text-xs">
                         <span className="text-gray-600 truncate max-w-[180px]">
                           {g.name} ({g.quantity} uni)
                         </span>
                         <span className="font-medium text-lufit-teal">
-                          -{g.discountPercent}% = -R$ {g.discountAmount.toFixed(2).replace('.', ',')}
+                          -R$ {g.discountAmount.toFixed(2).replace('.', ',')}
                         </span>
                       </div>
                     ))}
@@ -145,12 +181,19 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                   <span>Subtotal</span>
                   <span className="font-medium">R$ {cartTotal.toFixed(2).replace('.', ',')}</span>
                 </div>
-                {hasDiscount && (
+                {hasDiscount && isWholesale && (
                   <div className="flex items-center justify-between text-lufit-teal">
                     <span>Desconto Atacado</span>
                     <span className="font-medium">- R$ {discountTotal.toFixed(2).replace('.', ',')}</span>
                   </div>
                 )}
+                {/* Frete line */}
+                <div className="flex items-center justify-between text-gray-600">
+                  <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5" /> Frete</span>
+                  <span className={`font-medium ${freteGratisGeral ? 'text-lufit-teal' : ''}`}>
+                    {freteGratisGeral ? 'Grátis' : 'A calcular'}
+                  </span>
+                </div>
                 <div className="flex items-center justify-between text-gray-900 font-bold text-base pt-1 border-t border-gray-100">
                   <span>Total</span>
                   <span>R$ {finalTotal.toFixed(2).replace('.', ',')}</span>

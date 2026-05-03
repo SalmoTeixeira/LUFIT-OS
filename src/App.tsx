@@ -4,6 +4,7 @@ import TopBar from '@/components/TopBar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
+import NewsletterPopup from '@/components/NewsletterPopup';
 import HomePage from '@/pages/HomePage';
 import CategoryPage from '@/pages/CategoryPage';
 import ProductPage from '@/pages/ProductPage';
@@ -38,6 +39,7 @@ function Layout({ children }: { children: React.ReactNode }) {
       <TopBar />
       <Header />
       <ScrollToTop />
+      <NewsletterPopup />
       {children}
       <Footer />
     </>
