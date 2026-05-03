@@ -24,16 +24,23 @@ import { products as defaultProducts, type Product } from '@/data/products';
 const ADMIN_DEMO_KEY = 'lufit_admin_demo';
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, isAuthenticated } = useAuth({
-    redirectOnUnauthenticated: true,
-    redirectPath: '/admin/login',
-  });
+  const navigate = useNavigate();
 
-  // Demo bypass for static deployment testing
+  // Demo bypass for static deployment testing — check BEFORE auth to prevent redirects
   const isDemo = typeof window !== 'undefined' && localStorage.getItem(ADMIN_DEMO_KEY) === 'true';
 
   if (isDemo) {
     return <>{children}</>;
+  }
+
+  const { user, isLoading, isAuthenticated } = useAuth({
+    redirectOnUnauthenticated: false,
+  });
+
+  // Redirect manually if not authenticated (only when not in demo)
+  if (!isLoading && !isAuthenticated) {
+    navigate('/admin/login');
+    return null;
   }
 
   if (isLoading) {
@@ -51,7 +58,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
           <p className="text-white font-semibold">Acesso restrito</p>
           <p className="text-[#6E6E80] text-sm">Você precisa estar logado como administrador.</p>
           <button
-            onClick={() => window.location.href = '/#/admin/login'}
+            onClick={() => navigate('/admin/login')}
             className="px-4 py-2 rounded-lg bg-[#2DD4A8] text-black text-xs font-semibold"
           >
             Login Admin

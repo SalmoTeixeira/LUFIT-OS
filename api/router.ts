@@ -6,6 +6,8 @@ import { inventoryRouter } from "./inventory-router";
 import { paymentRouter } from "./payment-router";
 import { shippingRouter } from "./shipping-router";
 import { cartRouter } from "./cart-router";
+import { mercadopagoRouter } from "./mercadopago-router";
+import { kanguRouter } from "./kangu-router";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -18,6 +20,8 @@ export const appRouter = createRouter({
   payment: paymentRouter,
   shipping: shippingRouter,
   cart: cartRouter,
+  mercadopago: mercadopagoRouter,
+  kangu: kanguRouter,
 });
 
 export type AppRouter = typeof appRouter;
