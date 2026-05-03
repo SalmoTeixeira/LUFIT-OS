@@ -47,7 +47,7 @@ const faqs = [
   {
     question: 'Quais as formas de pagamento?',
     answer:
-      'Aceitamos cartão de crédito (parcelamos em até 12x), Pix (com 10% de desconto), boleto bancário e cartão de débito.',
+      'Aceitamos cartão de crédito (parcelamos em até 12x), Pix (com desconto à vista), boleto bancário e cartão de débito.',
   },
   {
     question: 'Como saber meu tamanho?',

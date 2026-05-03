@@ -60,7 +60,7 @@ export default function PagamentosPage() {
               <Smartphone className="w-6 h-6 text-lufit-teal" />
               <h3 className="font-bold text-lufit-dark">Pix</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Pagamento instantâneo com <strong>10% de desconto</strong> sobre o valor total.</p>
+            <p className="text-sm text-gray-600 mb-4">Pagamento instantâneo com <strong>desconto à vista</strong> sobre o valor total.</p>
             <div className="flex gap-2"><PixIcon /></div>
           </div>
           <div className="bg-white rounded-xl border p-6">
@@ -77,8 +77,8 @@ export default function PagamentosPage() {
               <h3 className="font-bold text-lufit-dark">Descontos Especiais</h3>
             </div>
             <ul className="text-sm text-gray-600 space-y-2">
-              <li>Pix: 10% OFF à vista</li>
-              <li>Boleto: 5% OFF à vista</li>
+              <li>Pix: desconto à vista</li>
+              <li>Boleto: desconto à vista</li>
               <li>Cartão em até 12x sem juros</li>
               <li>Frete grátis acima de R$ 149,99 (Sudeste)</li>
             </ul>

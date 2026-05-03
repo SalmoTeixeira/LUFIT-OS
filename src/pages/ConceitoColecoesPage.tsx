@@ -11,7 +11,7 @@ const colecoes = [
 ];
 
 const destaques = [
-  { id: '5', name: 'Conjunto Fitness Estampado Preto', price: 149.90, oldPrice: 199.90, image: '/produtos/conjunto-1.jpg', tag: '-25%' },
+  { id: '5', name: 'Conjunto Fitness Estampado Preto', price: 149.90, oldPrice: 199.90, image: '/produtos/conjunto-1.jpg', tag: 'Promo' },
   { id: '1', name: 'Legging Energy Poliamida Preta', price: 90.99, oldPrice: 139.99, image: '/produtos/legging-1.jpg', tag: 'SALE' },
   { id: '51', name: 'Maiô Fitness com Recortes Preto', price: 129.90, oldPrice: 169.90, image: '/produtos/top-5.jpg', tag: 'NEW' },
   { id: '40', name: 'Camiseta Dry Fit Masculina', price: 69.90, oldPrice: 89.90, image: '/produtos/masc-1.jpg', tag: 'HOT' },

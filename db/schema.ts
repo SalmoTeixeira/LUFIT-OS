@@ -70,8 +70,25 @@ export type Category = typeof categories.$inferSelect;
 export type InsertCategory = typeof categories.$inferInsert;
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO OPERACIONAL — PRODUTOS (Ficha Técnica)
+// MÓDULO OPERACIONAL — SUBCATEGORIAS
 // ─────────────────────────────────────────────────────────────────────
+
+export const subcategories = mysqlTable("subcategories", {
+  id: serial("id").primaryKey(),
+  categoryId: bigint("categoryId", { mode: "number", unsigned: true }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull(),
+  description: text("description"),
+  sortOrder: int("sortOrder").default(0),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("subcat_slug_idx").on(table.slug),
+  index("subcat_cat_idx").on(table.categoryId),
+]);
+
+export type Subcategory = typeof subcategories.$inferSelect;
+export type InsertSubcategory = typeof subcategories.$inferInsert;
 
 export const products = mysqlTable("products", {
   id: serial("id").primaryKey(),
@@ -84,6 +101,13 @@ export const products = mysqlTable("products", {
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
   costPrice: decimal("costPrice", { precision: 10, scale: 2 }),
   categoryId: bigint("categoryId", { mode: "number", unsigned: true }),
+  subcategoryId: bigint("subcategoryId", { mode: "number", unsigned: true }),
+  // Fornecedor e NCM (nota fiscal)
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
+  ncm: varchar("ncm", { length: 15 }),
+  // Código de barras (opcional no pai, obrigatório nas variações)
+  ean: varchar("ean", { length: 20 }),
+  barcode: varchar("barcode", { length: 50 }),
   // Ficha Técnica
   composition: text("composition"),
   careInstructions: text("careInstructions"),
@@ -111,6 +135,8 @@ export const products = mysqlTable("products", {
   uniqueIndex("prod_sku_idx").on(table.sku),
   uniqueIndex("prod_slug_idx").on(table.slug),
   index("prod_cat_idx").on(table.categoryId),
+  index("prod_subcat_idx").on(table.subcategoryId),
+  index("prod_supplier_idx").on(table.supplierId),
   index("prod_active_idx").on(table.isActive),
 ]);
 
@@ -133,6 +159,8 @@ export const productVariations = mysqlTable("productVariations", {
   hexColor: varchar("hexColor", { length: 7 }),
   // Preços por variação
   costPrice: decimal("costPrice", { precision: 10, scale: 2 }),
+  previousCostPrice: decimal("previousCostPrice", { precision: 10, scale: 2 }),
+  averageCostPrice: decimal("averageCostPrice", { precision: 10, scale: 2 }),
   salePrice: decimal("salePrice", { precision: 10, scale: 2 }),
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
   // Estoque
@@ -157,6 +185,26 @@ export const productVariations = mysqlTable("productVariations", {
 
 export type ProductVariation = typeof productVariations.$inferSelect;
 export type InsertProductVariation = typeof productVariations.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO OPERACIONAL — CORES DOS PRODUTOS (Grade Dinâmica)
+// ─────────────────────────────────────────────────────────────────────
+
+export const productColors = mysqlTable("productColors", {
+  id: serial("id").primaryKey(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  name: varchar("name", { length: 50 }).notNull(),
+  hexColor: varchar("hexColor", { length: 7 }),
+  imageUrl: text("imageUrl"),
+  position: int("position").default(0),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("pc_product_idx").on(table.productId),
+]);
+
+export type ProductColor = typeof productColors.$inferSelect;
+export type InsertProductColor = typeof productColors.$inferInsert;
 
 // ─────────────────────────────────────────────────────────────────────
 // MÓDULO OPERACIONAL — DEPÓSITOS / ARMAZÉNS

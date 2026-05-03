@@ -261,7 +261,7 @@ export default function DashboardKPIGrid() {
           </div>
           <div className="flex gap-2">
             <button className="rounded-lg bg-[#FF9100] px-3 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-[#FF9100]/90">
-              Cupom 10%
+              Cupom Especial
             </button>
             <button className="rounded-lg border border-[#FF9100]/40 px-3 py-1.5 text-xs font-medium text-[#FF9100] transition-colors hover:bg-[#FF9100]/10">
               Push

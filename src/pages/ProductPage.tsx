@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, Share2, Truck, RotateCcw, Ruler, ChevronLeft, ChevronRight, Star, ShoppingBag, Minus, Plus, Shield, Store, Tag, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Heart, Share2, Truck, RotateCcw, Ruler, ChevronLeft, ChevronRight, Star, ShoppingBag, Minus, Plus, Shield, Store, Tag, CheckCircle2, AlertCircle, X, Sparkles } from 'lucide-react';
 import { getProductById, getRelatedProducts } from '@/data/products';
 import { useStore } from '@/contexts/StoreContext';
 import ProductCard from '@/components/ProductCard';
@@ -23,7 +23,9 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
+  const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews' | 'medidas'>('desc');
+  const [sizeChartOpen, setSizeChartOpen] = useState(false);
+  const [virtualFittingOpen, setVirtualFittingOpen] = useState(false);
   const [cep, setCep] = useState('');
   const [addedToast, setAddedToast] = useState(false);
 
@@ -41,9 +43,7 @@ export default function ProductPage() {
   }
 
   const inWishlist = isInWishlist(product.id);
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
+  const hasPromo = product.oldPrice && product.oldPrice > product.price;
 
   const isWholesale = customer?.isWholesale ?? false;
   const stockQty = selectedSize && selectedColor
@@ -58,9 +58,9 @@ export default function ProductPage() {
   // Wholesale discount preview for this product
   const wholesalePreview = (() => {
     const totalQty = qtyInCart + quantity;
-    if (totalQty >= 48) return { pct: 15, label: '15% OFF' };
-    if (totalQty >= 24) return { pct: 10, label: '10% OFF' };
-    if (totalQty >= 12) return { pct: 5, label: '5% OFF' };
+    if (totalQty >= 48) return { label: 'Desconto Máximo' };
+    if (totalQty >= 24) return { label: 'Desconto Intermediário' };
+    if (totalQty >= 12) return { label: 'Desconto Inicial' };
     return null;
   })();
 
@@ -115,9 +115,9 @@ export default function ProductPage() {
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
-              {product.isSale && discount > 0 && (
-                <span className="absolute top-3 left-3 bg-lufit-red text-white text-xs font-bold px-2.5 py-1 rounded">
-                  -{discount}%
+              {product.isSale && hasPromo && (
+                <span className="absolute top-3 left-3 bg-lufit-dark text-white text-xs font-bold px-2.5 py-1 rounded uppercase tracking-wide">
+                  Promo
                 </span>
               )}
               {product.images.length > 1 && (
@@ -186,20 +186,19 @@ export default function ProductPage() {
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-4">
-              <span className="text-2xl sm:text-3xl font-bold text-lufit-teal">
+              <span className="text-2xl sm:text-3xl font-bold text-lufit-dark">
                 R$ {product.price.toFixed(2).replace('.', ',')}
               </span>
               {product.oldPrice && (
-                <>
-                  <span className="text-lg text-gray-400 line-through">
-                    R$ {product.oldPrice.toFixed(2).replace('.', ',')}
-                  </span>
-                  <span className="text-sm bg-lufit-red/10 text-lufit-red font-semibold px-2 py-0.5 rounded">
-                    {discount}% OFF
-                  </span>
-                </>
+                <span className="text-lg text-gray-400 line-through">
+                  R$ {product.oldPrice.toFixed(2).replace('.', ',')}
+                </span>
               )}
             </div>
+            {/* Pix price */}
+            <p className="text-sm text-lufit-teal font-medium mb-4">
+              R$ {(product.price * 0.9).toFixed(2).replace('.', ',')} no Pix
+            </p>
 
             {/* Wholesale info badge */}
             {isWholesale && (
@@ -209,7 +208,7 @@ export default function ProductPage() {
                   Preços Atacado Ativos
                 </div>
                 <p className="text-xs text-gray-600 mt-1">
-                  12 peças = 5% OFF &nbsp;|&nbsp; 24 peças = 10% OFF &nbsp;|&nbsp; 48+ peças = 15% OFF
+                  12 peças = Desconto Inicial &nbsp;|&nbsp; 24 peças = Desconto Intermediário &nbsp;|&nbsp; 48+ peças = Desconto Máximo
                   <br />
                   <span className="text-lufit-teal font-medium">Mesmo código, cores e tamanhos variados.</span>
                 </p>
@@ -225,7 +224,7 @@ export default function ProductPage() {
               <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
                 <Tag className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-800">
-                  <strong>Quer comprar no atacado?</strong> Cadastre-se como revendedor e ganhe até 15% de desconto por código de produto.
+                  <strong>Quer comprar no atacado?</strong> Cadastre-se como revendedor e ganhe descontos por código de produto.
                 </p>
               </div>
             )}
@@ -272,7 +271,10 @@ export default function ProductPage() {
                   </button>
                 ))}
               </div>
-              <button className="flex items-center gap-1 text-sm text-lufit-teal mt-2 hover:underline">
+              <button 
+                onClick={() => setSizeChartOpen(true)}
+                className="flex items-center gap-1 text-sm text-lufit-teal mt-2 hover:underline"
+              >
                 <Ruler className="w-3.5 h-3.5" /> Tabela de medidas
               </button>
             </div>
@@ -394,6 +396,7 @@ export default function ProductPage() {
             {[
               { key: 'desc' as const, label: 'Descrição' },
               { key: 'specs' as const, label: 'Especificações' },
+              { key: 'medidas' as const, label: 'Tabela de Medidas' },
               { key: 'reviews' as const, label: `Avaliações (${product.reviewCount})` },
             ].map(tab => (
               <button
@@ -427,6 +430,28 @@ export default function ProductPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {activeTab === 'medidas' && (
+              <div className="max-w-3xl">
+                <SizeChartTable category={product.category} />
+                {/* Provador Virtual CTA */}
+                <div className="mt-6 bg-lufit-teal/5 border border-lufit-teal/20 rounded-xl p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 bg-lufit-teal/10 rounded-full flex items-center justify-center shrink-0">
+                    <Sparkles className="w-6 h-6 text-lufit-teal" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-lufit-dark">Provador Virtual</h4>
+                    <p className="text-xs text-gray-500 mt-0.5">Experimente virtualmente antes de comprar. Envie sua foto e veja como fica!</p>
+                    <button 
+                      onClick={() => setVirtualFittingOpen(true)}
+                      className="mt-2 text-xs font-medium text-lufit-teal hover:underline"
+                    >
+                      Experimente agora →
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -518,6 +543,136 @@ export default function ProductPage() {
           </div>
         )}
       </div>
+      {/* Size Chart Modal */}
+      {sizeChartOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSizeChartOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-auto p-6 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-lufit-dark flex items-center gap-2">
+                <Ruler className="w-5 h-5 text-lufit-teal" /> Tabela de Medidas
+              </h3>
+              <button onClick={() => setSizeChartOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <SizeChartTable category={product.category} />
+          </div>
+        </div>
+      )}
+
+      {/* Virtual Fitting Modal */}
+      {virtualFittingOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVirtualFittingOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-lufit-dark flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-lufit-teal" /> Provador Virtual
+              </h3>
+              <button onClick={() => setVirtualFittingOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="text-center py-6">
+              <div className="w-16 h-16 bg-lufit-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-8 h-8 text-lufit-teal" />
+              </div>
+              <h4 className="text-sm font-semibold text-lufit-dark mb-2">Em breve!</h4>
+              <p className="text-xs text-gray-500 px-4">
+                Estamos desenvolvendo a tecnologia de provador virtual com IA. 
+                Em breve você poderá enviar sua foto e visualizar como a peça ficaria em você!
+              </p>
+              <button 
+                onClick={() => setVirtualFittingOpen(false)}
+                className="mt-4 px-5 py-2 bg-lufit-dark text-white text-sm font-medium rounded-lg hover:bg-lufit-dark/90 transition-colors"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
+  );
+}
+
+
+/* ── Size Chart Component ── */
+const SIZE_CHARTS: Record<string, { headers: string[]; rows: Record<string, string[]> }> = {
+  default: {
+    headers: ['Tamanho', 'Busto/Cintura (cm)', 'Quadril (cm)', 'Altura (cm)'],
+    rows: {
+      'PP': ['76-80', '88-92', '158-162'],
+      'P': ['80-84', '92-96', '162-166'],
+      'M': ['84-88', '96-100', '166-170'],
+      'G': ['88-92', '100-104', '170-174'],
+      'GG': ['92-96', '104-108', '174-178'],
+    },
+  },
+  leggings: {
+    headers: ['Tamanho', 'Cintura (cm)', 'Quadril (cm)', 'Gancho (cm)', 'Comprimento (cm)'],
+    rows: {
+      'PP': ['60-64', '84-88', '68', '88'],
+      'P': ['64-68', '88-92', '70', '90'],
+      'M': ['68-72', '92-96', '72', '92'],
+      'G': ['72-76', '96-100', '74', '94'],
+      'GG': ['76-80', '100-104', '76', '96'],
+    },
+  },
+  tops: {
+    headers: ['Tamanho', 'Busto (cm)', 'Cintura (cm)', 'Comprimento (cm)'],
+    rows: {
+      'PP': ['76-80', '60-64', '38'],
+      'P': ['80-84', '64-68', '40'],
+      'M': ['84-88', '68-72', '42'],
+      'G': ['88-92', '72-76', '44'],
+      'GG': ['92-96', '76-80', '46'],
+    },
+  },
+  masculino: {
+    headers: ['Tamanho', 'Peito (cm)', 'Cintura (cm)', 'Comprimento (cm)'],
+    rows: {
+      'P': ['90-94', '76-80', '66'],
+      'M': ['94-98', '80-84', '68'],
+      'G': ['98-102', '84-88', '70'],
+      'GG': ['102-106', '88-92', '72'],
+    },
+  },
+};
+
+function SizeChartTable({ category }: { category: string }) {
+  const chart = SIZE_CHARTS[category] || SIZE_CHARTS.default;
+  const sizes = Object.keys(chart.rows);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-gray-500">
+        As medidas podem variar em até ±2cm. Recomendamos comparar com uma peça que você já tenha e goste do caimento.
+      </p>
+      <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-lufit-dark text-white">
+              {chart.headers.map(h => (
+                <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sizes.map((size, i) => (
+              <tr key={size} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <td className="px-3 py-2 font-semibold text-lufit-dark">{size}</td>
+                {chart.rows[size].map((val, j) => (
+                  <td key={j} className="px-3 py-2 text-gray-600">{val}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-start gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+        <Ruler className="w-4 h-4 text-lufit-teal shrink-0 mt-0.5" />
+        <p>Dica: Meça sua cintura no ponto mais estreito, quadril no mais largo e busto na altura do mamilo. Use uma fita métrica flexível, sem apertar.</p>
+      </div>
+    </div>
   );
 }

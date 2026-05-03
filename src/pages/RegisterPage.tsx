@@ -98,9 +98,9 @@ export default function RegisterPage() {
           {form.isWholesale && (
             <div className="bg-lufit-teal/10 border border-lufit-teal/20 rounded-lg p-3 text-xs text-lufit-teal text-left space-y-1">
               <p className="font-semibold">Suas regras de desconto:</p>
-              <p>12 peças do mesmo código = 5% OFF</p>
-              <p>24 peças do mesmo código = 10% OFF</p>
-              <p>48+ peças do mesmo código = 15% OFF</p>
+              <p>12 peças do mesmo código = Desconto Inicial</p>
+              <p>24 peças do mesmo código = Desconto Intermediário</p>
+              <p>48+ peças do mesmo código = Desconto Máximo</p>
               <p className="text-[10px] text-gray-500 mt-1">*Cores e tamanhos podem variar dentro do mesmo código.</p>
             </div>
           )}
@@ -350,7 +350,7 @@ export default function RegisterPage() {
                 </div>
                 <p className="text-xs text-[#6E6E80] mt-1">
                   Marque esta opção se você compra para revender. Descontos escalonados por CÓDIGO DE PRODUTO (mesmo código, cores/tamanhos variados):
-                  5% OFF (12 peças), 10% OFF (24 peças), 15% OFF (48+ peças).
+                  Desconto Inicial (12 peças), Desconto Intermediário (24 peças), Desconto Máximo (48+ peças).
                 </p>
               </div>
             </label>

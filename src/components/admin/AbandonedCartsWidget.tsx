@@ -16,13 +16,13 @@ function getBadgeColor(hours: number): { bg: string; text: string; label: string
 }
 
 function getCupomDiscount(total: number): string {
-  return total >= 200 ? '15%' : '10%';
+  return total >= 200 ? 'Desconto Máximo' : 'Desconto Especial';
 }
 
 /* ── Mensagem WhatsApp pré-pronta ── */
 function generateWhatsAppMessage(customer: string, total: number): string {
-  const discount = total >= 200 ? '15%' : '10%';
-  return `Olá ${customer.split(' ')[0]}! 👋\n\nViu que deixou R$ ${total.toFixed(2).replace('.', ',')} em produtos no carrinho da LUFIT?\n\nEles estão te esperando! Use o cupom VOLTEI${total >= 200 ? '15' : '10'} e ganhe ${discount} OFF.\n\nVálido por 6h ⏰`;
+  const discountLabel = total >= 200 ? 'Desconto Máximo' : 'Desconto Especial';
+  return `Olá ${customer.split(' ')[0]}! 👋\n\nViu que deixou R$ ${total.toFixed(2).replace('.', ',')} em produtos no carrinho da LUFIT?\n\nEles estão te esperando! Use o cupom VOLTEI${total >= 200 ? 'MAX' : 'ESP'} e ganhe ${discountLabel}.\n\nVálido por 6h ⏰`;
 }
 
 /* ── Card individual ── */
