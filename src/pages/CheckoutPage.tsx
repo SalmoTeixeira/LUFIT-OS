@@ -1,22 +1,12 @@
 import { useState, useEffect } from 'react';
-import { trpc } from '@/providers/trpc';
+import { Link } from 'react-router-dom';
+import { useStore } from '@/contexts/StoreContext';
 import {
   CreditCard, QrCode, Truck, MapPin, ChevronRight, CheckCircle2,
-  Loader2, Copy, ShieldCheck, Phone, Package,
+  Loader2, Copy, ShieldCheck, Phone, Package, Tag, Store, ArrowLeft,
 } from 'lucide-react';
 
 /* ── Types ── */
-interface CartItem {
-  id: number;
-  name: string;
-  sku: string;
-  price: number;
-  quantity: number;
-  size?: string;
-  color?: string;
-  image?: string;
-}
-
 interface ShippingOption {
   carrier: string;
   service: string;
@@ -32,14 +22,42 @@ interface InstallmentOption {
   interest: boolean;
 }
 
-/* ── Mock Cart (replace with real context later) ── */
-const MOCK_CART: CartItem[] = [
-  { id: 1, name: 'Legging Energy Preta', sku: 'LGF-001', price: 129.90, quantity: 2, size: 'M', color: 'Preto' },
-  { id: 2, name: 'Top Cropped Rosa', sku: 'TOP-001', price: 89.90, quantity: 1, size: 'G', color: 'Rosa' },
-];
+/* ── Installment calculation (frontend) ── */
+function calculateInstallments(amount: number): InstallmentOption[] {
+  const results: InstallmentOption[] = [];
+  for (let i = 1; i <= 12; i++) {
+    if (i <= 6) {
+      results.push({ count: i, amount: amount / i, total: amount, interest: false });
+    } else {
+      const interestRate = 1.99;
+      const totalWithInterest = amount * Math.pow(1 + interestRate / 100, i);
+      results.push({
+        count: i,
+        amount: totalWithInterest / i,
+        total: totalWithInterest,
+        interest: true,
+      });
+    }
+  }
+  return results;
+}
+
+/* ── Mock shipping for static deploy ── */
+function mockShipping(zipCode: string): ShippingOption[] {
+  return [
+    { carrier: 'Kangu', service: 'Expresso', serviceCode: 'kangu-express', cost: 19.90, estimatedDays: 3 },
+    { carrier: 'Kangu', service: 'Econômico', serviceCode: 'kangu-econ', cost: 12.90, estimatedDays: 7 },
+    { carrier: 'Motoboy', service: 'Same Day (GO)', serviceCode: 'motoboy', cost: 9.90, estimatedDays: 1 },
+  ];
+}
 
 /* ── Checkout Page ── */
 export default function CheckoutPage() {
+  const {
+    cart, cartTotal, cartCount, wholesaleGroups, discountTotal, finalTotal,
+    clearCart, customer,
+  } = useStore();
+
   const [step, setStep] = useState<'address' | 'shipping' | 'payment'>('address');
 
   // Address state
@@ -63,21 +81,19 @@ export default function CheckoutPage() {
   const [pixData, setPixData] = useState<{ qrCode: string; qrText: string; expiresAt: Date } | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'approved' | 'rejected'>('idle');
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
-  // Calculated values
-  const subtotal = MOCK_CART.reduce((s, i) => s + i.price * i.quantity, 0);
+  // Computed totals
+  const subtotal = finalTotal; // already includes wholesale discounts
   const shippingCost = selectedShipping?.cost ?? 0;
   const total = subtotal + shippingCost;
 
-  // Fetch installments
-  const { data: installmentData } = trpc.payment.installments.useQuery(
-    { amount: total },
-    { enabled: paymentMethod === 'card' && total > 0 }
-  );
-
+  // Generate installments when payment method changes
   useEffect(() => {
-    if (installmentData) setInstallments(installmentData);
-  }, [installmentData]);
+    if (paymentMethod === 'card' && total > 0) {
+      setInstallments(calculateInstallments(total));
+    }
+  }, [paymentMethod, total]);
 
   // CEP auto-fill
   const handleCepBlur = async () => {
@@ -108,24 +124,11 @@ export default function CheckoutPage() {
     const clean = cep.replace(/\D/g, '');
     if (clean.length !== 8) return;
     setLoadingShipping(true);
-    try {
-      const result = await trpc.shipping.calculate.useQuery({
-        zipCode: clean,
-        products: MOCK_CART.map((i) => ({
-          weightKg: 0.25,
-          lengthCm: 30,
-          widthCm: 20,
-          heightCm: 3,
-          quantity: i.quantity,
-        })),
-      }).refetch();
-      if (result.data) {
-        setShippingOptions(result.data);
-        setSelectedShipping(result.data[0]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    // Simulate API delay
+    await new Promise(r => setTimeout(r, 800));
+    const options = mockShipping(clean);
+    setShippingOptions(options);
+    setSelectedShipping(options[0]);
     setLoadingShipping(false);
   };
 
@@ -133,9 +136,10 @@ export default function CheckoutPage() {
   const handlePixPayment = async () => {
     setLoadingPayment(true);
     setPaymentStatus('processing');
-    // Simulate API call delay
     await new Promise((r) => setTimeout(r, 1500));
-    const qrText = `00020126360014BR.GOV.BCB.PIX0114+55629999999995204000053039865802BR5913LUFIT MODA6009GOIANIA62140510LUF1234566304`;
+    const orderNum = `LUF-${Date.now().toString(36).toUpperCase()}`;
+    setOrderNumber(orderNum);
+    const qrText = `00020126360014BR.GOV.BCB.PIX0114+5562993940034520400005303986${total.toFixed(2).replace('.', '')}5802BR5913LUFIT MODA6009GOIANIA62140510${orderNum}6304`;
     setPixData({
       qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrText)}`,
       qrText,
@@ -150,6 +154,7 @@ export default function CheckoutPage() {
     setLoadingPayment(true);
     setPaymentStatus('processing');
     await new Promise((r) => setTimeout(r, 2000));
+    setOrderNumber(`LUF-${Date.now().toString(36).toUpperCase()}`);
     setPaymentStatus('approved');
     setLoadingPayment(false);
   };
@@ -164,13 +169,31 @@ export default function CheckoutPage() {
   const canProceedAddress = address.street && address.number && address.city && cep.length >= 8;
   const canProceedShipping = !!selectedShipping;
 
+  // Empty cart guard
+  if (cart.length === 0 && paymentStatus !== 'approved') {
+    return (
+      <div className="min-h-screen bg-[#0A0A0F] text-white flex items-center justify-center">
+        <div className="text-center space-y-4 px-4">
+          <Package className="w-16 h-16 text-[#6E6E80] mx-auto" />
+          <h1 className="text-xl font-bold text-white">Seu carrinho está vazio</h1>
+          <p className="text-sm text-[#A0A0B0]">Adicione produtos ao carrinho para finalizar a compra.</p>
+          <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-[#2DD4A8] text-black font-bold rounded-xl hover:bg-[#2DD4A8]/90 transition-all">
+            <ArrowLeft className="w-4 h-4" /> Voltar à Loja
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
       {/* Header */}
       <div className="border-b border-[#1E1E2E] bg-[#14141E]">
         <div className="mx-auto max-w-6xl px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-white">LUFIT <span className="text-[#2DD4A8]">Checkout</span></h1>
+            <Link to="/" className="text-xl font-bold text-white">
+              LUFIT <span className="text-[#2DD4A8]">Checkout</span>
+            </Link>
             <div className="flex items-center gap-1 text-xs text-[#6E6E80]">
               <ShieldCheck className="h-3.5 w-3.5 text-[#2DD4A8]" />
               Pagamento Seguro
@@ -495,24 +518,38 @@ export default function CheckoutPage() {
 
                   {/* Payment status */}
                   {paymentStatus === 'approved' && (
-                    <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#00E676]/10 border border-[#00E676]/30 p-4">
-                      <CheckCircle2 className="h-5 w-5 text-[#00E676]" />
-                      <div>
-                        <p className="text-sm font-semibold text-[#00E676]">Pagamento confirmado!</p>
-                        <p className="text-xs text-[#A0A0B0]">Seu pedido foi processado com sucesso.</p>
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center gap-2 rounded-xl bg-[#00E676]/10 border border-[#00E676]/30 p-4">
+                        <CheckCircle2 className="h-5 w-5 text-[#00E676]" />
+                        <div>
+                          <p className="text-sm font-semibold text-[#00E676]">Pagamento confirmado!</p>
+                          <p className="text-xs text-[#A0A0B0]">Seu pedido foi processado com sucesso.</p>
+                        </div>
                       </div>
+                      <div className="text-center">
+                        <p className="text-xs text-[#6E6E80]">Pedido: <span className="text-white font-mono">{orderNumber}</span></p>
+                      </div>
+                      <Link
+                        to="/"
+                        onClick={() => clearCart()}
+                        className="block w-full text-center rounded-xl bg-[#2DD4A8] py-3 text-sm font-bold text-black transition-all hover:bg-[#2DD4A8]/90"
+                      >
+                        Continuar Comprando
+                      </Link>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setStep('shipping')}
-                    className="rounded-xl border border-[#1E1E2E] px-6 py-3 text-sm font-medium text-[#A0A0B0] transition-all hover:border-[#2DD4A8]/30"
-                  >
-                    Voltar
-                  </button>
-                </div>
+                {paymentStatus !== 'approved' && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setStep('shipping')}
+                      className="rounded-xl border border-[#1E1E2E] px-6 py-3 text-sm font-medium text-[#A0A0B0] transition-all hover:border-[#2DD4A8]/30"
+                    >
+                      Voltar
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -522,11 +559,23 @@ export default function CheckoutPage() {
             <div className="sticky top-4 rounded-2xl border border-[#1E1E2E] bg-[#14141E] p-6">
               <h3 className="text-sm font-semibold text-white mb-4">Resumo do Pedido</h3>
 
+              {/* Customer badge */}
+              {customer?.isWholesale && (
+                <div className="mb-3 flex items-center gap-2 rounded-lg bg-[#2DD4A8]/10 border border-[#2DD4A8]/20 px-3 py-2">
+                  <Store className="h-3.5 w-3.5 text-[#2DD4A8]" />
+                  <span className="text-xs font-medium text-[#2DD4A8]">Revendedor Atacado</span>
+                </div>
+              )}
+
               <div className="space-y-3">
-                {MOCK_CART.map((item) => (
+                {cart.map((item) => (
                   <div key={item.id} className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-[#1E1E2E] flex items-center justify-center text-[#6E6E80] text-xs">
-                      <Package className="h-5 w-5" />
+                    <div className="h-12 w-12 rounded-lg bg-[#1E1E2E] flex items-center justify-center text-[#6E6E80] text-xs overflow-hidden">
+                      {item.image ? (
+                        <img src={item.image} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <Package className="h-5 w-5" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-white truncate">{item.name}</p>
@@ -539,11 +588,34 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Wholesale discount breakdown */}
+              {wholesaleGroups.some(g => g.discountPercent > 0) && (
+                <div className="mt-4 space-y-1.5 border-t border-[#1E1E2E] pt-3">
+                  <div className="flex items-center gap-1.5 text-xs text-[#2DD4A8] font-medium">
+                    <Tag className="h-3 w-3" /> Descontos Atacado por Código
+                  </div>
+                  {wholesaleGroups
+                    .filter(g => g.discountPercent > 0)
+                    .map(g => (
+                      <div key={g.productId} className="flex justify-between text-[11px] text-[#A0A0B0]">
+                        <span className="truncate max-w-[180px]">{g.name} ({g.quantity}pç)</span>
+                        <span className="text-[#2DD4A8]">-{g.discountPercent}%</span>
+                      </div>
+                    ))}
+                </div>
+              )}
+
               <div className="mt-4 space-y-2 border-t border-[#1E1E2E] pt-4 text-sm">
                 <div className="flex justify-between text-[#A0A0B0]">
-                  <span>Subtotal</span>
-                  <span>R$ {subtotal.toFixed(2).replace('.', ',')}</span>
+                  <span>Subtotal ({cartCount} {cartCount === 1 ? 'item' : 'itens'})</span>
+                  <span>R$ {cartTotal.toFixed(2).replace('.', ',')}</span>
                 </div>
+                {discountTotal > 0 && (
+                  <div className="flex justify-between text-[#2DD4A8]">
+                    <span>Desconto Atacado</span>
+                    <span>- R$ {discountTotal.toFixed(2).replace('.', ',')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[#A0A0B0]">
                   <span>Frete</span>
                   <span className={shippingCost === 0 ? 'text-[#6E6E80]' : 'text-white'}>
@@ -575,7 +647,7 @@ export default function CheckoutPage() {
                   <ShieldCheck className="h-3 w-3 text-[#2DD4A8]" /> Ambiente 100% seguro
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Phone className="h-3 w-3 text-[#2DD4A8]" /> Dúvidas? (62) 99999-9999
+                  <Phone className="h-3 w-3 text-[#2DD4A8]" /> Dúvidas? (62) 99394-0034
                 </div>
               </div>
             </div>

@@ -1,15 +1,23 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, Share2, Truck, RotateCcw, Ruler, ChevronLeft, ChevronRight, Star, ShoppingBag, Minus, Plus, Shield } from 'lucide-react';
+import { Heart, Share2, Truck, RotateCcw, Ruler, ChevronLeft, ChevronRight, Star, ShoppingBag, Minus, Plus, Shield, Store, Tag, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getProductById, getRelatedProducts } from '@/data/products';
 import { useStore } from '@/contexts/StoreContext';
 import ProductCard from '@/components/ProductCard';
+
+/* ── Mock stock per product (simulate real ERP stock) ── */
+function getMockStock(productId: string, size: string, color: string): number {
+  const base = 15 + (productId.charCodeAt(0) % 40);
+  const sizeMod = size === 'P' ? 3 : size === 'M' ? 2 : size === 'G' ? 1 : 0;
+  const colorMod = color.length % 5;
+  return Math.max(0, base - sizeMod - colorMod);
+}
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const product = getProductById(id || '');
   const relatedProducts = getRelatedProducts(id || '', 4);
-  const { addToCart, toggleWishlist, isInWishlist } = useStore();
+  const { addToCart, toggleWishlist, isInWishlist, customer, cart } = useStore();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
@@ -17,6 +25,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
   const [cep, setCep] = useState('');
+  const [addedToast, setAddedToast] = useState(false);
 
   if (!product) {
     return (
@@ -36,6 +45,25 @@ export default function ProductPage() {
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : 0;
 
+  const isWholesale = customer?.isWholesale ?? false;
+  const stockQty = selectedSize && selectedColor
+    ? getMockStock(product.id, selectedSize, selectedColor)
+    : null;
+
+  // How many of this product in cart
+  const qtyInCart = cart
+    .filter(i => i.productId === product.id)
+    .reduce((sum, i) => sum + i.quantity, 0);
+
+  // Wholesale discount preview for this product
+  const wholesalePreview = (() => {
+    const totalQty = qtyInCart + quantity;
+    if (totalQty >= 48) return { pct: 15, label: '15% OFF' };
+    if (totalQty >= 24) return { pct: 10, label: '10% OFF' };
+    if (totalQty >= 12) return { pct: 5, label: '5% OFF' };
+    return null;
+  })();
+
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) return;
     addToCart({
@@ -46,11 +74,22 @@ export default function ProductPage() {
       size: selectedSize,
       color: selectedColor,
       quantity,
+      sku: product.sku,
     });
+    setAddedToast(true);
+    setTimeout(() => setAddedToast(false), 2000);
   };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background relative">
+      {/* Toast */}
+      {addedToast && (
+        <div className="fixed top-24 right-4 z-[100] bg-lufit-teal text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-right">
+          <CheckCircle2 className="w-5 h-5" />
+          <span className="text-sm font-medium">Adicionado ao carrinho!</span>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
@@ -146,7 +185,7 @@ export default function ProductPage() {
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 mb-6">
+            <div className="flex items-baseline gap-3 mb-4">
               <span className="text-2xl sm:text-3xl font-bold text-lufit-teal">
                 R$ {product.price.toFixed(2).replace('.', ',')}
               </span>
@@ -162,12 +201,41 @@ export default function ProductPage() {
               )}
             </div>
 
+            {/* Wholesale info badge */}
+            {isWholesale && (
+              <div className="mb-4 bg-lufit-teal/10 border border-lufit-teal/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-lufit-teal">
+                  <Store className="w-4 h-4" />
+                  Preços Atacado Ativos
+                </div>
+                <p className="text-xs text-gray-600 mt-1">
+                  12 peças = 5% OFF &nbsp;|&nbsp; 24 peças = 10% OFF &nbsp;|&nbsp; 48+ peças = 15% OFF
+                  <br />
+                  <span className="text-lufit-teal font-medium">Mesmo código, cores e tamanhos variados.</span>
+                </p>
+                {qtyInCart > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Você já tem <strong>{qtyInCart}</strong> peças deste código no carrinho.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!isWholesale && (
+              <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                <Tag className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-800">
+                  <strong>Quer comprar no atacado?</strong> Cadastre-se como revendedor e ganhe até 15% de desconto por código de produto.
+                </p>
+              </div>
+            )}
+
             {/* Colors */}
             <div className="mb-5">
               <h3 className="text-sm font-semibold mb-2">
                 COR: <span className="font-normal text-gray-500">{selectedColor || 'Selecione'}</span>
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {product.colors.map(color => (
                   <button
                     key={color.name}
@@ -209,6 +277,38 @@ export default function ProductPage() {
               </button>
             </div>
 
+            {/* Stock indicator */}
+            {selectedSize && selectedColor && (
+              <div className="mb-4">
+                {stockQty !== null && stockQty > 5 ? (
+                  <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span><strong>{stockQty}</strong> unidades em estoque — pronta entrega</span>
+                  </div>
+                ) : stockQty !== null && stockQty > 0 ? (
+                  <div className="flex items-center gap-1.5 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span><strong>{stockQty}</strong> unidades em estoque — últimas peças</span>
+                  </div>
+                ) : stockQty !== null && stockQty === 0 ? (
+                  <div className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>Esgotado nesta variação</span>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {/* Wholesale preview */}
+            {wholesalePreview && (
+              <div className="mb-4 bg-lufit-teal/10 border border-lufit-teal/20 rounded-lg px-3 py-2 flex items-center justify-between">
+                <span className="text-xs font-medium text-lufit-teal">
+                  Com este item você atinge <strong>{wholesalePreview.label}</strong> neste código
+                </span>
+                <Tag className="w-4 h-4 text-lufit-teal" />
+              </div>
+            )}
+
             {/* Quantity & Add to Cart */}
             <div className="flex gap-3 mb-6">
               <div className="flex items-center border border-gray-200 rounded-lg">
@@ -228,7 +328,7 @@ export default function ProductPage() {
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedSize || !selectedColor}
+                disabled={!selectedSize || !selectedColor || stockQty === 0}
                 className="flex-1 flex items-center justify-center gap-2 bg-lufit-lime text-lufit-dark font-bold rounded-lg hover:bg-lufit-lime/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShoppingBag className="w-5 h-5" />
