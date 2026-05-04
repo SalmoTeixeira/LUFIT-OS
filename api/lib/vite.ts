@@ -10,7 +10,7 @@ type App = Hono<{ Bindings: HttpBindings }>;
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export function serveStaticFiles(app: App) {
-  const distPath = path.resolve(__dirname, "../../dist/public");
+  const distPath = path.resolve(__dirname, "../../dist");
   console.log(`[LUFIT-OS] Serving static files from: ${distPath}`);
   console.log(`[LUFIT-OS] CWD: ${process.cwd()}`);
   console.log(`[LUFIT-OS] __dirname: ${__dirname}`);
@@ -18,9 +18,9 @@ export function serveStaticFiles(app: App) {
   // Log para debug: listar arquivos no diretório
   try {
     const files = fs.readdirSync(distPath);
-    console.log(`[LUFIT-OS] Files in dist/public: ${files.join(", ")}`);
+    console.log(`[LUFIT-OS] Files in dist: ${files.join(", ")}`);
   } catch (e) {
-    console.error(`[LUFIT-OS] ERROR reading dist/public: ${e}`);
+    console.error(`[LUFIT-OS] ERROR reading dist: ${e}`);
   }
 
   app.use("*", serveStatic({ root: distPath }));
