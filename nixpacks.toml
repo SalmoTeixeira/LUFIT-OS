@@ -1,0 +1,8 @@
+[phases.setup]
+nixpkgsArchive = "ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7"
+
+[phases.build]
+cmds = ["npm ci", "npm run build"]
+
+[start]
+cmd = "npm run start"
