@@ -3,19 +3,16 @@ import type { HttpBindings } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
 type App = Hono<{ Bindings: HttpBindings }>;
 
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-
 export function serveStaticFiles(app: App) {
-  const distPath = path.resolve(__dirname, "../../dist/public");
+  // Usar CWD (/app no Railway) como base — mais previsível que __dirname no esbuild
+  const cwd = process.cwd();
+  const distPath = path.resolve(cwd, "dist/public");
+  console.log(`[LUFIT-OS] CWD: ${cwd}`);
   console.log(`[LUFIT-OS] Serving static files from: ${distPath}`);
-  console.log(`[LUFIT-OS] CWD: ${process.cwd()}`);
-  console.log(`[LUFIT-OS] __dirname: ${__dirname}`);
   
-  // Log para debug: listar arquivos no diretório
   try {
     const files = fs.readdirSync(distPath);
     console.log(`[LUFIT-OS] Files in dist/public: ${files.join(", ")}`);
