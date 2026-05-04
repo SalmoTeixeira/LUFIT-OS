@@ -33,14 +33,12 @@ app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
 
 export default app;
 
-if (env.isProduction) {
-  const { serve } = await import("@hono/node-server");
-  const { serveStaticFiles } = await import("./lib/vite");
-  serveStaticFiles(app);
+const { serve } = await import("@hono/node-server");
+const { serveStaticFiles } = await import("./lib/vite");
+serveStaticFiles(app);
 
-  const port = parseInt(process.env.PORT || "3000");
-  console.log(`[LUFIT-OS] Starting production server on port ${port}...`);
-  serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, () => {
-    console.log(`[LUFIT-OS] Server running on http://0.0.0.0:${port}/`);
-  });
-}
+const port = parseInt(process.env.PORT || "3000");
+console.log(`[LUFIT-OS] Starting production server on port ${port}...`);
+serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, () => {
+  console.log(`[LUFIT-OS] Server running on http://0.0.0.0:${port}/`);
+});
