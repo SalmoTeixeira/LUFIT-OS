@@ -1,20 +1,40 @@
-FROM node:20-alpine AS base
+# Railway Dockerfile for LUFIT OS
+# Multi-stage build: Build → Production
+
+# ===== STAGE 1: Build =====
+FROM node:20-slim AS builder
+
 WORKDIR /app
 
-FROM base AS deps
-COPY package.json package-lock.json ./
-RUN npm config set registry https://npm.mirrors.msh.team
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --prefer-offline --no-audit
+# Copy package files first (better Docker layer caching)
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-FROM deps AS build
+# Copy all source files
 COPY . .
+
+# Build frontend (Vite) + backend (esbuild)
 RUN npm run build
 
-FROM node:20-alpine AS production
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY package.json .env ./
+# ===== STAGE 2: Production =====
+FROM node:20-slim AS production
 
+WORKDIR /app
+
+# Copy built artifacts from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json* ./
+
+# Install ONLY production dependencies (no devDependencies)
+RUN npm ci --omit=dev
+
+# Expose port (Railway detects this)
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+
+# Start the server
+CMD ["node", "dist/boot.js"]

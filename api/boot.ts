@@ -39,7 +39,8 @@ if (env.isProduction) {
   serveStaticFiles(app);
 
   const port = parseInt(process.env.PORT || "3000");
+  console.log(`[LUFIT-OS] Starting production server on port ${port}...`);
   serve({ fetch: app.fetch, port }, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+    console.log(`[LUFIT-OS] Server running on http://localhost:${port}/`);
   });
 }

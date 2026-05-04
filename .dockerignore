@@ -1,5 +1,15 @@
 node_modules
+npm-debug.log
+.env
+.env.local
+.env.*.local
 dist
 .git
-*.swp
+.gitignore
+README.md
+railway.json
+*.md
+uploads/
+.vscode/
+.idea/
 *.log
