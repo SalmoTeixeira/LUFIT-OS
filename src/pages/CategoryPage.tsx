@@ -126,17 +126,29 @@ export default function CategoryPage() {
               <p className="text-xs sm:text-sm tracking-[0.3em] uppercase mb-2 opacity-80">
                 {banner.theme === 'praia' ? 'Beachwear Collection' : banner.theme === 'fitness' ? 'Performance Wear' : banner.theme === 'luxo' ? 'Sport Luxe' : 'LUFIT Collection'}
               </p>
-              {/* Logo vazada no lugar do título - proporcional ao tamanho do texto */}
+              {/* Logo vazada — cada categoria com sua marca */}
               {banner.slug === 'infantil' || banner.slug === 'kids' ? (
-                <img 
-                  src="/logo-kids-banner.png" 
-                  alt="KIDS" 
+                <img
+                  src="/logo-kids-banner.png"
+                  alt="LUFIT KIDS"
+                  className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                />
+              ) : banner.slug === 'lupo' ? (
+                <img
+                  src="/logo-lupo.png"
+                  alt="LUPO SPORT"
+                  className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                />
+              ) : banner.slug === 'selene' ? (
+                <img
+                  src="/logo-selene.png"
+                  alt="SELENE"
                   className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
                 />
               ) : (
-                <img 
-                  src="/logo-lufit-nobg.png" 
-                  alt="LUFIT" 
+                <img
+                  src="/logo-lufit-nobg.png"
+                  alt="LUFIT"
                   className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
                 />
               )}
