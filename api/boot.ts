@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.4.1 FRETE FIX: removido da produto, só no checkout
-console.log("[LUFIT OS] Boot v2.4.1 — Frete removido da página de produto");
+// Force Railway rebuild — v2.4.2 AUTO-MIGRATION + Frete fix
+console.log("[LUFIT OS] Boot v2.4.2 — Auto-migration WhatsApp + Frete no checkout");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.4.1-frete-checkout-fix",
+  version: "2.4.2-auto-migration",
   timestamp: new Date().toISOString(),
 }));
 
@@ -159,4 +159,76 @@ if (env.isProduction) {
   const port = parseInt(process.env.PORT || "3000");
   console.log(`[LUFIT-OS] Starting production server on port ${port}...`);
   serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, () => {
-    console.log(`[LUFIT-OS] Server running on 
+    console.log(`[LUFIT-OS] Server running on port ${port}`);
+  });
+
+  // ═════════════════════════════════════════════════════════════════════
+  // AUTO-MIGRATION: Cria tabelas WhatsApp se nao existirem
+  // ═════════════════════════════════════════════════════════════════════
+  try {
+    const db = getDb();
+    const { whatsappConfig, whatsappMessages, whatsappTemplates } = await import("../db/schema");
+    const { sql } = await import("drizzle-orm");
+
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS whatsappConfig (
+      id SERIAL AUTO_INCREMENT PRIMARY KEY,
+      phoneNumber VARCHAR(20) NOT NULL,
+      businessName VARCHAR(100) DEFAULT 'LUFIT Moda',
+      welcomeMessage TEXT,
+      autoReplyEnabled BOOLEAN DEFAULT true,
+      orderConfirmationEnabled BOOLEAN DEFAULT true,
+      shippingNotificationEnabled BOOLEAN DEFAULT true,
+      lowStockAlertEnabled BOOLEAN DEFAULT true,
+      dailyReportEnabled BOOLEAN DEFAULT false,
+      createdAt TIMESTAMP DEFAULT NOW(),
+      updatedAt TIMESTAMP DEFAULT NOW()
+    )`);
+
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS whatsappMessages (
+      id SERIAL AUTO_INCREMENT PRIMARY KEY,
+      phoneNumber VARCHAR(20) NOT NULL,
+      templateName VARCHAR(100),
+      body TEXT NOT NULL,
+      status VARCHAR(50) DEFAULT 'pending',
+      eventType VARCHAR(50),
+      relatedOrderId INT,
+      relatedCustomerId INT,
+      sentAt TIMESTAMP,
+      deliveredAt TIMESTAMP,
+      readAt TIMESTAMP,
+      errorMessage TEXT,
+      createdAt TIMESTAMP DEFAULT NOW()
+    )`);
+
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS whatsappTemplates (
+      id SERIAL AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      label VARCHAR(100) NOT NULL,
+      body TEXT NOT NULL,
+      variables TEXT,
+      isActive BOOLEAN DEFAULT true,
+      createdAt TIMESTAMP DEFAULT NOW()
+    )`);
+
+    // Cria indexes
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_phone_idx ON whatsappMessages (phoneNumber)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_status_idx ON whatsappMessages (status)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_event_idx ON whatsappMessages (eventType)`);
+
+    // Insere templates padrao se tabela vazia
+    const existing = await db.select().from(whatsappTemplates).limit(1);
+    if (existing.length === 0) {
+      await db.insert(whatsappTemplates).values([
+        { name: 'order_confirmation', label: 'Pedido Confirmado', body: 'Oi {{nome}}! Seu pedido #{{pedido}} foi confirmado. Total: R$ {{total}}. Acompanhe pelo link: {{link}}', variables: '["nome","pedido","total","link"]', isActive: true },
+        { name: 'shipping_notification', label: 'Envio Realizado', body: 'Oi {{nome}}! Seu pedido #{{pedido}} foi enviado via {{transportadora}}. Rastreio: {{codigo}} {{link}}', variables: '["nome","pedido","transportadora","codigo","link"]', isActive: true },
+        { name: 'low_stock_alert', label: 'Estoque Baixo', body: 'Alerta: produto {{produto}} (SKU: {{sku}}) esta com estoque baixo: {{quantidade}} unidades. Repor urgentemente.', variables: '["produto","sku","quantidade"]', isActive: true },
+        { name: 'welcome', label: 'Boas-vindas', body: 'Ola! Bem-vindo a LUFIT Moda Praia e Fitness. Como posso ajudar?', variables: '[]', isActive: true },
+      ]);
+      console.log('[LUFIT-OS] WhatsApp: 4 templates padrao inseridos');
+    }
+
+    console.log('[LUFIT-OS] Auto-migration WhatsApp OK — tabelas criadas/verificadas');
+  } catch (e) {
+    console.warn('[LUFIT-OS] Auto-migration WhatsApp erro (tabelas podem ja existir):', (e as Error).message);
+  }
+}
