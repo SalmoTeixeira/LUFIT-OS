@@ -84,10 +84,11 @@ export default function NfDespachoTab() {
   const { data: rulesData, refetch: refetchRules } = trpc.nf.getRules.useQuery();
   const { data: dashboardData } = trpc.nf.dashboard.useQuery();
   const { data: blingStatus } = trpc.bling.status.useQuery();
+  const { data: blingAuthUrl } = trpc.bling.authorizeUrl.useQuery(undefined, { enabled: !!blingStatus?.configured && !blingStatus?.authorized });
   const createReceipt = trpc.nf.createReceipt.useMutation({ onSuccess: () => { refetchReceipts(); setReceiptModalOpen(false); setForm(emptyReceiptForm); } });
   const updateRule = trpc.nf.updateRule.useMutation({ onSuccess: () => refetchRules() });
-  const emitNfe = trpc.bling.emit.useMutation({ onSuccess: () => { if (nfeData) refetchNfe(); } });
-  const syncNfe = trpc.bling.sync.useMutation({ onSuccess: () => { if (nfeData) refetchNfe(); } });
+  const emitNfe = trpc.bling.emit.useMutation({ onSuccess: () => { if (refetchNfe) refetchNfe(); } });
+  const syncNfe = trpc.bling.sync.useMutation({ onSuccess: () => { if (refetchNfe) refetchNfe(); } });
 
   const receipts = receiptsData?.items || [];
   const nfeLog = nfeData || [];
@@ -174,9 +175,9 @@ export default function NfDespachoTab() {
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-white">NF / Despacho</h2>
           {/* Bling Status Badge */}
-          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${blingStatus?.configured ? 'bg-lufit-teal/10 text-lufit-teal' : 'bg-amber-500/10 text-amber-400'}`}>
-            {blingStatus?.configured ? <Zap className="w-3 h-3" /> : <ZapOff className="w-3 h-3" />}
-            Bling {blingStatus?.configured ? 'Ativo' : 'Inativo'}
+          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${blingStatus?.authorized ? 'bg-lufit-teal/10 text-lufit-teal' : blingStatus?.configured ? 'bg-amber-500/10 text-amber-400' : 'bg-gray-500/10 text-gray-500'}`}>
+            {blingStatus?.authorized ? <Zap className="w-3 h-3" /> : blingStatus?.configured ? <ZapOff className="w-3 h-3" /> : <ZapOff className="w-3 h-3" />}
+            Bling {blingStatus?.authorized ? 'Conectado' : blingStatus?.configured ? 'Não Autorizado' : 'Não Configurado'}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -188,11 +189,15 @@ export default function NfDespachoTab() {
           <Button onClick={() => setReceiptModalOpen(true)} className="bg-[#2DD4A8] hover:bg-[#25b98f] text-black">
             <Plus className="h-4 w-4 mr-1" />Recibo
           </Button>
-          {blingStatus?.configured && (
+          {blingStatus?.authorized ? (
             <Button onClick={() => syncNfe.mutate()} variant="outline" disabled={syncNfe.isPending} className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
               <Cloud className="h-4 w-4 mr-1" />{syncNfe.isPending ? 'Sync...' : 'Sync Bling'}
             </Button>
-          )}
+          ) : blingStatus?.configured && blingAuthUrl?.url ? (
+            <Button onClick={() => { window.open(blingAuthUrl.url, '_blank', 'width=800,height=700'); }} className="bg-blue-500 hover:bg-blue-600 text-white">
+              <Zap className="h-4 w-4 mr-1" />Conectar Bling
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -440,12 +445,11 @@ export default function NfDespachoTab() {
               className="bg-[#2DD4A8] hover:bg-[#25b98f] text-black">
               {createReceipt.isPending ? 'Salvando...' : 'Gerar Recibo'}
             </Button>
-            {blingStatus?.configured && (
-              <Button onClick={handleEmitNfe} disabled={!form.customerName || form.items.length === 0 || emitNfe.isPending}
-                variant="outline" className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
-                <Zap className="h-4 w-4 mr-1" />{emitNfe.isPending ? 'Emitindo...' : 'Emitir NF-e'}
-              </Button>
-            )}
+            <Button onClick={handleEmitNfe} disabled={!form.customerName || form.items.length === 0 || emitNfe.isPending}
+              variant="outline" className={blingStatus?.authorized ? "border-blue-500/30 text-blue-400 hover:bg-blue-500/10" : "border-amber-500/30 text-amber-400 hover:bg-amber-500/10"}>
+              <Zap className="h-4 w-4 mr-1" />
+              {emitNfe.isPending ? 'Emitindo...' : blingStatus?.authorized ? 'Emitir NF-e (Real)' : 'Emitir NF-e (Mock)'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
