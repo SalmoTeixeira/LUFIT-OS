@@ -350,7 +350,7 @@ export default function RegisterPage() {
                 </div>
                 <p className="text-xs text-[#6E6E80] mt-1">
                   Marque esta opção se você compra para revender. Descontos escalonados por CÓDIGO DE PRODUTO (mesmo código, cores/tamanhos variados):
-                  Desconto Inicial (12 peças), Desconto Intermediário (24 peças), Desconto Máximo (48+ peças).
+                  5% OFF (12 peças), 10% OFF (24 peças), 15% OFF (48+ peças).
                 </p>
               </div>
             </label>

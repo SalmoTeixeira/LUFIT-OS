@@ -8,13 +8,14 @@ import {
 
 /* ── Tiers de desconto REAIS da LUFIT ──
  * REGRA: mesma peça (productId), pode variar cores e tamanhos.
- * Ex: 12 Leggings Energy (Preta P + Preta M + Rosa G + ...) = Desconto Inicial
+ * Ex: 12 Leggings Energy (Preta P + Preta M + Rosa G + ...) = 5% OFF
  */
 const tiers = [
   {
     min: 12,
     max: 23,
-    discount: 'Desconto Inicial',
+    discount: 5,
+    discountLabel: 'Desconto Inicial',
     label: '12 a 23 peças',
     popular: false,
     benefits: ['Mesmo código de produto', 'Varie cores e tamanhos', 'Qualquer SKU com estoque'],
@@ -22,7 +23,8 @@ const tiers = [
   {
     min: 24,
     max: 47,
-    discount: 'Desconto Intermediário',
+    discount: 10,
+    discountLabel: 'Desconto Intermediário',
     label: '24 a 47 peças',
     popular: true,
     benefits: ['Mesmo código de produto', 'Varie cores e tamanhos', 'Frete com desconto', 'Materiais de divulgação'],
@@ -30,7 +32,8 @@ const tiers = [
   {
     min: 48,
     max: null,
-    discount: 'Desconto Máximo',
+    discount: 15,
+    discountLabel: 'Desconto Máximo',
     label: '48+ peças',
     popular: false,
     benefits: ['Mesmo código de produto', 'Varie cores e tamanhos', 'Frete grátis Sudeste', 'Atendimento prioritário', 'Catálogo digital mensal'],
@@ -126,7 +129,7 @@ export default function AtacadoPage() {
             <p className="text-xs text-gray-600 mt-1 leading-relaxed">
               O desconto aplica-se quando você compra múltiplas peças do <strong>mesmo código de produto</strong>.
               Pode variar livremente as <strong>cores e tamanhos</strong>. Exemplo: 12 Leggings Energy 
-              (Preta P + Preta M + Rosa G + Turquesa GG...) = <strong>Desconto Inicial</strong>.
+              (Preta P + Preta M + Rosa G + Turquesa GG...) = <strong>5% OFF</strong>.
             </p>
           </div>
         </div>
@@ -157,9 +160,10 @@ export default function AtacadoPage() {
 
               <div className="text-center mb-5">
                 <p className="text-sm font-medium text-gray-500">{tier.label}</p>
-                <p className="mt-2 text-3xl font-extrabold text-[#2DD4A8]">
-                  {tier.discount}
+                <p className="mt-2 text-5xl font-extrabold text-[#2DD4A8]">
+                  {tier.discount}<span className="text-2xl">% OFF</span>
                 </p>
+                <p className="mt-1 text-xs text-[#2DD4A8] font-medium">{tier.discountLabel}</p>
               </div>
 
               <ul className="space-y-3">
@@ -290,9 +294,9 @@ export default function AtacadoPage() {
                 <label className="text-xs font-medium text-gray-600">Previsão de volume mensal</label>
                 <select value={form.volume} onChange={(e) => setForm({ ...form, volume: e.target.value })}
                   className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-[#2DD4A8]">
-                  <option value="12-23">12 a 23 peças (Desconto Inicial)</option>
-                  <option value="24-47">24 a 47 peças (Desconto Intermediário)</option>
-                  <option value="48+">48+ peças (Desconto Máximo)</option>
+                  <option value="12-23">12 a 23 peças (5% OFF)</option>
+                  <option value="24-47">24 a 47 peças (10% OFF)</option>
+                  <option value="48+">48+ peças (15% OFF)</option>
                 </select>
               </div>
 
@@ -324,7 +328,7 @@ export default function AtacadoPage() {
         <h2 className="text-xl font-bold text-gray-900 text-center mb-8">Dúvidas Frequentes</h2>
         <div className="space-y-3">
           {[
-            { q: 'As peças precisam ser do mesmo modelo?', a: 'Sim. O desconto é por código de produto. Você pode variar livremente as cores e tamanhos. Exemplo: 12 Leggings Energy em cores/tamanhos diferentes = Desconto Inicial.' },
+            { q: 'As peças precisam ser do mesmo modelo?', a: 'Sim. O desconto é por código de produto. Você pode variar livremente as cores e tamanhos. Exemplo: 12 Leggings Energy em cores/tamanhos diferentes = 5% OFF.' },
             { q: 'Posso comprar diferentes modelos no atacado?', a: 'Sim, mas o desconto progressivo aplica-se separadamente por código. Cada código precisa atingir a quantidade mínima para o desconto.' },
             { q: 'Precisa de CNPJ para comprar no atacado?', a: 'Não obrigatoriamente. Aceitamos CPF para compras iniciais. A partir de 48 peças recomendamos CNPJ para emissão de nota fiscal.' },
             { q: 'Qual o prazo de entrega?', a: 'Goiânia e DF: 1-2 dias. Sudeste: 3-5 dias. Demais regiões: 5-10 dias úteis.' },

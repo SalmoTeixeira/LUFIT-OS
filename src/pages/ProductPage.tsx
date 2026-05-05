@@ -58,9 +58,9 @@ export default function ProductPage() {
   // Wholesale discount preview for this product
   const wholesalePreview = (() => {
     const totalQty = qtyInCart + quantity;
-    if (totalQty >= 48) return { label: 'Desconto Máximo' };
-    if (totalQty >= 24) return { label: 'Desconto Intermediário' };
-    if (totalQty >= 12) return { label: 'Desconto Inicial' };
+    if (totalQty >= 48) return { pct: 15, label: '15% OFF' };
+    if (totalQty >= 24) return { pct: 10, label: '10% OFF' };
+    if (totalQty >= 12) return { pct: 5, label: '5% OFF' };
     return null;
   })();
 
@@ -208,7 +208,7 @@ export default function ProductPage() {
                   Preços Atacado Ativos
                 </div>
                 <p className="text-xs text-gray-600 mt-1">
-                  12 peças = Desconto Inicial &nbsp;|&nbsp; 24 peças = Desconto Intermediário &nbsp;|&nbsp; 48+ peças = Desconto Máximo
+                  12 peças = 5% OFF &nbsp;|&nbsp; 24 peças = 10% OFF &nbsp;|&nbsp; 48+ peças = 15% OFF
                   <br />
                   <span className="text-lufit-teal font-medium">Mesmo código, cores e tamanhos variados.</span>
                 </p>
