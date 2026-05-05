@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
 import NewsletterPopup from '@/components/NewsletterPopup';
+import WhatsAppFloat from '@/components/WhatsAppFloat';
 import HomePage from '@/pages/HomePage';
 import CategoryPage from '@/pages/CategoryPage';
 import ProductPage from '@/pages/ProductPage';
@@ -42,6 +43,7 @@ function Layout({ children }: { children: React.ReactNode }) {
       <NewsletterPopup />
       {children}
       <Footer />
+      <WhatsAppFloat />
     </>
   );
 }
