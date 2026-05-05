@@ -315,7 +315,6 @@ export const melhorenvioRouter = createRouter({
           estimatedDays: cheapest.delivery_time || cheapest.delivery_range?.max || 5,
           totalWeightKg: String(products.reduce((s, p) => s + p.weight * p.quantity, 0)),
           isSelected: true,
-          rawResponse: normalized,
         });
       }
 
