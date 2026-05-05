@@ -1370,6 +1370,34 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
 
 // ═════════════════════════════════════════════════════════════════════
+// MÓDULO BLING — OAuth2 Tokens (NF-e)
+// ═════════════════════════════════════════════════════════════════════
+
+export const blingOAuth = mysqlTable("blingOAuth", {
+  id: serial("id").primaryKey(),
+  // Tokens OAuth2
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  tokenType: varchar("tokenType", { length: 50 }).default("Bearer"),
+  expiresAt: timestamp("expiresAt"),
+  scope: text("scope"),
+  // Estado do fluxo OAuth2
+  state: varchar("state", { length: 255 }),
+  // Dados do aplicativo
+  clientId: varchar("clientId", { length: 255 }),
+  // Status
+  isActive: boolean("isActive").default(false).notNull(),
+  lastUsedAt: timestamp("lastUsedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("bo_state_idx").on(table.state),
+  index("bo_active_idx").on(table.isActive),
+]);
+
+export type BlingOAuth = typeof blingOAuth.$inferSelect;
+export type InsertBlingOAuth = typeof blingOAuth.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
 // MÓDULO FRETE — CONFIGURAÇÕES DE ENVIO (Melhor Envio)
 // ═════════════════════════════════════════════════════════════════════
 
