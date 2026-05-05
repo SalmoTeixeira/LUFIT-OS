@@ -1370,6 +1370,63 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
 
 // ═════════════════════════════════════════════════════════════════════
+// MÓDULO WHATSAPP — Automação de Mensagens
+// ═════════════════════════════════════════════════════════════════════
+
+export const whatsappConfig = mysqlTable("whatsappConfig", {
+  id: serial("id").primaryKey(),
+  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(), // Número do WhatsApp da LUFIT (62 9...)
+  businessName: varchar("businessName", { length: 100 }).default("LUFIT Moda"),
+  welcomeMessage: text("welcomeMessage"),
+  autoReplyEnabled: boolean("autoReplyEnabled").default(true),
+  orderConfirmationEnabled: boolean("orderConfirmationEnabled").default(true),
+  shippingNotificationEnabled: boolean("shippingNotificationEnabled").default(true),
+  lowStockAlertEnabled: boolean("lowStockAlertEnabled").default(true),
+  dailyReportEnabled: boolean("dailyReportEnabled").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
+});
+
+export const whatsappTemplates = mysqlTable("whatsappTemplates", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // ex: "order_confirmation"
+  label: varchar("label", { length: 100 }).notNull(), // ex: "Pedido Confirmado"
+  body: text("body").notNull(), // Template com {{variáveis}}
+  variables: text("variables"), // JSON: ["customerName", "orderId", "total"]
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const whatsappMessages = mysqlTable("whatsappMessages", {
+  id: serial("id").primaryKey(),
+  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
+  templateName: varchar("templateName", { length: 100 }),
+  body: text("body").notNull(),
+  status: varchar("status", { length: 50 }).default("pending"), // pending, sent, delivered, read, failed
+  eventType: varchar("eventType", { length: 50 }), // order_confirmed, shipped, low_stock, etc.
+  relatedOrderId: int("relatedOrderId"),
+  relatedCustomerId: int("relatedCustomerId"),
+  sentAt: timestamp("sentAt"),
+  deliveredAt: timestamp("deliveredAt"),
+  readAt: timestamp("readAt"),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("wm_phone_idx").on(table.phoneNumber),
+  index("wm_status_idx").on(table.status),
+  index("wm_event_idx").on(table.eventType),
+  index("wm_order_idx").on(table.relatedOrderId),
+  index("wm_created_idx").on(table.createdAt),
+]);
+
+export type WhatsappConfig = typeof whatsappConfig.$inferSelect;
+export type InsertWhatsappConfig = typeof whatsappConfig.$inferInsert;
+export type WhatsappTemplate = typeof whatsappTemplates.$inferSelect;
+export type InsertWhatsappTemplate = typeof whatsappTemplates.$inferInsert;
+export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
+export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
 // MÓDULO BLING — OAuth2 Tokens (NF-e)
 // ═════════════════════════════════════════════════════════════════════
 

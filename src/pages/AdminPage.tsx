@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, DollarSign,
-  Warehouse, Settings, Megaphone, LogOut, Sun, Moon, Building2, FileText,
+  Warehouse, Settings, Megaphone, LogOut, Sun, Moon, Building2, FileText, MessageCircle,
   TrendingUp, ArrowUpRight, ArrowDownRight, CheckCircle, Clock, ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import ProdutosTab from '@/components/admin/ProdutosTab';
 import NfDespachoTab from '@/components/admin/NfDespachoTab';
 import FinanceiroTab from '@/components/admin/FinanceiroTab';
 import EstoqueTab from '@/components/admin/EstoqueTab';
+import WhatsAppTab from '@/components/admin/WhatsAppTab';
 
 /* ── Admin Guard ── */
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -68,7 +69,7 @@ const TABS = [
   { id: 'nf', label: 'NF / Despacho', icon: FileText },
   { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
   { id: 'estoque', label: 'Estoque', icon: Warehouse },
-  { id: 'marketing', label: 'Marketing', icon: Megaphone },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { id: 'config', label: 'Configurações', icon: Settings },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
@@ -165,7 +166,7 @@ export default function AdminPage() {
               {tab === 'nf' && <NfDespachoTab />}
               {tab === 'financeiro' && <FinanceiroTab />}
               {tab === 'estoque' && <EstoqueTab />}
-              {tab === 'marketing' && <MarketingTab />}
+              {tab === 'whatsapp' && <WhatsAppTab />}
               {tab === 'config' && <ConfigTab />}
             </main>
           </div>
