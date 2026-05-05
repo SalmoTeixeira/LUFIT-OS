@@ -13,6 +13,9 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
+// Force Railway rebuild — v2025-05-06-fix-frete-v2
+console.log("[LUFIT OS] Boot v2.2.2 — Frete fix ativado");
+
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
 // Health check for Railway deploy monitoring
