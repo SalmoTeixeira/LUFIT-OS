@@ -5,7 +5,7 @@ import {
   Warehouse, Settings, Search, Plus, Pencil, Trash2,
   ChevronLeft, ChevronRight, TrendingUp, AlertTriangle,
   ArrowUpRight, ArrowDownRight, Megaphone, CheckCircle,
-  Clock, LogOut, Sun, Moon, Building2
+  Clock, LogOut, Sun, Moon, Building2, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,9 @@ import {
 import { products, type Product } from '@/data/products';
 import ProductEntryManager from '@/components/ProductEntryManager';
 import SuppliersTab from '@/components/admin/SuppliersTab';
+import NfDespachoTab from '@/components/admin/NfDespachoTab';
+import FinanceiroTab from '@/components/admin/FinanceiroTab';
+import EstoqueTab from '@/components/admin/EstoqueTab';
 
 /* ── Admin Guard ── */
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -68,6 +71,7 @@ const TABS = [
   { id: 'fornecedores', label: 'Fornecedores', icon: Building2 },
   { id: 'pedidos', label: 'Pedidos', icon: ShoppingCart },
   { id: 'clientes', label: 'Clientes', icon: Users },
+  { id: 'nf', label: 'NF / Despacho', icon: FileText },
   { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
   { id: 'estoque', label: 'Estoque', icon: Warehouse },
   { id: 'marketing', label: 'Marketing', icon: Megaphone },
@@ -164,6 +168,7 @@ export default function AdminPage() {
               {tab === 'fornecedores' && <SuppliersTab />}
               {tab === 'pedidos' && <PedidosTab />}
               {tab === 'clientes' && <ClientesTab />}
+              {tab === 'nf' && <NfDespachoTab />}
               {tab === 'financeiro' && <FinanceiroTab />}
               {tab === 'estoque' && <EstoqueTab />}
               {tab === 'marketing' && <MarketingTab />}
@@ -462,32 +467,7 @@ function ClientesTab() {
   );
 }
 
-/* ── Financeiro Tab ── */
-function FinanceiroTab() {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white">Financeiro</h2>
-      <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-8 text-center">
-        <DollarSign className="w-10 h-10 mx-auto mb-3 text-[#6E6E80]" />
-        <p className="text-[#A0A0B0]">Módulo financeiro em desenvolvimento</p>
-        <p className="text-xs text-[#6E6E80] mt-1">Integração com Bling em breve</p>
-      </div>
-    </div>
-  );
-}
-
-/* ── Estoque Tab ── */
-function EstoqueTab() {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white">Estoque</h2>
-      <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-8 text-center">
-        <Warehouse className="w-10 h-10 mx-auto mb-3 text-[#6E6E80]" />
-        <p className="text-[#A0A0B0]">Controle de estoque em desenvolvimento</p>
-      </div>
-    </div>
-  );
-}
+// FinanceiroTab e EstoqueTab agora importados de @/components/admin/
 
 /* ── Marketing Tab ── */
 function MarketingTab() {
@@ -523,7 +503,7 @@ function ConfigTab() {
           <h3 className="text-sm font-semibold text-white mb-2">Integrações Ativas</h3>
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2 text-lufit-teal"><CheckCircle className="w-4 h-4" /> Mercado Pago (PIX + Cartão)</div>
-            <div className="flex items-center gap-2 text-lufit-teal"><CheckCircle className="w-4 h-4" /> Kangu (Frete)</div>
+            <div className="flex items-center gap-2 text-lufit-teal"><CheckCircle className="w-4 h-4" /> Melhor Envio (Frete Multi-Transportadora)</div>
             <div className="flex items-center gap-2 text-[#6E6E80]"><Clock className="w-4 h-4" /> Bling (Escudo Fiscal — em breve)</div>
             <div className="flex items-center gap-2 text-[#6E6E80]"><Clock className="w-4 h-4" /> n8n (Automações — em breve)</div>
           </div>

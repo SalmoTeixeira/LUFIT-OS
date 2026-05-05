@@ -78,7 +78,7 @@ export default function CheckoutPage() {
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // tRPC mutations
-  const kanguQuote = trpc.kangu.quote.useMutation();
+  const melhorEnvioQuote = trpc.melhorenvio.quote.useMutation();
   const mpPix = trpc.mercadopago.createPix.useMutation();
   const mpCard = trpc.mercadopago.createCard.useMutation();
 
@@ -118,7 +118,7 @@ export default function CheckoutPage() {
     setLoadingCep(false);
   };
 
-  // Calculate shipping via Kangu API
+  // Calculate shipping via Melhor Envio API
   const calculateShippingHandler = async () => {
     const clean = cep.replace(/\D/g, '');
     if (clean.length !== 8) return;
@@ -135,7 +135,7 @@ export default function CheckoutPage() {
         unitPrice: item.price,
       }));
 
-      const result = await kanguQuote.mutateAsync({
+      const result = await melhorEnvioQuote.mutateAsync({
         destinationZip: clean,
         products,
         invoiceValue: subtotal,
@@ -145,13 +145,13 @@ export default function CheckoutPage() {
       const city = address.city?.toUpperCase();
       const isGoiania = city?.includes('GOIÂNIA') || city?.includes('GOIANIA');
 
-      let options: ShippingOption[] = result.map(r => ({
+      let options: ShippingOption[] = result.options?.map((r: any) => ({
         carrier: r.carrier,
-        service: r.service,
-        serviceCode: r.serviceCode,
-        cost: r.cost,
-        estimatedDays: r.estimatedDays,
-      }));
+        service: r.name,
+        serviceCode: String(r.id),
+        cost: r.price,
+        estimatedDays: r.deliveryDays,
+      })) || [];
 
       // Frete grátis: Goiânia >= 199 | Geral >= 499
       const freeGoiania = isGoiania && subtotal >= 199;
@@ -182,13 +182,19 @@ export default function CheckoutPage() {
 
       setShippingOptions(options);
       setSelectedShipping(options[0] ?? null);
+
+      // Log se estiver em modo mock
+      if (result.isMock) {
+        console.warn('[Melhor Envio] Usando cotação mock — configure MELHORENVIO_TOKEN');
+      }
     } catch (err: any) {
       console.error('Erro no frete:', err);
       setPaymentError('Não foi possível calcular o frete. Tente novamente.');
       const fallback: ShippingOption[] = [
         { carrier: 'LUFIT', service: 'Retirar na Loja', serviceCode: 'pickup', cost: 0, estimatedDays: 0 },
-        { carrier: 'Kangu', service: 'Expresso', serviceCode: 'kangu-express', cost: subtotal >= 499 ? 0 : 19.90, estimatedDays: 3 },
-        { carrier: 'Kangu', service: 'Econômico', serviceCode: 'kangu-econ', cost: subtotal >= 499 ? 0 : 12.90, estimatedDays: 7 },
+        { carrier: 'Correios', service: 'PAC', serviceCode: '1', cost: subtotal >= 499 ? 0 : 18.90, estimatedDays: 5 },
+        { carrier: 'Correios', service: 'SEDEX', serviceCode: '2', cost: subtotal >= 499 ? 0 : 25.90, estimatedDays: 2 },
+        { carrier: 'Mini Envios', service: 'Mini', serviceCode: '30', cost: subtotal >= 499 ? 0 : 9.90, estimatedDays: 5 },
       ];
       setShippingOptions(fallback);
       setSelectedShipping(fallback[0]);
