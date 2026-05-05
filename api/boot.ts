@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.4.0 FASE 4 WhatsApp
-console.log("[LUFIT OS] Boot v2.4.0 — FASE 4 WhatsApp Automático ativo");
+// Force Railway rebuild — v2.4.1 FRETE FIX: removido da produto, só no checkout
+console.log("[LUFIT OS] Boot v2.4.1 — Frete removido da página de produto");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.4.0-fase4-whatsapp",
+  version: "2.4.1-frete-checkout-fix",
   timestamp: new Date().toISOString(),
 }));
 
@@ -159,6 +159,4 @@ if (env.isProduction) {
   const port = parseInt(process.env.PORT || "3000");
   console.log(`[LUFIT-OS] Starting production server on port ${port}...`);
   serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, () => {
-    console.log(`[LUFIT-OS] Server running on http://0.0.0.0:${port}/`);
-  });
-}
+    console.log(`[LUFIT-OS] Server running on 
