@@ -5,7 +5,7 @@ import {
   Warehouse, Settings, Search, Plus, Pencil, Trash2,
   ChevronLeft, ChevronRight, TrendingUp, AlertTriangle,
   ArrowUpRight, ArrowDownRight, Megaphone, CheckCircle,
-  Clock, LogOut, Sun, Moon
+  Clock, LogOut, Sun, Moon, Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { products, type Product } from '@/data/products';
 import ProductEntryManager from '@/components/ProductEntryManager';
+import SuppliersTab from '@/components/admin/SuppliersTab';
 
 /* ── Admin Guard ── */
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -64,6 +65,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'produtos', label: 'Produtos', icon: Package },
+  { id: 'fornecedores', label: 'Fornecedores', icon: Building2 },
   { id: 'pedidos', label: 'Pedidos', icon: ShoppingCart },
   { id: 'clientes', label: 'Clientes', icon: Users },
   { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
@@ -159,6 +161,7 @@ export default function AdminPage() {
             <main className="flex-1 min-w-0">
               {tab === 'dashboard' && <DashboardTab />}
               {tab === 'produtos' && <ProdutosTab />}
+              {tab === 'fornecedores' && <SuppliersTab />}
               {tab === 'pedidos' && <PedidosTab />}
               {tab === 'clientes' && <ClientesTab />}
               {tab === 'financeiro' && <FinanceiroTab />}
