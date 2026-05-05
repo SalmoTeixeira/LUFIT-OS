@@ -19,7 +19,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "1.0.0",
+  version: "2.2.1-fix-frete",
   timestamp: new Date().toISOString(),
 }));
 
