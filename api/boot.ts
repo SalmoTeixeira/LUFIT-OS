@@ -159,4 +159,6 @@ if (env.isProduction) {
   const port = parseInt(process.env.PORT || "3000");
   console.log(`[LUFIT-OS] Starting production server on port ${port}...`);
   serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, () => {
-    console.log(`[LUFIT-OS] Server running on 
+    console.log(`[LUFIT-OS] Server running on http://0.0.0.0:${port}`);
+  });
+}
