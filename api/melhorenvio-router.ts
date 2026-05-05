@@ -297,26 +297,10 @@ export const melhorenvioRouter = createRouter({
       // Normalizar resposta (garante array)
       const normalized = Array.isArray(results) ? results : [results];
 
-      // Salvar no banco
-      const db = getDb();
+      // Encontrar a opção mais barata (para o frontend)
       const cheapest = normalized
         .filter((r: any) => r?.price && !isNaN(parseFloat(r.price)))
         .sort((a: any, b: any) => parseFloat(a.price) - parseFloat(b.price))[0];
-
-      if (cheapest) {
-        await db.insert(shippingQuotes).values({
-          zipCode: toCep,
-          addressState: "",
-          addressCity: "",
-          carrier: cheapest.company?.name || "Correios",
-          service: cheapest.name || "PAC",
-          serviceCode: String(cheapest.id || ""),
-          cost: String(cheapest.price || cheapest.custom_price || "0"),
-          estimatedDays: cheapest.delivery_time || cheapest.delivery_range?.max || 5,
-          totalWeightKg: String(products.reduce((s, p) => s + p.weight * p.quantity, 0)),
-          isSelected: true,
-        });
-      }
 
       return {
         success: true,
