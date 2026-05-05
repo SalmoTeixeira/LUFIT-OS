@@ -1039,5 +1039,349 @@ export const auditLogs = mysqlTable("auditLogs", {
   index("al_created_idx").on(table.createdAt),
 ]);
 
+// ═════════════════════════════════════════════════════════════════════
+// MÓDULO NOTA FISCAL / RECIBO — REGRAS E CONTROLE
+// ═════════════════════════════════════════════════════════════════════
+
+// Regras de NF por canal de venda
+export const nfRules = mysqlTable("nfRules", {
+  id: serial("id").primaryKey(),
+  channel: mysqlEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"])
+    .notNull(),
+  // Se true, emite NF automaticamente sem perguntar
+  autoEmit: boolean("autoEmit").default(false),
+  // Valor mínimo para NF ser obrigatória (0 = sempre pergunta)
+  threshold: decimal("threshold", { precision: 12, scale: 2 }).default("0"),
+  // Se true, pergunta ao cliente/operador
+  askCustomer: boolean("askCustomer").default(true),
+  // Se true, default é "SIM quero NF"
+  defaultYes: boolean("defaultYes").default(false),
+  // Motivos permitidos para não emitir NF
+  allowedReasons: json("allowedReasons").$type<string[]>()
+    .default(["client_declined", "gift", "below_threshold", "informal_sale"]),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
+});
+
+export type NfRule = typeof nfRules.$inferSelect;
+export type InsertNfRule = typeof nfRules.$inferInsert;
+
+// Recibos de venda (quando não emite NF)
+export const saleReceipts = mysqlTable("saleReceipts", {
+  id: serial("id").primaryKey(),
+  receiptNumber: varchar("receiptNumber", { length: 50 }).notNull().unique(),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
+  customerName: varchar("customerName", { length: 255 }),
+  customerDocument: varchar("customerDocument", { length: 20 }),
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  customerPhone: varchar("customerPhone", { length: 50 }),
+  // Itens da venda (JSON)
+  items: json("items").$type<
+    { name: string; sku: string; quantity: number; unitPrice: number; total: number; size?: string; color?: string }[]
+  >(),
+  subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
+  discountAmount: decimal("discountAmount", { precision: 12, scale: 2 }).default("0"),
+  shippingCost: decimal("shippingCost", { precision: 10, scale: 2 }).default("0"),
+  total: decimal("total", { precision: 12, scale: 2 }).notNull(),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "credit_card", "debit_card", "cash", "boleto", "other"]).notNull(),
+  paymentTransactionId: varchar("paymentTransactionId", { length: 255 }),
+  // Motivo de não ter NF
+  noNfReason: mysqlEnum("noNfReason", ["client_declined", "gift", "below_threshold", "informal_sale", "other"]),
+  noNfReasonDetail: text("noNfReasonDetail"),
+  // Canal de venda
+  channel: mysqlEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"]).default("ecommerce"),
+  // Destino (para regras de obrigatoriedade)
+  destinationState: varchar("destinationState", { length: 2 }),
+  destinationCity: varchar("destinationCity", { length: 100 }),
+  // Operador que gerou o recibo
+  operatorName: varchar("operatorName", { length: 255 }),
+  printedAt: timestamp("printedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("sr_order_idx").on(table.orderId),
+  index("sr_number_idx").on(table.receiptNumber),
+  index("sr_created_idx").on(table.createdAt),
+]);
+
+export type SaleReceipt = typeof saleReceipts.$inferSelect;
+export type InsertSaleReceipt = typeof saleReceipts.$inferInsert;
+
+// Log de NF-e emitidas via Bling
+export const nfeLog = mysqlTable("nfeLog", {
+  id: serial("id").primaryKey(),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }).notNull(),
+  receiptId: bigint("receiptId", { mode: "number", unsigned: true }),
+  // Dados da NF
+  blingNfeId: varchar("blingNfeId", { length: 100 }),
+  nfNumber: varchar("nfNumber", { length: 20 }),
+  nfSeries: varchar("nfSeries", { length: 10 }),
+  nfKey: varchar("nfKey", { length: 50 }),
+  // URLs
+  xmlUrl: text("xmlUrl"),
+  pdfUrl: text("pdfUrl"),
+  danfeUrl: text("danfeUrl"),
+  // Status
+  status: mysqlEnum("status", ["pending", "processing", "authorized", "cancelled", "rejected", "error"])
+    .default("pending")
+    .notNull(),
+  errorMessage: text("errorMessage"),
+  // Envio ao cliente
+  customerEmailSent: boolean("customerEmailSent").default(false),
+  customerEmailSentAt: timestamp("customerEmailSentAt"),
+  // Timestamps
+  requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  emittedAt: timestamp("emittedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("nfl_order_idx").on(table.orderId),
+  index("nfl_bling_idx").on(table.blingNfeId),
+  index("nfl_status_idx").on(table.status),
+  index("nfl_created_idx").on(table.createdAt),
+]);
+
+export type NfeLog = typeof nfeLog.$inferSelect;
+export type InsertNfeLog = typeof nfeLog.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
+// MÓDULO FINANCEIRO — CONTAS A PAGAR / RECEBER / FLUXO DE CAIXA
+// ═════════════════════════════════════════════════════════════════════
+
+// Contas a Pagar (fornecedores, despesas)
+export const payables = mysqlTable("payables", {
+  id: serial("id").primaryKey(),
+  // Documento
+  documentNumber: varchar("documentNumber", { length: 100 }),
+  description: varchar("description", { length: 255 }).notNull(),
+  // Fornecedor (opcional — pode ser despesa sem fornecedor cadastrado)
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
+  supplierName: varchar("supplierName", { length: 255 }),
+  // Origem (compra, despesa, imposto, etc)
+  origin: mysqlEnum("origin", ["purchase", "expense", "tax", "salary", "rent", "other"]).default("purchase"),
+  // Valores
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
+  discountAmount: decimal("discountAmount", { precision: 12, scale: 2 }).default("0"),
+  interestAmount: decimal("interestAmount", { precision: 12, scale: 2 }).default("0"),
+  balance: decimal("balance", { precision: 12, scale: 2 }).notNull(),
+  // Datas
+  issueDate: timestamp("issueDate").defaultNow().notNull(),
+  dueDate: timestamp("dueDate").notNull(),
+  paidDate: timestamp("paidDate"),
+  // Status
+  status: mysqlEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "scheduled"])
+    .default("pending")
+    .notNull(),
+  // Forma de pagamento
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "bank_transfer", "boleto", "cash", "credit_card", "other"]),
+  // Categoria
+  category: varchar("category", { length: 100 }),
+  // Nota fiscal de entrada (vinculo)
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number", unsigned: true }),
+  // Observações
+  notes: text("notes"),
+  // Alerta enviado
+  reminderSent: boolean("reminderSent").default(false),
+  reminderSentAt: timestamp("reminderSentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("pay_supplier_idx").on(table.supplierId),
+  index("pay_status_idx").on(table.status),
+  index("pay_due_idx").on(table.dueDate),
+  index("pay_origin_idx").on(table.origin),
+]);
+
+export type Payable = typeof payables.$inferSelect;
+export type InsertPayable = typeof payables.$inferInsert;
+
+// Contas a Receber (vendas)
+export const receivables = mysqlTable("receivables", {
+  id: serial("id").primaryKey(),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }).notNull(),
+  receiptNumber: varchar("receiptNumber", { length: 50 }),
+  // Cliente
+  customerId: bigint("customerId", { mode: "number", unsigned: true }),
+  customerName: varchar("customerName", { length: 255 }),
+  customerDocument: varchar("customerDocument", { length: 20 }),
+  // Valores
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  receivedAmount: decimal("receivedAmount", { precision: 12, scale: 2 }).default("0"),
+  discountAmount: decimal("discountAmount", { precision: 12, scale: 2 }).default("0"),
+  feeAmount: decimal("feeAmount", { precision: 12, scale: 2 }).default("0"),
+  balance: decimal("balance", { precision: 12, scale: 2 }).notNull(),
+  // Datas
+  issueDate: timestamp("issueDate").defaultNow().notNull(),
+  dueDate: timestamp("dueDate").notNull(),
+  receivedDate: timestamp("receivedDate"),
+  // Status
+  status: mysqlEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "refunded", "chargeback"])
+    .default("pending")
+    .notNull(),
+  // Forma de pagamento
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "credit_card", "debit_card", "boleto", "cash", "wallet", "other"]).notNull(),
+  // Gateway (Mercado Pago, etc)
+  gateway: mysqlEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
+  gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
+  // Canal
+  channel: mysqlEnum("channel", ["ecommerce", "retail", "wholesale", "marketplace"]).default("ecommerce"),
+  // Parcelas (cartão)
+  installments: int("installments").default(1),
+  // Observações
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("rec_order_idx").on(table.orderId),
+  index("rec_status_idx").on(table.status),
+  index("rec_due_idx").on(table.dueDate),
+  index("rec_customer_idx").on(table.customerId),
+]);
+
+export type Receivable = typeof receivables.$inferSelect;
+export type InsertReceivable = typeof receivables.$inferInsert;
+
+// Lançamentos de Caixa (entradas e saídas)
+export const cashFlowEntries = mysqlTable("cashFlowEntries", {
+  id: serial("id").primaryKey(),
+  // Tipo
+  type: mysqlEnum("type", ["income", "expense"]).notNull(),
+  // Origem (vinculo a outras tabelas)
+  source: mysqlEnum("source", ["sale", "payable", "receivable", "manual", "transfer", "adjustment"]).notNull(),
+  sourceId: bigint("sourceId", { mode: "number", unsigned: true }),
+  // Descrição
+  description: varchar("description", { length: 255 }).notNull(),
+  // Categoria
+  category: varchar("category", { length: 100 }).notNull(),
+  subcategory: varchar("subcategory", { length: 100 }),
+  // Valor
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  // Data do lançamento
+  entryDate: timestamp("entryDate").defaultNow().notNull(),
+  // Método
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "bank_transfer", "cash", "credit_card", "debit_card", "boleto", "other"]),
+  // Saldo acumulado após este lançamento
+  runningBalance: decimal("runningBalance", { precision: 12, scale: 2 }).notNull(),
+  // Observações
+  notes: text("notes"),
+  // Operador
+  operatorName: varchar("operatorName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("cfe_type_idx").on(table.type),
+  index("cfe_date_idx").on(table.entryDate),
+  index("cfe_category_idx").on(table.category),
+  index("cfe_source_idx").on(table.source),
+]);
+
+export type CashFlowEntry = typeof cashFlowEntries.$inferSelect;
+export type InsertCashFlowEntry = typeof cashFlowEntries.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
+// MÓDULO ESTOQUE AVANÇADO — ALERTAS E MOVIMENTAÇÕES
+// ═════════════════════════════════════════════════════════════════════
+
+// Alertas de estoque (reposição, excesso, vencimento)
+export const stockAlerts = mysqlTable("stockAlerts", {
+  id: serial("id").primaryKey(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  sku: varchar("sku", { length: 100 }),
+  size: varchar("size", { length: 50 }),
+  color: varchar("color", { length: 50 }),
+  // Tipo de alerta
+  alertType: mysqlEnum("alertType", ["below_min", "above_max", "zero_stock", "expiring", "slow_moving", "dead_stock"])
+    .notNull(),
+  // Estoque atual vs mínimo/máximo
+  currentStock: int("currentStock").notNull(),
+  minStock: int("minStock").default(0),
+  maxStock: int("maxStock").default(100),
+  // Sugestão de compra
+  suggestedQty: int("suggestedQty").default(0),
+  // Fornecedor sugerido
+  suggestedSupplierId: bigint("suggestedSupplierId", { mode: "number", unsigned: true }),
+  // Status
+  status: mysqlEnum("status", ["active", "resolved", "ignored"]).default("active").notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+  resolvedBy: varchar("resolvedBy", { length: 255 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("sa_product_idx").on(table.productId),
+  index("sa_type_idx").on(table.alertType),
+  index("sa_status_idx").on(table.status),
+  index("sa_created_idx").on(table.createdAt),
+]);
+
+export type StockAlert = typeof stockAlerts.$inferSelect;
+export type InsertStockAlert = typeof stockAlerts.$inferInsert;
+
+// Movimentações de estoque (histórico completo)
+export const productMovements = mysqlTable("productMovements", {
+  id: serial("id").primaryKey(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
+  productName: varchar("productName", { length: 255 }),
+  sku: varchar("sku", { length: 100 }),
+  size: varchar("size", { length: 50 }),
+  color: varchar("color", { length: 50 }),
+  // Tipo de movimento
+  movementType: mysqlEnum("movementType", [
+    "purchase_in",      // Entrada por compra
+    "sale_out",         // Saída por venda
+    "return_in",        // Retorno de cliente
+    "return_out",       // Devolução a fornecedor
+    "adjustment",       // Ajuste de inventário
+    "transfer_in",      // Transferência entre depósitos (entrada)
+    "transfer_out",     // Transferência entre depósitos (saída)
+    "production_in",    // Entrada por produção
+    "waste",            // Perda/quebra
+  ]).notNull(),
+  // Quantidade (positiva = entrada, negativa = saída)
+  quantity: int("quantity").notNull(),
+  // Estoque antes e depois
+  stockBefore: int("stockBefore").notNull(),
+  stockAfter: int("stockAfter").notNull(),
+  // Custo unitário no momento
+  unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
+  // Documento de origem
+  documentNumber: varchar("documentNumber", { length: 100 }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
+  // Fornecedor (quando compra)
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
+  supplierName: varchar("supplierName", { length: 255 }),
+  // Observações
+  notes: text("notes"),
+  // Operador
+  operatorName: varchar("operatorName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("pm_product_idx").on(table.productId),
+  index("pm_type_idx").on(table.movementType),
+  index("pm_created_idx").on(table.createdAt),
+  index("pm_supplier_idx").on(table.supplierId),
+]);
+
+export type ProductMovement = typeof productMovements.$inferSelect;
+export type InsertProductMovement = typeof productMovements.$inferInsert;
+
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
+// MÓDULO FRETE — CONFIGURAÇÕES DE ENVIO (Melhor Envio)
+// ═════════════════════════════════════════════════════════════════════
+
+export const shippingSettings = mysqlTable("shippingSettings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  description: text("description"),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  uniqueIndex("ss_key_idx").on(table.key),
+]);
+
+export type ShippingSetting = typeof shippingSettings.$inferSelect;
+export type InsertShippingSetting = typeof shippingSettings.$inferInsert;
