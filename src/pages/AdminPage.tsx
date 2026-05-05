@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, DollarSign,
-  Warehouse, Settings, Megaphone, LogOut, Sun, Moon, Building2, FileText, MessageCircle,
+  Warehouse, Settings, LogOut, Sun, Moon, Building2, FileText, MessageCircle,
   TrendingUp, ArrowUpRight, ArrowDownRight, CheckCircle, Clock, ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -275,20 +275,6 @@ function ClientesTab() {
 }
 
 // FinanceiroTab e EstoqueTab agora importados de @/components/admin/
-
-/* ── Marketing Tab ── */
-function MarketingTab() {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white">Marketing</h2>
-      <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-8 text-center">
-        <Megaphone className="w-10 h-10 mx-auto mb-3 text-[#6E6E80]" />
-        <p className="text-[#A0A0B0]">Campanhas e automações em desenvolvimento</p>
-        <p className="text-xs text-[#6E6E80] mt-1">Integração com n8n em breve</p>
-      </div>
-    </div>
-  );
-}
 
 /* ── Config Tab ── */
 function ConfigTab() {

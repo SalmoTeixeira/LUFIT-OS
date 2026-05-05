@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2025-05-06-fix-frete-v2
-console.log("[LUFIT OS] Boot v2.2.2 — Frete fix ativado");
+// Force Railway rebuild — v2.4.0 FASE 4 WhatsApp
+console.log("[LUFIT OS] Boot v2.4.0 — FASE 4 WhatsApp Automático ativo");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.2.1-fix-frete",
+  version: "2.4.0-fase4-whatsapp",
   timestamp: new Date().toISOString(),
 }));
 
