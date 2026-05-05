@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { trpc } from '@/providers/trpc';
 import {
   Plus, Trash2, Barcode, FileText,
   CreditCard, ChevronDown, ChevronUp, ScanLine,
@@ -42,12 +43,6 @@ const DEFAULT_SIZES: SizeDef[] = [
   { id: 'g2', name: 'G2' },
 ];
 
-const DEFAULT_SUPPLIERS: Supplier[] = [
-  { id: '1', name: 'Fábrica Alpha Fitness', code: 'ALP001' },
-  { id: '2', name: 'Casa dos Tecidos', code: 'CTD002' },
-  { id: '3', name: 'Moda Sul Distribuidora', code: 'MSD003' },
-];
-
 const DEFAULT_CATEGORIES: Category[] = [
   { id: 'leggings', name: 'Leggings' },
   { id: 'tops', name: 'Tops & Croppeds' },
@@ -87,7 +82,7 @@ const SUBCATEGORY_MAP: Record<string, string[]> = {
 
 function generateId() { return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; }
 
-export default function ProductEntryManager({ onClose, onSave }: { onClose: () => void; onSave: () => void }) {
+export default function ProductEntryManager({ onClose }: { onClose: () => void }) {
   /* ── MODE: new product or quick entry (existing) ── */
   const [mode, setMode] = useState<'new' | 'quick'>('new');
 
@@ -108,8 +103,14 @@ export default function ProductEntryManager({ onClose, onSave }: { onClose: () =
   const [minStock, setMinStock] = useState('5');
   const [maxStock, setMaxStock] = useState('100');
 
-  // Suppliers management
-  const [suppliers, setSuppliers] = useState<Supplier[]>(DEFAULT_SUPPLIERS);
+  // Suppliers management — buscar do banco real
+  const { data: supplierData } = trpc.supplier.list.useQuery();
+  const realSuppliers: Supplier[] = supplierData?.items?.map((s: any) => ({ 
+    id: String(s.id), 
+    name: s.tradeName || s.fullName || 'Fornecedor ' + s.id, 
+    code: s.internalCode || `FOR${s.id}` 
+  })) || [];
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [newSupplierName, setNewSupplierName] = useState('');
   const [showAddSupplier, setShowAddSupplier] = useState(false);
 
@@ -125,6 +126,13 @@ export default function ProductEntryManager({ onClose, onSave }: { onClose: () =
   const [newColorHex, setNewColorHex] = useState('#000000');
   const [newSizeName, setNewSizeName] = useState('');
 
+  // Sincronizar fornecedores reais quando carregam
+  useState(() => {
+    if (realSuppliers.length > 0) {
+      setSuppliers(realSuppliers);
+    }
+  });
+
   /* ── BLOCO 3: ENTRADA ── */
   const eanInputRef = useRef<HTMLInputElement>(null);
   const [eanScan, setEanScan] = useState('');
@@ -134,6 +142,27 @@ export default function ProductEntryManager({ onClose, onSave }: { onClose: () =
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [paymentCondition, setPaymentCondition] = useState('pix');
   const [notes, setNotes] = useState('');
+
+  /* ── BLOCO 5: tRPC MUTATIONS ── */
+  const createProduct = trpc.product.create.useMutation({
+    onSuccess: () => {
+      alert('✅ Produto cadastrado com sucesso!');
+      setSku('');
+      setName('');
+      setDescription('');
+      setCategoryId('');
+      setSubcategory('');
+      setSupplierId('');
+      setGrossWeight('');
+      setLengthCm('');
+      setWidthCm('');
+      setHeightCm('');
+      setGradeRows([]);
+    },
+    onError: (err) => {
+      alert('❌ Erro ao salvar: ' + err.message);
+    },
+  });
 
   /* ── COLLAPSE STATES ── */
   const [b1Open, setB1Open] = useState(true);
@@ -265,13 +294,40 @@ export default function ProductEntryManager({ onClose, onSave }: { onClose: () =
   /* ── SAVE ── */
   const handleSave = () => {
     if (!sku.trim() || !name.trim()) return;
-    // Em produção: chamar tRPC mutation
-    console.log('SALVANDO PRODUTO:', {
-      sku, name, categoryId, subcategory, supplierId, ncm,
-      grossWeight, lengthCm, widthCm, heightCm,
-      colors, gradeRows, invoiceNumber, paymentCondition, notes,
-    });
-    onSave();
+    
+    // Preparar dados para o backend
+    const productData = {
+      sku: sku.trim(),
+      name: name.trim(),
+      description: description.trim() || null,
+      price: gradeRows.length > 0 ? gradeRows[0].suggestedPrice : 0,
+      compareAtPrice: gradeRows.length > 0 ? gradeRows[0].previousCost : null,
+      costPrice: gradeRows.length > 0 ? gradeRows[0].currentCost : 0,
+      markupPercent: markupPercent,
+      categoryId: categoryId ? parseInt(categoryId) : 1,
+      subcategory: subcategory || null,
+      season: null,
+      material: null,
+      supplierId: supplierId ? parseInt(supplierId) : null,
+      ncm: ncm || '6108.22.00',
+      grossWeight: grossWeight ? parseFloat(grossWeight) : null,
+      lengthCm: lengthCm ? parseFloat(lengthCm) : null,
+      widthCm: widthCm ? parseFloat(widthCm) : null,
+      heightCm: heightCm ? parseFloat(heightCm) : null,
+      images: null,
+      tags: null,
+      isActive: true,
+      // Variações (grade)
+      variations: gradeRows.map(row => ({
+        color: row.colorName,
+        size: row.sizeName,
+        stock: row.qty,
+        costPrice: row.currentCost,
+        salePrice: row.suggestedPrice,
+      })),
+    };
+    
+    createProduct.mutate(productData);
   };
 
   const currentSubs = SUBCATEGORY_MAP[categoryId] || [];
@@ -585,9 +641,9 @@ export default function ProductEntryManager({ onClose, onSave }: { onClose: () =
       {/* Footer Actions */}
       <div className="flex gap-3 pt-2 pb-4">
         <Button type="button" variant="outline" onClick={onClose} className="border-[#1E1E2E] text-[#A0A0B0]">Cancelar</Button>
-        <Button type="button" onClick={handleSave} className="flex-1 bg-[#2DD4A8] hover:bg-[#25b98f] text-black font-bold py-3">
+        <Button type="button" onClick={handleSave} disabled={createProduct.isPending || !sku.trim() || !name.trim()} className="flex-1 bg-[#2DD4A8] hover:bg-[#25b98f] text-black font-bold py-3 disabled:opacity-50">
           <Save className="h-4 w-4 mr-2" />
-          {mode === 'new' ? 'Salvar Produto e Entrada' : 'Registrar Entrada'}
+          {createProduct.isPending ? 'Salvando...' : (mode === 'new' ? 'Salvar Produto e Entrada' : 'Registrar Entrada')}
         </Button>
       </div>
     </div>
