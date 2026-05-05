@@ -311,7 +311,7 @@ export const melhorenvioRouter = createRouter({
           carrier: cheapest.company?.name || "Correios",
           service: cheapest.name || "PAC",
           serviceCode: String(cheapest.id || ""),
-          cost: cheapest.price || cheapest.custom_price || "0",
+          cost: String(cheapest.price || cheapest.custom_price || "0"),
           estimatedDays: cheapest.delivery_time || cheapest.delivery_range?.max || 5,
           totalWeightKg: String(products.reduce((s, p) => s + p.weight * p.quantity, 0)),
           isSelected: true,
