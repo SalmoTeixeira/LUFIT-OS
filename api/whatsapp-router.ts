@@ -130,7 +130,13 @@ export const whatsappRouter = createRouter({
   // ── Listar templates ──
   listTemplates: publicQuery.query(async () => {
     const db = getDb();
-    return db.select().from(whatsappTemplates).orderBy(desc(whatsappTemplates.createdAt));
+    const templates = await db.select().from(whatsappTemplates).orderBy(desc(whatsappTemplates.createdAt));
+    // Se vazio, insere templates padrao automaticamente
+    if (templates.length === 0) {
+      await db.insert(whatsappTemplates).values(DEFAULT_TEMPLATES.map(t => ({ ...t, isActive: true })));
+      return db.select().from(whatsappTemplates).orderBy(desc(whatsappTemplates.createdAt));
+    }
+    return templates;
   }),
 
   // ── Atualizar template ──
