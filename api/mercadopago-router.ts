@@ -10,6 +10,15 @@ import {
 } from "./queries/mercadopago";
 
 export const mercadopagoRouter = createRouter({
+  // ── Status / Configuração ──
+  status: publicQuery.query(() => ({
+    configured: isMercadoPagoConfigured(),
+    message: isMercadoPagoConfigured()
+      ? "Mercado Pago configurado (Produção)"
+      : "Mercado Pago em modo simulado",
+    features: ["PIX", "Cartão de Crédito", "Cartão de Débito", "Webhook"],
+  })),
+
   // ── Gerar PIX (Copia e Cola real) ──
   createPix: publicQuery
     .input(
