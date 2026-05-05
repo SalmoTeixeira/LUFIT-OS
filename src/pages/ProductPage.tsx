@@ -26,7 +26,6 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews' | 'medidas'>('desc');
   const [sizeChartOpen, setSizeChartOpen] = useState(false);
   const [virtualFittingOpen, setVirtualFittingOpen] = useState(false);
-  const [cep, setCep] = useState('');
   const [addedToast, setAddedToast] = useState(false);
 
   if (!product) {
@@ -346,26 +345,6 @@ export default function ProductPage() {
               >
                 <Heart className={`w-5 h-5 ${inWishlist ? 'fill-current' : ''}`} />
               </button>
-            </div>
-
-            {/* Shipping */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                <Truck className="w-4 h-4 text-lufit-teal" />
-                Calcular frete
-              </h3>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="00000-000"
-                  value={cep}
-                  onChange={e => setCep(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-lufit-teal"
-                />
-                <button className="px-4 py-2 bg-lufit-dark text-white text-sm font-semibold rounded-lg hover:bg-lufit-dark/90">
-                  Calcular
-                </button>
-              </div>
             </div>
 
             {/* Benefits */}
