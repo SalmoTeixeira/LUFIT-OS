@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.4.4 BANNERS: 5 novos banners + logos LUPO/SELENE
-console.log("[LUFIT OS] Boot v2.4.4 — Banners categorias + logos vazadas");
+// Force Railway rebuild — v2.5.0 FASE 4 FINAL: WhatsApp real + auto-confirmação pedido
+console.log("[LUFIT OS] Boot v2.5.0 — FASE 4 WhatsApp Automático 100%");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.4.4-banners-categorias",
+  version: "2.5.0-fase4-whatsapp-final",
   timestamp: new Date().toISOString(),
 }));
 

@@ -1,22 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
+import { trpc } from '@/providers/trpc';
 
 export default function WhatsAppFloat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [config, setConfig] = useState<any>(null);
 
-  // Buscar configuração do WhatsApp
-  useEffect(() => {
-    // Em produção, buscaria do backend
-    // Por enquanto, usa número padrão da LUFIT
-    setConfig({
-      phoneNumber: '5562999999999', // Substituir pelo número real da LUFIT
-      businessName: 'LUFIT Moda',
-      welcomeMessage: 'Olá! Gostaria de saber mais sobre os produtos.',
-    });
-  }, []);
+  // Buscar configuração REAL do WhatsApp do backend
+  const { data: waConfig } = trpc.whatsapp.status.useQuery();
 
-  const waLink = `https://wa.me/${config?.phoneNumber || '5562999999999'}?text=${encodeURIComponent(config?.welcomeMessage || 'Olá!')}`;
+  // Número real configurado no admin, ou fallback para o da LUFIT
+  const phoneNumber = waConfig?.phoneNumber || '5562993940034';
+  const businessName = waConfig?.businessName || 'LUFIT Moda';
+  const welcomeMessage = 'Ola! Vi o site da LUFIT e gostaria de mais informacoes.';
+
+  const waLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(welcomeMessage)}`;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
@@ -29,7 +26,7 @@ export default function WhatsAppFloat() {
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-sm text-gray-900">{config?.businessName || 'LUFIT'}</p>
+                <p className="font-semibold text-sm text-gray-900">{businessName}</p>
                 <p className="text-xs text-green-600 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
                   Online
