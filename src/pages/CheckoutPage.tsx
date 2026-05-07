@@ -82,6 +82,9 @@ export default function CheckoutPage() {
   const mpPix = trpc.mercadopago.createPix.useMutation();
   const mpCard = trpc.mercadopago.createCard.useMutation();
 
+  // WhatsApp automação — envio de confirmação de pedido
+  const sendWhatsAppConfirmation = trpc.whatsapp.sendOrderConfirmation.useMutation();
+
   // Computed totals
   const subtotal = finalTotal;
   const shippingCost = selectedShipping?.cost ?? 0;
@@ -93,6 +96,21 @@ export default function CheckoutPage() {
       setInstallments(calculateInstallments(total));
     }
   }, [paymentMethod, total]);
+
+  // Enviar confirmação WhatsApp automaticamente quando pagamento é aprovado
+  useEffect(() => {
+    if (paymentStatus === 'approved' && orderNumber && customer?.phone) {
+      const itemsList = cart.map(item => `${item.name} (x${item.quantity})`).join(', ');
+      sendWhatsAppConfirmation.mutate({
+        customerPhone: customer.phone.replace(/\D/g, ''),
+        customerName: customer.name?.split(' ')[0] || 'Cliente',
+        orderId: 0, // Sera preenchido pelo backend ao criar o pedido
+        items: itemsList.length > 100 ? itemsList.substring(0, 100) + '...' : itemsList,
+        total: `R$ ${total.toFixed(2)}`,
+        paymentMethod: paymentMethod === 'pix' ? 'PIX' : 'Cartão de Crédito',
+      });
+    }
+  }, [paymentStatus]);
 
   // CEP auto-fill
   const handleCepBlur = async () => {
