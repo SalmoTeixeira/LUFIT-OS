@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { trpc } from '@/providers/trpc';
-import { Search, Plus, Pencil, Trash2, Package, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Package, ChevronLeft, ChevronRight, TrendingUp, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -12,12 +12,15 @@ export default function ProdutosTab() {
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<any>(null);
+  const [editingPrice, setEditingPrice] = useState<number | null>(null);
+  const [editPriceValue, setEditPriceValue] = useState('');
   const itemsPerPage = 10;
 
   // Buscar produtos e fornecedores do banco
-  const { data: productsData } = trpc.product.list.useQuery({});
+  const { data: productsData, refetch } = trpc.product.list.useQuery({});
   const { data: suppliersData } = trpc.supplier.list.useQuery();
-  const deleteProduct = trpc.product.delete.useMutation();
+  const deleteProduct = trpc.product.delete.useMutation({ onSuccess: () => refetch() });
+  const updatePrice = trpc.product.updatePrice.useMutation({ onSuccess: () => { refetch(); setEditingPrice(null); } });
 
   const products = productsData?.rows || [];
   const suppliers = suppliersData?.items || [];
@@ -34,6 +37,13 @@ export default function ProdutosTab() {
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
+  // Seleciona produto para histórico de compras
+  const selectedProductId = paginatedProducts[0]?.id;
+  const { data: purchaseHistory } = trpc.product.purchaseHistory.useQuery(
+    { productId: selectedProductId || 0 },
+    { enabled: !!selectedProductId }
+  );
+
   const handleDelete = (product: any) => {
     setProductToDelete(product);
     setDeleteModalOpen(true);
@@ -41,12 +51,21 @@ export default function ProdutosTab() {
 
   const confirmDelete = () => {
     if (!productToDelete) return;
-    deleteProduct.mutate({ id: productToDelete.id }, {
-      onSuccess: () => {
-        setDeleteModalOpen(false);
-        setProductToDelete(null);
-      }
-    });
+    deleteProduct.mutate({ id: productToDelete.id });
+    setDeleteModalOpen(false);
+    setProductToDelete(null);
+  };
+
+  const startEditingPrice = (product: any) => {
+    setEditingPrice(product.id);
+    setEditPriceValue(String(product.price || 0));
+  };
+
+  const savePrice = (productId: number) => {
+    const price = parseFloat(editPriceValue);
+    if (price > 0) {
+      updatePrice.mutate({ id: productId, price });
+    }
   };
 
   // Helpers
@@ -56,22 +75,39 @@ export default function ProdutosTab() {
     return s?.name || s?.legalName || `Fornecedor #${id}`;
   };
 
-  const calcLucratividade = (cost: string | number, price: string | number) => {
-    const c = parseFloat(String(cost || '0'));
-    const p = parseFloat(String(price || '0'));
-    if (!p || p <= 0) return 0;
-    return ((p - c) / p) * 100;
+  const calcMargin = (cost: number, price: number) => {
+    if (!cost || !price || price <= 0) return 0;
+    return ((price - cost) / price) * 100;
   };
 
   const formatCurrency = (v: string | number) => {
     const n = parseFloat(String(v || '0'));
-    return `R$ ${n.toFixed(2).replace('.', ',')}`;
+    return isNaN(n) ? 'R$ 0,00' : `R$ ${n.toFixed(2).replace('.', ',')}`;
+  };
+
+  const formatDate = (d: string | Date) => {
+    if (!d) return '-';
+    return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  };
+
+  // Dados agregados de compra por produto
+  const getPurchaseData = (productId: number) => {
+    const history = (purchaseHistory || []).filter((h: any) => h.productId === productId);
+    const last = history[0];
+    const previous = history[1];
+    const totalQty = history.reduce((sum: number, h: any) => sum + (h.qty || 0), 0);
+    const totalCost = history.reduce((sum: number, h: any) => sum + ((h.unitCost || 0) * (h.qty || 0)), 0);
+    const avgCost = totalQty > 0 ? totalCost / totalQty : 0;
+    return { last, previous, avgCost, totalQty };
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-white">Produtos</h2>
+        <div>
+          <h2 className="text-xl font-bold text-white">Produtos</h2>
+          <p className="text-[10px] text-[#6E6E80]">{filteredProducts.length} produtos no sistema</p>
+        </div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E80]" />
@@ -82,10 +118,7 @@ export default function ProdutosTab() {
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             />
           </div>
-          <Button
-            onClick={() => setProductModalOpen(true)}
-            className="bg-[#2DD4A8] hover:bg-[#25b98f] text-black"
-          >
+          <Button onClick={() => setProductModalOpen(true)} className="bg-[#2DD4A8] hover:bg-[#25b98f] text-black">
             <Plus className="h-4 w-4 mr-2" />Novo Produto
           </Button>
         </div>
@@ -93,61 +126,99 @@ export default function ProdutosTab() {
 
       <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[11px]">
             <thead>
-              <tr className="border-b border-[#1E1E2E] text-[#6E6E80] text-xs">
-                <th className="text-left px-3 py-3 font-medium">Produto</th>
-                <th className="text-left px-3 py-3 font-medium">SKU</th>
-                <th className="text-left px-3 py-3 font-medium">Última Compra</th>
-                <th className="text-right px-3 py-3 font-medium">Custo</th>
-                <th className="text-right px-3 py-3 font-medium">Venda</th>
-                <th className="text-right px-3 py-3 font-medium">Qtd Entrada</th>
-                <th className="text-right px-3 py-3 font-medium">Margem</th>
-                <th className="text-right px-3 py-3 font-medium">Estoque</th>
-                <th className="text-right px-3 py-3 font-medium">Ações</th>
+              <tr className="border-b border-[#1E1E2E] text-[#6E6E80] text-[10px] uppercase tracking-wider">
+                <th className="text-left px-2 py-2 font-medium">Produto</th>
+                <th className="text-left px-2 py-2 font-medium">SKU</th>
+                <th className="text-left px-2 py-2 font-medium whitespace-nowrap">Última Compra</th>
+                <th className="text-right px-2 py-2 font-medium whitespace-nowrap">Custo Últ.</th>
+                <th className="text-right px-2 py-2 font-medium whitespace-nowrap">Custo Atual</th>
+                <th className="text-right px-2 py-2 font-medium whitespace-nowrap">Custo Médio</th>
+                <th className="text-right px-2 py-2 font-medium">Qtd</th>
+                <th className="text-right px-2 py-2 font-medium whitespace-nowrap">Margem</th>
+                <th className="text-right px-2 py-2 font-medium whitespace-nowrap">Preço Final</th>
+                <th className="text-right px-2 py-2 font-medium">Estoque</th>
+                <th className="text-right px-2 py-2 font-medium">Ações</th>
               </tr>
             </thead>
             <tbody>
               {paginatedProducts.map((product: any) => {
-                const lucro = calcLucratividade(product.costPrice, product.price);
-                const lucroColor = lucro >= 50 ? 'text-lufit-teal' : lucro >= 30 ? 'text-amber-400' : lucro > 0 ? 'text-orange-400' : 'text-red-400';
-                const marginBg = lucro >= 50 ? 'bg-lufit-teal/10' : lucro >= 30 ? 'bg-amber-500/10' : 'bg-red-500/10';
-                const lastPurchaseDate = product.updatedAt
-                  ? new Date(product.updatedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-                  : '-';
-                const entradaQty = product.stock || 0;
+                const purchase = getPurchaseData(product.id);
+                const lastPurchaseDate = purchase.last?.createdAt ? formatDate(purchase.last.createdAt) : '-';
+                const lastCost = purchase.previous?.unitCost || product.costPrice || 0;
+                const currentCost = purchase.last?.unitCost || product.costPrice || 0;
+                const avgCost = purchase.avgCost || product.costPrice || 0;
+                const qty = purchase.totalQty || product.stock || 0;
+                const margin = calcMargin(Number(avgCost), Number(product.price));
+                const marginColor = margin >= 50 ? 'text-[#00E676]' : margin >= 30 ? 'text-[#FF9100]' : margin > 0 ? 'text-[#FF5722]' : 'text-[#FF1744]';
+                const marginBg = margin >= 50 ? 'bg-[#00E676]/10' : margin >= 30 ? 'bg-[#FF9100]/10' : 'bg-[#FF1744]/10';
+                const stock = product.stock || 0;
+                const stockColor = stock > 10 ? 'bg-[#00E676]/10 text-[#00E676]' : stock > 0 ? 'bg-[#FF9100]/10 text-[#FF9100]' : 'bg-[#FF1744]/10 text-[#FF1744]';
+
                 return (
-                  <tr key={product.id} className="border-b border-[#1E1E2E] last:border-0 hover:bg-[#1E1E2E]/50 transition-colors">
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <img src={product.images?.[0] || '/logo.jpg'} alt={product.name} className="w-9 h-9 rounded-lg object-cover bg-[#0A0A0F] shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-white font-medium text-sm truncate">{product.name}</p>
-                          <p className="text-[10px] text-[#6E6E80]">{getSupplierName(product.supplierId)}</p>
+                  <tr key={product.id} className="border-b border-[#1E1E2E] last:border-0 hover:bg-[#1E1E2E]/40 transition-colors">
+                    {/* Produto */}
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-2">
+                        <img src={product.images?.[0] || '/logo.jpg'} alt={product.name} className="w-8 h-8 rounded-lg object-cover bg-[#0A0A0F] shrink-0" />
+                        <div className="min-w-0 max-w-[120px]">
+                          <p className="text-white font-medium text-[11px] truncate">{product.name}</p>
+                          <p className="text-[9px] text-[#6E6E80]">{getSupplierName(product.supplierId)}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-[#A0A0B0] text-xs">{product.sku || '-'}</td>
-                    <td className="px-3 py-3 text-[#6E6E80] text-xs">{lastPurchaseDate}</td>
-                    <td className="px-3 py-3 text-right text-[#A0A0B0] text-xs">{formatCurrency(product.costPrice)}</td>
-                    <td className="px-3 py-3 text-right text-white font-medium text-xs">{formatCurrency(product.price)}</td>
-                    <td className="px-3 py-3 text-right">
-                      <span className="text-[#00B0FF] text-xs font-medium">{entradaQty} un</span>
+                    {/* SKU */}
+                    <td className="px-2 py-2 text-[#A0A0B0] text-[10px]">{product.sku || '-'}</td>
+                    {/* Última Compra */}
+                    <td className="px-2 py-2 text-[#6E6E80] text-[10px] whitespace-nowrap">{lastPurchaseDate}</td>
+                    {/* Custo Última Compra */}
+                    <td className="px-2 py-2 text-right text-[#A0A0B0] text-[10px]">{formatCurrency(lastCost)}</td>
+                    {/* Custo Atual */}
+                    <td className="px-2 py-2 text-right text-white text-[10px] font-medium">{formatCurrency(currentCost)}</td>
+                    {/* Custo Médio */}
+                    <td className="px-2 py-2 text-right text-lufit-teal text-[10px] font-medium">{formatCurrency(avgCost)}</td>
+                    {/* Qtd */}
+                    <td className="px-2 py-2 text-right">
+                      <span className="text-[#00B0FF] text-[10px] font-medium">{qty}u</span>
                     </td>
-                    <td className="px-3 py-3 text-right">
-                      <span className={`inline-flex items-center gap-0.5 ${lucroColor} text-xs font-bold px-1.5 py-0.5 rounded ${marginBg}`}>
-                        <TrendingUp className="w-3 h-3" />{lucro.toFixed(1)}%
+                    {/* Margem */}
+                    <td className="px-2 py-2 text-right">
+                      <span className={`inline-flex items-center gap-0.5 ${marginColor} text-[10px] font-bold px-1 py-0.5 rounded ${marginBg}`}>
+                        <TrendingUp className="w-2.5 h-2.5" />{margin.toFixed(0)}%
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${(product.stock || 0) > 10 ? 'bg-lufit-teal/10 text-lufit-teal' : (product.stock || 0) > 0 ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400'}`}>
-                        {product.stock || 0} un
+                    {/* Preço Final (ajustável) */}
+                    <td className="px-2 py-2 text-right">
+                      {editingPrice === product.id ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            value={editPriceValue}
+                            onChange={(e) => setEditPriceValue(e.target.value)}
+                            className="w-16 h-6 text-[10px] bg-[#0A0A0F] border-lufit-teal text-white px-1 py-0"
+                            autoFocus
+                            onKeyDown={(e) => { if (e.key === 'Enter') savePrice(product.id); if (e.key === 'Escape') setEditingPrice(null); }}
+                          />
+                          <button onClick={() => savePrice(product.id)} className="text-lufit-teal hover:text-white"><Save className="w-3 h-3" /></button>
+                          <button onClick={() => setEditingPrice(null)} className="text-[#6E6E80] hover:text-white"><X className="w-3 h-3" /></button>
+                        </div>
+                      ) : (
+                        <button onClick={() => startEditingPrice(product)} className="text-white text-[10px] font-semibold hover:text-lufit-teal transition-colors">
+                          {formatCurrency(product.price)}
+                        </button>
+                      )}
+                    </td>
+                    {/* Estoque */}
+                    <td className="px-2 py-2 text-right">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${stockColor}`}>
+                        {stock}u
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right">
+                    {/* Ações */}
+                    <td className="px-2 py-2 text-right">
                       <div className="flex items-center justify-end gap-0.5">
-                        <button onClick={() => setProductModalOpen(true)} className="p-1.5 rounded-lg hover:bg-[#1E1E2E] text-[#6E6E80] transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => handleDelete(product)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#6E6E80] hover:text-red-400 transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setProductModalOpen(true)} className="p-1 rounded hover:bg-[#1E1E2E] text-[#6E6E80] transition-colors"><Pencil className="h-3 w-3" /></button>
+                        <button onClick={() => handleDelete(product)} className="p-1 rounded hover:bg-red-500/10 text-[#6E6E80] hover:text-red-400 transition-colors"><Trash2 className="h-3 w-3" /></button>
                       </div>
                     </td>
                   </tr>
@@ -170,21 +241,9 @@ export default function ProdutosTab() {
               Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredProducts.length)} de {filteredProducts.length} produtos
             </p>
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 rounded-lg hover:bg-[#1E1E2E] disabled:opacity-30 text-[#A0A0B0]"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1.5 rounded-lg hover:bg-[#1E1E2E] disabled:opacity-30 text-[#A0A0B0]"><ChevronLeft className="w-4 h-4" /></button>
               <span className="text-sm text-[#A0A0B0] px-2">{currentPage} / {totalPages}</span>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-1.5 rounded-lg hover:bg-[#1E1E2E] disabled:opacity-30 text-[#A0A0B0]"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1.5 rounded-lg hover:bg-[#1E1E2E] disabled:opacity-30 text-[#A0A0B0]"><ChevronRight className="w-4 h-4" /></button>
             </div>
           </div>
         )}
@@ -201,9 +260,7 @@ export default function ProdutosTab() {
           </p>
           <DialogFooter className="pt-4">
             <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Cancelar</Button>
-            <Button onClick={confirmDelete} className="bg-red-500 hover:bg-red-600 text-white">
-              Excluir
-            </Button>
+            <Button onClick={confirmDelete} className="bg-red-500 hover:bg-red-600 text-white">Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
