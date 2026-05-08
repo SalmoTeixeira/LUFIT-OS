@@ -27,6 +27,7 @@ export default function ProductPage() {
   const [sizeChartOpen, setSizeChartOpen] = useState(false);
   const [virtualFittingOpen, setVirtualFittingOpen] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
 
   if (!product) {
     return (
@@ -64,7 +65,16 @@ export default function ProductPage() {
   })();
 
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) return;
+    if (!selectedSize) {
+      setCartError('Selecione um tamanho');
+      setTimeout(() => setCartError(null), 3000);
+      return;
+    }
+    if (!selectedColor) {
+      setCartError('Selecione uma cor');
+      setTimeout(() => setCartError(null), 3000);
+      return;
+    }
     addToCart({
       productId: product.id,
       name: product.name,
@@ -77,6 +87,7 @@ export default function ProductPage() {
     });
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2000);
+    setCartError(null);
   };
 
   return (
@@ -329,8 +340,7 @@ export default function ProductPage() {
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedSize || !selectedColor || stockQty === 0}
-                className="flex-1 flex items-center justify-center gap-2 bg-lufit-lime text-lufit-dark font-bold rounded-lg hover:bg-lufit-lime/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 bg-lufit-lime text-lufit-dark font-bold rounded-lg hover:bg-lufit-lime/90 transition-colors"
               >
                 <ShoppingBag className="w-5 h-5" />
                 Adicionar ao Carrinho
@@ -346,6 +356,13 @@ export default function ProductPage() {
                 <Heart className={`w-5 h-5 ${inWishlist ? 'fill-current' : ''}`} />
               </button>
             </div>
+            {/* Error message */}
+            {cartError && (
+              <div className="mt-2 bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {cartError}
+              </div>
+            )}
 
             {/* Benefits */}
             <div className="grid grid-cols-2 gap-3 mb-6">
