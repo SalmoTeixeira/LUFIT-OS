@@ -117,10 +117,11 @@ export default function CheckoutPage() {
     const clean = cep.replace(/\D/g, '');
     if (clean.length !== 8) return;
     setLoadingCep(true);
+    setPaymentError(null);
     try {
       const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
       const data = await res.json();
-      if (!data.erro) {
+      if (data && !data.erro) {
         setAddress({
           street: data.logradouro || '',
           number: '',
@@ -129,11 +130,15 @@ export default function CheckoutPage() {
           city: data.localidade || '',
           state: data.uf || '',
         });
+      } else if (data?.erro) {
+        setPaymentError('CEP não encontrado. Verifique o número digitado.');
       }
     } catch (e) {
       console.error('CEP lookup failed', e);
+      setPaymentError('Erro ao buscar CEP. Verifique sua conexão.');
+    } finally {
+      setLoadingCep(false);
     }
-    setLoadingCep(false);
   };
 
   // Calculate shipping via Melhor Envio API
@@ -159,22 +164,27 @@ export default function CheckoutPage() {
         invoiceValue: subtotal,
       });
 
-      const state = address.state?.toUpperCase();
-      const city = address.city?.toUpperCase();
-      const isGoiania = city?.includes('GOIÂNIA') || city?.includes('GOIANIA');
+      // Verificar se temos resultado válido
+      if (!result || !result.options || !Array.isArray(result.options)) {
+        throw new Error('Resposta inválida da API de frete');
+      }
 
-      let options: ShippingOption[] = result.options?.map((r: any) => ({
-        carrier: r.carrier,
-        service: r.name,
-        serviceCode: String(r.id),
-        cost: r.price,
-        estimatedDays: r.deliveryDays,
+      const state = address.state?.toUpperCase() || '';
+      const city = (address.city || '').toUpperCase();
+      const isGoiania = city.includes('GOIANIA') || city.includes('GOIÂNIA') || city.includes('GOIANI');
+
+      let options: ShippingOption[] = result.options.map((r: any) => ({
+        carrier: r.carrier || 'Transportadora',
+        service: r.name || 'Padrão',
+        serviceCode: String(r.id || '0'),
+        cost: parseFloat(r.price) || 0,
+        estimatedDays: r.deliveryDays || 5,
       })) || [];
 
-      // Frete grátis: Goiânia >= 199 | Geral >= 499
-      const freeGoiania = isGoiania && subtotal >= 199;
-      const freeGeneral = subtotal >= 499;
-      if (freeGoiania || freeGeneral) {
+      // Frete GRÁTIS: SOMENTE Goiânia >= R$ 399. Outras cidades = SEMPRE PAGO
+      const FREE_SHIPPING_GOIANIA = 399;
+      const freeGoiania = isGoiania && subtotal >= FREE_SHIPPING_GOIANIA;
+      if (freeGoiania) {
         options = options.map(o => ({ ...o, cost: 0 }));
       }
 
@@ -184,12 +194,12 @@ export default function CheckoutPage() {
           carrier: 'Motoboy',
           service: 'Same Day (Goiânia)',
           serviceCode: 'motoboy',
-          cost: freeGoiania || freeGeneral ? 0 : 9.90,
+          cost: freeGoiania ? 0 : 9.90,
           estimatedDays: 1,
         });
       }
 
-      // Retirar na Loja — sempre grátis
+      // Retirar na Loja — sempre disponível
       options.unshift({
         carrier: 'LUFIT',
         service: 'Retirar na Loja',
@@ -207,12 +217,16 @@ export default function CheckoutPage() {
       }
     } catch (err: any) {
       console.error('Erro no frete:', err);
-      setPaymentError('Não foi possível calcular o frete. Tente novamente.');
+      setPaymentError('Não foi possível calcular o frete. Usando valores estimados.');
+      // Fallback SEMPRE com frete pago (nunca grátis no fallback)
+      const city = (address.city || '').toUpperCase();
+      const isGoiania = city.includes('GOIANIA') || city.includes('GOIÂNIA');
+      const freeGoiania = isGoiania && subtotal >= 399;
       const fallback: ShippingOption[] = [
         { carrier: 'LUFIT', service: 'Retirar na Loja', serviceCode: 'pickup', cost: 0, estimatedDays: 0 },
-        { carrier: 'Correios', service: 'PAC', serviceCode: '1', cost: subtotal >= 499 ? 0 : 18.90, estimatedDays: 5 },
-        { carrier: 'Correios', service: 'SEDEX', serviceCode: '2', cost: subtotal >= 499 ? 0 : 25.90, estimatedDays: 2 },
-        { carrier: 'Mini Envios', service: 'Mini', serviceCode: '30', cost: subtotal >= 499 ? 0 : 9.90, estimatedDays: 5 },
+        { carrier: 'Correios', service: 'PAC', serviceCode: '1', cost: freeGoiania ? 0 : 18.90, estimatedDays: 5 },
+        { carrier: 'Correios', service: 'SEDEX', serviceCode: '2', cost: freeGoiania ? 0 : 25.90, estimatedDays: 2 },
+        { carrier: 'Mini Envios', service: 'Mini', serviceCode: '30', cost: freeGoiania ? 0 : 9.90, estimatedDays: 5 },
       ];
       setShippingOptions(fallback);
       setSelectedShipping(fallback[0]);

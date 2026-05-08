@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.6.4 FIX: erro carrinho visivel + WhatsApp header + numeros footer
-console.log("[LUFIT OS] Boot v2.6.4 — Carrinho com validacao e WhatsApp no topo");
+// Force Railway rebuild — v2.6.5 FIX: carrinho subtotal + frete Goiania 399 + tela branca checkout
+console.log("[LUFIT OS] Boot v2.6.5 — Frete e carrinho corrigidos");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.6.4-fix-carrinho-whatsapp",
+  version: "2.6.5-fix-frete-carrinho",
   timestamp: new Date().toISOString(),
 }));
 
