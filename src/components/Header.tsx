@@ -97,6 +97,25 @@ export default function Header() {
 
   return (
     <>
+      {/* Top Bar — WhatsApp numbers */}
+      <div className="bg-[#0A0A0F] text-white text-xs py-1.5 border-b border-[#1E1E2E]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <a href="https://wa.me/5562993940034" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-[#2DD4A8] transition-colors">
+              <span className="text-[10px] text-gray-400">Vendas:</span>
+              <span className="font-medium">(62) 99394-0034</span>
+            </a>
+            <span className="text-[#1E1E2E] hidden sm:inline">|</span>
+            <a href="https://wa.me/5562994490177" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1.5 hover:text-[#2DD4A8] transition-colors">
+              <span className="font-medium">(62) 99449-0177</span>
+            </a>
+          </div>
+          <div className="hidden sm:flex items-center gap-1 text-gray-400">
+            <span>Atendimento via</span>
+            <span className="text-green-400 font-medium">WhatsApp</span>
+          </div>
+        </div>
+      </div>
       <header className={`sticky top-0 z-50 bg-white transition-all duration-300 ${scrolled ? 'shadow-md' : 'border-b border-gray-100'}`}>
         {/* Main header row */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
