@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Barcode, FileText,
   CreditCard, ChevronDown, ChevronUp, ScanLine,
   Save, X, Ruler, Weight, Hash, Tag, DollarSign,
-  Layers, Boxes, AlertCircle, Palette
+  Layers, Boxes, AlertCircle, Palette, Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,6 @@ interface GradeRow {
   stockTotal: number;
 }
 interface Supplier { id: string; name: string; code: string; }
-interface Category { id: string; name: string; }
 
 /* ── DEFAULT DATA ── */
 const DEFAULT_SIZES: SizeDef[] = [
@@ -42,43 +41,6 @@ const DEFAULT_SIZES: SizeDef[] = [
   { id: 'g1', name: 'G1' },
   { id: 'g2', name: 'G2' },
 ];
-
-const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'leggings', name: 'Leggings' },
-  { id: 'tops', name: 'Tops & Croppeds' },
-  { id: 'macaquinhos', name: 'Macaquinhos' },
-  { id: 'macacoes', name: 'Macacões' },
-  { id: 'shorts', name: 'Shorts & Bermudas' },
-  { id: 'blusas', name: 'Blusas & Camisetas' },
-  { id: 'conjuntos', name: 'Conjuntos' },
-  { id: 'casacos', name: 'Casacos & Jaquetas' },
-  { id: 'praia', name: 'Moda Praia' },
-  { id: 'masculino', name: 'Masculino' },
-  { id: 'infantil', name: 'Linha Infantil' },
-  { id: 'intima', name: 'Moda Íntima' },
-  { id: 'acessorios', name: 'Acessórios' },
-  { id: 'lupo', name: 'LUPO' },
-  { id: 'selene', name: 'SELENE' },
-];
-
-const SUBCATEGORY_MAP: Record<string, string[]> = {
-  leggings: ['Leggings', 'Calças', 'Capri', 'Corsário'],
-  tops: ['Tops', 'Croppeds', 'Regatas', 'Camisetas Fitness'],
-  shorts: ['Shorts', 'Bermudas', 'Saia Shorts'],
-  blusas: ['Blusas', 'Regatas', 'Camisetas', 'T-shirts'],
-  conjuntos: ['Conjuntos Fitness', 'Conjuntos Praia'],
-  casacos: ['Casacos', 'Jaquetas', 'Corta Vento', 'Moletons'],
-  praia: ['Biquínis', 'Maiôs', 'Saídas de Praia', 'Vestidos'],
-  masculino: ['Camisetas', 'Shorts', 'Calças', 'Regatas'],
-  infantil: ['Conjuntos', 'Vestidos', 'Shorts', 'Camisetas'],
-  intima: ['Calcinhas', 'Sutiãs', 'Conjuntos Íntimos'],
-  acessorios: ['Meias', 'Faixas', 'Manguitos', 'Bonés', 'Bolsas'],
-  macaquinhos: ['Macaquinhos'],
-  macacoes: ['Macacões'],
-  calcas: ['Calças', 'Joggers'],
-  lupo: ['Leggings', 'Calças', 'Camisetas', 'Conjuntos', 'Shorts'],
-  selene: ['Tops', 'Shorts', 'Conjuntos', 'Calças', 'Camisetas'],
-};
 
 function generateId() { return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; }
 
@@ -105,14 +67,45 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
 
   // Suppliers management — buscar do banco real
   const { data: supplierData } = trpc.supplier.list.useQuery();
-  const realSuppliers: Supplier[] = supplierData?.items?.map((s: any) => ({ 
-    id: String(s.id), 
-    name: s.tradeName || s.fullName || 'Fornecedor ' + s.id, 
-    code: s.internalCode || `FOR${s.id}` 
+  const realSuppliers: Supplier[] = supplierData?.items?.map((s: any) => ({
+    id: String(s.id),
+    name: s.tradeName || s.fullName || 'Fornecedor ' + s.id,
+    code: s.internalCode || `FOR${s.id}`
   })) || [];
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [newSupplierName, setNewSupplierName] = useState('');
   const [showAddSupplier, setShowAddSupplier] = useState(false);
+
+  // Categories, Subcategories, Brands — do banco real
+  const { data: categoriesData } = trpc.category.list.useQuery();
+  const { data: subcategoriesData } = trpc.category.listSubcategories.useQuery(
+    { categoryId: categoryId ? parseInt(categoryId) : 0 },
+    { enabled: !!categoryId }
+  );
+  const { data: brandsData } = trpc.brand.list.useQuery();
+  const createCategory = trpc.category.create.useMutation();
+  const createSubcategory = trpc.category.createSubcategory.useMutation();
+  const createBrand = trpc.brand.create.useMutation();
+
+  // Novas categoria/subcategoria/marca (inline + modal)
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddSubcategory, setShowAddSubcategory] = useState(false);
+  const [newSubcategoryName, setNewSubcategoryName] = useState('');
+  const [showAddBrand, setShowAddBrand] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+
+  // Upload de imagem
+  const [productImage, setProductImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setProductImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   /* ── BLOCO 2: GRADE ── */
   const [colors, setColors] = useState<ColorDef[]>([
@@ -330,8 +323,6 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
     createProduct.mutate(productData);
   };
 
-  const currentSubs = SUBCATEGORY_MAP[categoryId] || [];
-
   return (
     <div className="space-y-5 text-white max-h-[85vh] overflow-y-auto pr-1">
       {/* Header */}
@@ -390,26 +381,86 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
               <div className="space-y-1"><label className="text-xs text-[#A0A0B0]">Nome do Produto *</label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Legging Energy Poliamida Preta" className="bg-[#0A0A0F] border-[#1E1E2E] text-white" /></div>
             </div>
             <div className="space-y-1"><label className="text-xs text-[#A0A0B0]">Descrição</label><textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white resize-none" placeholder="Descreva o produto..." /></div>
+            {/* Upload de Imagem */}
+            <div className="flex items-center gap-4">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-20 h-20 rounded-xl border-2 border-dashed border-[#1E1E2E] hover:border-lufit-teal/50 flex items-center justify-center cursor-pointer transition-colors overflow-hidden bg-[#14141E]"
+              >
+                {productImage ? (
+                  <img src={productImage} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <Image className="w-6 h-6 text-[#6E6E80]" />
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+              <div>
+                <p className="text-xs text-[#A0A0B0] font-medium">Foto do Produto</p>
+                <p className="text-[10px] text-[#6E6E80]">Clique para fazer upload</p>
+                {productImage && (
+                  <button onClick={() => setProductImage(null)} className="text-[10px] text-red-400 hover:text-red-300 mt-1">Remover</button>
+                )}
+              </div>
+            </div>
+
+            {/* Categoria + Subcategoria + Marca com botão + */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1"><label className="text-xs text-[#A0A0B0]">Categoria</label>
-                <select value={categoryId} onChange={e => { setCategoryId(e.target.value); setSubcategory(''); }} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
-                  <option value="">Selecione...</option>
-                  {DEFAULT_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+              {/* Categoria */}
+              <div className="space-y-1">
+                <label className="text-xs text-[#A0A0B0]">Categoria</label>
+                <div className="flex gap-1">
+                  <select value={categoryId} onChange={e => { setCategoryId(e.target.value); setSubcategory(''); }} className="flex-1 bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="">Selecione...</option>
+                    {(categoriesData || []).map((c: any) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+                  </select>
+                  <Button type="button" onClick={() => setShowAddCategory(!showAddCategory)} size="sm" className="bg-lufit-teal hover:bg-lufit-teal/90 text-black px-2"><Plus className="w-3.5 h-3.5" /></Button>
+                </div>
+                {showAddCategory && (
+                  <div className="flex gap-1 mt-1">
+                    <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Nova categoria..." className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-xs flex-1" onKeyDown={e => { if (e.key === 'Enter') { createCategory.mutate({ name: newCategoryName, slug: newCategoryName.toLowerCase().replace(/\s+/g, '-') }, { onSuccess: (data) => { setCategoryId(String(data.id)); setNewCategoryName(''); setShowAddCategory(false); } }); } }} />
+                    <Button type="button" onClick={() => { if (newCategoryName.trim()) createCategory.mutate({ name: newCategoryName, slug: newCategoryName.toLowerCase().replace(/\s+/g, '-') }, { onSuccess: (data) => { setCategoryId(String(data.id)); setNewCategoryName(''); setShowAddCategory(false); } }); }} size="sm" className="bg-lufit-teal hover:bg-lufit-teal/90 text-black px-2 text-xs">OK</Button>
+                    <Button type="button" onClick={() => setShowAddCategory(false)} size="sm" variant="outline" className="border-[#1E1E2E] text-[#A0A0B0] px-2"><X className="w-3 h-3" /></Button>
+                  </div>
+                )}
               </div>
-              <div className="space-y-1"><label className="text-xs text-[#A0A0B0]">Subcategoria</label>
-                <select value={subcategory} onChange={e => setSubcategory(e.target.value)} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
-                  <option value="">Selecione...</option>
-                  {currentSubs.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+              {/* Subcategoria */}
+              <div className="space-y-1">
+                <label className="text-xs text-[#A0A0B0]">Subcategoria</label>
+                <div className="flex gap-1">
+                  <select value={subcategory} onChange={e => setSubcategory(e.target.value)} className="flex-1 bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="">Selecione...</option>
+                    {(subcategoriesData || []).map((s: any) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
+                  <Button type="button" onClick={() => categoryId ? setShowAddSubcategory(!showAddSubcategory) : alert('Selecione uma categoria primeiro')} size="sm" className="bg-lufit-teal hover:bg-lufit-teal/90 text-black px-2"><Plus className="w-3.5 h-3.5" /></Button>
+                </div>
+                {showAddSubcategory && (
+                  <div className="flex gap-1 mt-1">
+                    <Input value={newSubcategoryName} onChange={e => setNewSubcategoryName(e.target.value)} placeholder="Nova subcategoria..." className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-xs flex-1" onKeyDown={e => { if (e.key === 'Enter') { const catId = parseInt(categoryId); if (catId) createSubcategory.mutate({ categoryId: catId, name: newSubcategoryName, slug: newSubcategoryName.toLowerCase().replace(/\s+/g, '-') }, { onSuccess: () => { setSubcategory(newSubcategoryName); setNewSubcategoryName(''); setShowAddSubcategory(false); } }); } }} />
+                    <Button type="button" onClick={() => { const catId = parseInt(categoryId); if (catId && newSubcategoryName.trim()) createSubcategory.mutate({ categoryId: catId, name: newSubcategoryName, slug: newSubcategoryName.toLowerCase().replace(/\s+/g, '-') }, { onSuccess: () => { setSubcategory(newSubcategoryName); setNewSubcategoryName(''); setShowAddSubcategory(false); } }); }} size="sm" className="bg-lufit-teal hover:bg-lufit-teal/90 text-black px-2 text-xs">OK</Button>
+                    <Button type="button" onClick={() => setShowAddSubcategory(false)} size="sm" variant="outline" className="border-[#1E1E2E] text-[#A0A0B0] px-2"><X className="w-3 h-3" /></Button>
+                  </div>
+                )}
               </div>
-              <div className="space-y-1"><label className="text-xs text-[#A0A0B0]">Marca</label>
-                <select value={brand} onChange={e => setBrand(e.target.value)} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
-                  <option value="LUFIT">LUFIT</option>
-                  <option value="LUPO">LUPO</option>
-                  <option value="SELENE">SELENE</option>
-                  <option value="Outra">Outra</option>
-                </select>
+              {/* Marca */}
+              <div className="space-y-1">
+                <label className="text-xs text-[#A0A0B0]">Marca</label>
+                <div className="flex gap-1">
+                  <select value={brand} onChange={e => setBrand(e.target.value)} className="flex-1 bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="">Selecione...</option>
+                    {(brandsData || []).map((b: any) => <option key={b.id} value={b.name}>{b.name}</option>)}
+                    <option value="LUFIT">LUFIT</option>
+                    <option value="LUPO">LUPO</option>
+                    <option value="SELENE">SELENE</option>
+                  </select>
+                  <Button type="button" onClick={() => setShowAddBrand(!showAddBrand)} size="sm" className="bg-lufit-teal hover:bg-lufit-teal/90 text-black px-2"><Plus className="w-3.5 h-3.5" /></Button>
+                </div>
+                {showAddBrand && (
+                  <div className="flex gap-1 mt-1">
+                    <Input value={newBrandName} onChange={e => setNewBrandName(e.target.value)} placeholder="Nova marca..." className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-xs flex-1" onKeyDown={e => { if (e.key === 'Enter') { createBrand.mutate({ name: newBrandName, slug: newBrandName.toLowerCase().replace(/\s+/g, '-') }, { onSuccess: () => { setBrand(newBrandName); setNewBrandName(''); setShowAddBrand(false); } }); } }} />
+                    <Button type="button" onClick={() => { if (newBrandName.trim()) createBrand.mutate({ name: newBrandName, slug: newBrandName.toLowerCase().replace(/\s+/g, '-') }, { onSuccess: () => { setBrand(newBrandName); setNewBrandName(''); setShowAddBrand(false); } }); }} size="sm" className="bg-lufit-teal hover:bg-lufit-teal/90 text-black px-2 text-xs">OK</Button>
+                    <Button type="button" onClick={() => setShowAddBrand(false)} size="sm" variant="outline" className="border-[#1E1E2E] text-[#A0A0B0] px-2"><X className="w-3 h-3" /></Button>
+                  </div>
+                )}
               </div>
             </div>
             {/* Fornecedor com add/remove */}

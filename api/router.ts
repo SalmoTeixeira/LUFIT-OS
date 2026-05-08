@@ -16,6 +16,8 @@ import { stockRouter } from "./stock-router";
 import { blingRouter } from "./bling-router";
 import { whatsappRouter } from "./whatsapp-router";
 import { customerRouter } from "./customer-router";
+import { categoryRouter } from "./category-router";
+import { brandRouter } from "./brand-router";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -38,6 +40,8 @@ export const appRouter = createRouter({
   bling: blingRouter,
   whatsapp: whatsappRouter,
   customer: customerRouter,
+  category: categoryRouter,
+  brand: brandRouter,
 });
 
 export type AppRouter = typeof appRouter;

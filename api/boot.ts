@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.5.1 ADMIN COMPLETO: Dashboard real + Pedidos + Clientes
-console.log("[LUFIT OS] Boot v2.5.1 — Painel administrativo 100% funcional");
+// Force Railway rebuild — v2.6.0 CADASTRO PRODUTO: upload foto + cat/sub/marca DB + tabela completa
+console.log("[LUFIT OS] Boot v2.6.0 — Cadastro de produtos revolucionado");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.5.1-admin-completo",
+  version: "2.6.0-cadastro-produto",
   timestamp: new Date().toISOString(),
 }));
 
@@ -230,5 +230,43 @@ if (env.isProduction) {
     console.log('[LUFIT-OS] Auto-migration WhatsApp OK — tabelas criadas/verificadas');
   } catch (e) {
     console.warn('[LUFIT-OS] Auto-migration WhatsApp erro (tabelas podem ja existir):', (e as Error).message);
+  }
+
+  // ═════════════════════════════════════════════════════════════════════
+  // AUTO-SEED: Categorias e Marcas padrão
+  // ═════════════════════════════════════════════════════════════════════
+  try {
+    const db = getDb();
+    const { categories, brands } = await import("../db/schema");
+    const { count } = await import("drizzle-orm");
+    const [catCount] = await db.select({ count: count() }).from(categories);
+    if ((catCount?.count ?? 0) === 0) {
+      await db.insert(categories).values([
+        { name: 'Leggings', slug: 'leggings', sortOrder: 1 },
+        { name: 'Tops & Croppeds', slug: 'tops', sortOrder: 2 },
+        { name: 'Macaquinhos', slug: 'macaquinhos', sortOrder: 3 },
+        { name: 'Shorts & Bermudas', slug: 'shorts', sortOrder: 4 },
+        { name: 'Blusas & Camisetas', slug: 'blusas', sortOrder: 5 },
+        { name: 'Conjuntos', slug: 'conjuntos', sortOrder: 6 },
+        { name: 'Casacos & Jaquetas', slug: 'casacos', sortOrder: 7 },
+        { name: 'Moda Praia', slug: 'praia', sortOrder: 8 },
+        { name: 'Masculino', slug: 'masculino', sortOrder: 9 },
+        { name: 'Linha Infantil', slug: 'infantil', sortOrder: 10 },
+        { name: 'Moda Íntima', slug: 'intima', sortOrder: 11 },
+        { name: 'Acessórios', slug: 'acessorios', sortOrder: 12 },
+      ]);
+      console.log('[LUFIT-OS] Auto-seed: 12 categorias inseridas');
+    }
+    const [brandCount] = await db.select({ count: count() }).from(brands);
+    if ((brandCount?.count ?? 0) === 0) {
+      await db.insert(brands).values([
+        { name: 'LUFIT', slug: 'lufit' },
+        { name: 'LUPO', slug: 'lupo' },
+        { name: 'SELENE', slug: 'selene' },
+      ]);
+      console.log('[LUFIT-OS] Auto-seed: 3 marcas inseridas');
+    }
+  } catch (e) {
+    console.warn('[LUFIT-OS] Auto-seed categorias/marcas erro:', (e as Error).message);
   }
 }
