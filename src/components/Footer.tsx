@@ -221,8 +221,9 @@ export default function Footer() {
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-lufit-teal shrink-0" />
                 <div className="text-sm text-gray-400">
-                  <p>Vendas: (62) 99394-0034</p>
-                  <p>(62) 99449-0177</p>
+                  <a href="https://wa.me/5562993940034" target="_blank" rel="noopener noreferrer" className="hover:text-lufit-teal transition-colors">Vendas: (62) 99394-0034</a>
+                  <br />
+                  <a href="https://wa.me/5562994490177" target="_blank" rel="noopener noreferrer" className="hover:text-lufit-teal transition-colors">(62) 99449-0177</a>
                 </div>
               </li>
               <li className="flex items-center gap-2.5">

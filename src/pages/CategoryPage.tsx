@@ -128,29 +128,24 @@ export default function CategoryPage() {
               </p>
               {/* Logo vazada — cada categoria com sua marca */}
               {banner.slug === 'infantil' || banner.slug === 'kids' ? (
-                <img
-                  src="/logo-kids-banner.png"
-                  alt="LUFIT KIDS"
-                  className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
-                />
+                <div className="flex flex-col items-center gap-1 mb-3">
+                  <img src="/logo-kids-banner.png" alt="LUFIT KIDS" className="h-14 sm:h-18 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+                  <Link to="/">
+                    <img src="/logo-lufit-nobg.png" alt="LUFIT" className="h-6 sm:h-8 w-auto drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]" />
+                  </Link>
+                </div>
               ) : banner.slug === 'lupo' ? (
-                <img
-                  src="/logo-lupo.png"
-                  alt="LUPO SPORT"
-                  className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
-                />
+                <Link to="/">
+                  <img src="/logo-lupo.png" alt="Lupo Sport" className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+                </Link>
               ) : banner.slug === 'selene' ? (
-                <img
-                  src="/logo-selene.png"
-                  alt="SELENE"
-                  className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
-                />
+                <Link to="/">
+                  <img src="/logo-selene.png" alt="Selene" className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+                </Link>
               ) : (
-                <img
-                  src="/logo-lufit-nobg.png"
-                  alt="LUFIT"
-                  className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
-                />
+                <Link to="/">
+                  <img src="/logo-lufit-nobg.png" alt="LUFIT" className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+                </Link>
               )}
               <p className="text-base sm:text-lg mb-1 opacity-90">{banner.subtitle}</p>
               {banner.description && (
