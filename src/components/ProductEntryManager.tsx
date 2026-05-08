@@ -107,6 +107,12 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
     reader.readAsDataURL(file);
   };
 
+  /* ── BLOCO 1B: PRECO E ESTOQUE BASE (obrigatorio!) ── */
+  const [baseCostPrice, setBaseCostPrice] = useState('');
+  const [baseSalePrice, setBaseSalePrice] = useState('');
+  const [baseStockQty, setBaseStockQty] = useState('');
+  const [baseMarkup, setBaseMarkup] = useState('200');
+
   /* ── BLOCO 2: GRADE ── */
   const [colors, setColors] = useState<ColorDef[]>([
     { id: generateId(), name: 'Preto', hex: '#000000' },
@@ -118,6 +124,15 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#000000');
   const [newSizeName, setNewSizeName] = useState('');
+
+  // Calcular preco de venda automaticamente a partir do custo + markup
+  useState(() => {
+    const cost = parseFloat(baseCostPrice || '0');
+    const markup = parseFloat(baseMarkup || '200');
+    if (cost > 0) {
+      setBaseSalePrice(String((cost * (1 + markup / 100)).toFixed(2)));
+    }
+  });
 
   // Sincronizar fornecedores reais quando carregam
   useState(() => {
@@ -288,15 +303,21 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
   const handleSave = () => {
     if (!sku.trim() || !name.trim()) return;
     
+    // Se tem grade, usa os valores da grade. Se não, usa os campos base
+    const hasGrade = gradeRows.length > 0;
+    const cost = hasGrade ? gradeRows[0].currentCost : parseFloat(baseCostPrice || '0');
+    const price = hasGrade ? gradeRows[0].suggestedPrice : parseFloat(baseSalePrice || '0');
+    const stock = hasGrade ? gradeRows.reduce((sum, r) => sum + (Number(r.qty) || 0), 0) : parseInt(baseStockQty || '0');
+    
     // Preparar dados para o backend
     const productData = {
       sku: sku.trim(),
       name: name.trim(),
       description: description.trim() || null,
-      price: gradeRows.length > 0 ? gradeRows[0].suggestedPrice : 0,
-      compareAtPrice: gradeRows.length > 0 ? gradeRows[0].previousCost : null,
-      costPrice: gradeRows.length > 0 ? gradeRows[0].currentCost : 0,
-      markupPercent: markupPercent,
+      price: price || 0,
+      compareAtPrice: hasGrade ? gradeRows[0].previousCost : null,
+      costPrice: cost || 0,
+      markupPercent: hasGrade ? markupPercent : baseMarkup,
       categoryId: categoryId ? parseInt(categoryId) : 1,
       subcategory: subcategory || null,
       season: null,
@@ -307,17 +328,24 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
       lengthCm: lengthCm ? parseFloat(lengthCm) : null,
       widthCm: widthCm ? parseFloat(widthCm) : null,
       heightCm: heightCm ? parseFloat(heightCm) : null,
-      images: null,
+      images: productImage ? [productImage] : null,
       tags: null,
       isActive: true,
+      stock: stock,
       // Variações (grade)
-      variations: gradeRows.map(row => ({
+      variations: hasGrade ? gradeRows.map(row => ({
         color: row.colorName,
         size: row.sizeName,
         stock: row.qty,
         costPrice: row.currentCost,
         salePrice: row.suggestedPrice,
-      })),
+      })) : [{
+        color: colors[0]?.name || 'Unico',
+        size: 'Unico',
+        stock: stock,
+        costPrice: cost,
+        salePrice: price,
+      }],
     };
     
     createProduct.mutate(productData);
@@ -506,17 +534,58 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
                 </select>
               </div>
             </div>
+            {/* PRECO, CUSTO E ESTOQUE — ESSENCIAL! */}
+            <div className="bg-[#2DD4A8]/5 border border-[#2DD4A8]/20 rounded-xl p-4">
+              <p className="text-xs font-semibold text-[#2DD4A8] mb-3 flex items-center gap-1">
+                <DollarSign className="w-3.5 h-3.5" /> Preço e Estoque (Obrigatório)
+              </p>
+              <div className="grid grid-cols-4 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-[#A0A0B0] block">Custo Unit. (R$) *</label>
+                  <Input type="number" step="0.01" value={baseCostPrice} onChange={e => {
+                    const val = e.target.value;
+                    setBaseCostPrice(val);
+                    const cost = parseFloat(val || '0');
+                    const markup = parseFloat(baseMarkup || '200');
+                    if (cost > 0) setBaseSalePrice(String((cost * (1 + markup / 100)).toFixed(2)));
+                  }} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" placeholder="29,90" />
+                  <p className="text-[9px] text-gray-500">Custo da compra atual</p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-[#A0A0B0] block">Markup (%)</label>
+                  <Input type="number" value={baseMarkup} onChange={e => {
+                    const val = e.target.value;
+                    setBaseMarkup(val);
+                    const cost = parseFloat(baseCostPrice || '0');
+                    const markup = parseFloat(val || '200');
+                    if (cost > 0) setBaseSalePrice(String((cost * (1 + markup / 100)).toFixed(2)));
+                  }} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" placeholder="200" />
+                  <p className="text-[9px] text-gray-500">Margem sobre o custo</p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-[#A0A0B0] block">Preço Venda (R$) *</label>
+                  <Input type="number" step="0.01" value={baseSalePrice} onChange={e => setBaseSalePrice(e.target.value)} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm font-bold" placeholder="89,70" />
+                  <p className="text-[9px] text-lufit-teal">Calculado automaticamente</p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-[#A0A0B0] block">Qtd. Entrada *</label>
+                  <Input type="number" value={baseStockQty} onChange={e => setBaseStockQty(e.target.value)} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" placeholder="10" />
+                  <p className="text-[9px] text-gray-500">Quantidade em estoque</p>
+                </div>
+              </div>
+            </div>
+
             {/* Estoque Min/Max */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-[#14141E] border border-[#1E1E2E] rounded-lg p-3">
-                <label className="text-xs text-[#A0A0B0] block mb-1">Estoque Mínimo (alerta)</label>
-                <Input type="number" value={minStock} onChange={e => setMinStock(e.target.value)} className="bg-[#0A0A0F] border-[#1E1E2E] text-white" />
-                <p className="text-[10px] text-gray-500 mt-1">Alerta quando estoque chegar neste valor</p>
+              <div className="space-y-1">
+                <label className="text-xs text-[#A0A0B0] block">Estoque Mínimo (alerta)</label>
+                <Input type="number" value={minStock} onChange={e => setMinStock(e.target.value)} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                <p className="text-[10px] text-gray-500">Alerta quando estoque chegar neste valor</p>
               </div>
-              <div className="bg-[#14141E] border border-[#1E1E2E] rounded-lg p-3">
-                <label className="text-xs text-[#A0A0B0] block mb-1">Estoque Máximo</label>
-                <Input type="number" value={maxStock} onChange={e => setMaxStock(e.target.value)} className="bg-[#0A0A0F] border-[#1E1E2E] text-white" />
-                <p className="text-[10px] text-gray-500 mt-1">Limite ideal de estoque</p>
+              <div className="space-y-1">
+                <label className="text-xs text-[#A0A0B0] block">Estoque Máximo</label>
+                <Input type="number" value={maxStock} onChange={e => setMaxStock(e.target.value)} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                <p className="text-[10px] text-gray-500">Limite ideal de estoque</p>
               </div>
             </div>
           </div>
