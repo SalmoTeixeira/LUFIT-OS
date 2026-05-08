@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, DollarSign,
   Warehouse, Settings, LogOut, Sun, Moon, Building2, FileText, MessageCircle,
-  TrendingUp, ArrowUpRight, ArrowDownRight, CheckCircle, Clock, ChevronLeft
+  CheckCircle, Clock, ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import SuppliersTab from '@/components/admin/SuppliersTab';
 import ProdutosTab from '@/components/admin/ProdutosTab';
+import PedidosTab from '@/components/admin/PedidosTab';
+import ClientesTab from '@/components/admin/ClientesTab';
 import NfDespachoTab from '@/components/admin/NfDespachoTab';
 import FinanceiroTab from '@/components/admin/FinanceiroTab';
 import EstoqueTab from '@/components/admin/EstoqueTab';
@@ -176,105 +178,9 @@ export default function AdminPage() {
   );
 }
 
-/* ── Dashboard Tab ── */
-function DashboardTab() {
-  const stats = [
-    { label: 'Vendas Hoje', value: 'R$ 3.240,00', change: '+12%', up: true, icon: DollarSign },
-    { label: 'Pedidos Hoje', value: '18', change: '+5', up: true, icon: ShoppingCart },
-    { label: 'Clientes Novos', value: '7', change: '-2', up: false, icon: Users },
-    { label: 'Ticket Médio', value: 'R$ 180,00', change: '+8%', up: true, icon: TrendingUp },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white">Dashboard</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => {
-          const Icon = s.icon;
-          return (
-            <div key={s.label} className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-[#6E6E80]">{s.label}</span>
-                <Icon className="w-4 h-4 text-[#6E6E80]" />
-              </div>
-              <div className="text-2xl font-bold text-white">{s.value}</div>
-              <div className={`flex items-center gap-1 mt-1 text-xs ${s.up ? 'text-lufit-teal' : 'text-red-400'}`}>
-                {s.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {s.change}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-4">Vendas da Semana</h3>
-          <div className="h-40 flex items-end gap-2">
-            {[40, 65, 45, 80, 55, 90, 60].map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full bg-lufit-teal/20 rounded-t" style={{ height: `${h * 1.5}px` }} />
-                <span className="text-[10px] text-[#6E6E80]">{['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][i]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-4">Pedidos Recentes</h3>
-          <div className="space-y-3">
-            {[
-              { id: '#5241', client: 'Ana Paula', total: 'R$ 259,80', status: 'Pago', color: 'text-lufit-teal' },
-              { id: '#5240', client: 'Mariana S.', total: 'R$ 478,00', status: 'Pendente', color: 'text-amber-400' },
-              { id: '#5239', client: 'Juliana R.', total: 'R$ 129,90', status: 'Entregue', color: 'text-blue-400' },
-            ].map((o) => (
-              <div key={o.id} className="flex items-center justify-between py-2 border-b border-[#1E1E2E] last:border-0">
-                <div>
-                  <p className="text-sm text-white font-medium">{o.id}</p>
-                  <p className="text-xs text-[#6E6E80]">{o.client}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-white">{o.total}</p>
-                  <p className={`text-xs ${o.color}`}>{o.status}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ProdutosTab agora importado de @/components/admin/ProdutosTab
-
-/* ── Pedidos Tab ── */
-function PedidosTab() {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white">Pedidos</h2>
-      <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-8 text-center">
-        <ShoppingCart className="w-10 h-10 mx-auto mb-3 text-[#6E6E80]" />
-        <p className="text-[#A0A0B0]">Gestão de pedidos em desenvolvimento</p>
-        <p className="text-xs text-[#6E6E80] mt-1">Integração com Bling em breve</p>
-      </div>
-    </div>
-  );
-}
-
-/* ── Clientes Tab ── */
-function ClientesTab() {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white">Clientes</h2>
-      <div className="bg-[#14141E] border border-[#1E1E2E] rounded-xl p-8 text-center">
-        <Users className="w-10 h-10 mx-auto mb-3 text-[#6E6E80]" />
-        <p className="text-[#A0A0B0]">Base de clientes em desenvolvimento</p>
-      </div>
-    </div>
-  );
-}
-
-// FinanceiroTab e EstoqueTab agora importados de @/components/admin/
+// Tabs importados de @/components/admin/ (externos, com dados reais)
+import Dashboard from '@/components/admin/Dashboard';
+function DashboardTab() { return <Dashboard />; }
 
 /* ── Config Tab ── */
 function ConfigTab() {
