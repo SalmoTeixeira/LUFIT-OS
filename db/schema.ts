@@ -90,6 +90,49 @@ export const subcategories = mysqlTable("subcategories", {
 export type Subcategory = typeof subcategories.$inferSelect;
 export type InsertSubcategory = typeof subcategories.$inferInsert;
 
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO OPERACIONAL — MARCAS
+// ─────────────────────────────────────────────────────────────────────
+
+export const brands = mysqlTable("brands", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull(),
+  description: text("description"),
+  logoUrl: text("logoUrl"),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("brand_slug_idx").on(table.slug),
+]);
+
+export type Brand = typeof brands.$inferSelect;
+export type InsertBrand = typeof brands.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO OPERACIONAL — HISTÓRICO DE COMPRAS/ENTRADAS
+// ─────────────────────────────────────────────────────────────────────
+
+export const productPurchaseHistory = mysqlTable("productPurchaseHistory", {
+  id: serial("id").primaryKey(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
+  invoiceNumber: varchar("invoiceNumber", { length: 100 }),
+  qty: int("qty").default(0).notNull(),
+  unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
+  totalCost: decimal("totalCost", { precision: 10, scale: 2 }),
+  paymentCondition: varchar("paymentCondition", { length: 50 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("pph_product_idx").on(table.productId),
+  index("pph_supplier_idx").on(table.supplierId),
+  index("pph_created_idx").on(table.createdAt),
+]);
+
+export type ProductPurchaseHistory = typeof productPurchaseHistory.$inferSelect;
+
 export const products = mysqlTable("products", {
   id: serial("id").primaryKey(),
   sku: varchar("sku", { length: 100 }).notNull().unique(),

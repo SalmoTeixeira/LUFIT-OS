@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { trpc } from '@/providers/trpc';
-import { Search, Plus, Pencil, Trash2, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Package, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -95,56 +95,59 @@ export default function ProdutosTab() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#1E1E2E] text-[#6E6E80]">
-                <th className="text-left px-4 py-3 font-medium">Produto</th>
-                <th className="text-left px-4 py-3 font-medium">SKU</th>
-                <th className="text-left px-4 py-3 font-medium">Fornecedor</th>
-                <th className="text-left px-4 py-3 font-medium">Custo</th>
-                <th className="text-left px-4 py-3 font-medium">Preço</th>
-                <th className="text-left px-4 py-3 font-medium">Lucro</th>
-                <th className="text-left px-4 py-3 font-medium">Estoque</th>
-                <th className="text-right px-4 py-3 font-medium">Ações</th>
+              <tr className="border-b border-[#1E1E2E] text-[#6E6E80] text-xs">
+                <th className="text-left px-3 py-3 font-medium">Produto</th>
+                <th className="text-left px-3 py-3 font-medium">SKU</th>
+                <th className="text-left px-3 py-3 font-medium">Última Compra</th>
+                <th className="text-right px-3 py-3 font-medium">Custo</th>
+                <th className="text-right px-3 py-3 font-medium">Venda</th>
+                <th className="text-right px-3 py-3 font-medium">Qtd Entrada</th>
+                <th className="text-right px-3 py-3 font-medium">Margem</th>
+                <th className="text-right px-3 py-3 font-medium">Estoque</th>
+                <th className="text-right px-3 py-3 font-medium">Ações</th>
               </tr>
             </thead>
             <tbody>
               {paginatedProducts.map((product: any) => {
                 const lucro = calcLucratividade(product.costPrice, product.price);
                 const lucroColor = lucro >= 50 ? 'text-lufit-teal' : lucro >= 30 ? 'text-amber-400' : lucro > 0 ? 'text-orange-400' : 'text-red-400';
+                const marginBg = lucro >= 50 ? 'bg-lufit-teal/10' : lucro >= 30 ? 'bg-amber-500/10' : 'bg-red-500/10';
+                const lastPurchaseDate = product.updatedAt
+                  ? new Date(product.updatedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                  : '-';
+                const entradaQty = product.stock || 0;
                 return (
                   <tr key={product.id} className="border-b border-[#1E1E2E] last:border-0 hover:bg-[#1E1E2E]/50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <img src={product.images?.[0] || '/logo.jpg'} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-[#0A0A0F]" />
-                        <div>
-                          <p className="text-white font-medium text-sm">{product.name}</p>
-                          {product.sku && <p className="text-[10px] text-[#6E6E80]">SKU: {product.sku}</p>}
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <img src={product.images?.[0] || '/logo.jpg'} alt={product.name} className="w-9 h-9 rounded-lg object-cover bg-[#0A0A0F] shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-white font-medium text-sm truncate">{product.name}</p>
+                          <p className="text-[10px] text-[#6E6E80]">{getSupplierName(product.supplierId)}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#A0A0B0]">{product.sku || '-'}</td>
-                    <td className="px-4 py-3 text-[#A0A0B0] text-xs">{getSupplierName(product.supplierId)}</td>
-                    <td className="px-4 py-3 text-[#6E6E80]">{formatCurrency(product.costPrice)}</td>
-                    <td className="px-4 py-3 text-white font-medium">{formatCurrency(product.price)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`${lucroColor} text-xs font-medium`}>{lucro.toFixed(1)}%</span>
+                    <td className="px-3 py-3 text-[#A0A0B0] text-xs">{product.sku || '-'}</td>
+                    <td className="px-3 py-3 text-[#6E6E80] text-xs">{lastPurchaseDate}</td>
+                    <td className="px-3 py-3 text-right text-[#A0A0B0] text-xs">{formatCurrency(product.costPrice)}</td>
+                    <td className="px-3 py-3 text-right text-white font-medium text-xs">{formatCurrency(product.price)}</td>
+                    <td className="px-3 py-3 text-right">
+                      <span className="text-[#00B0FF] text-xs font-medium">{entradaQty} un</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-lufit-teal text-xs font-medium">{product.stock || 0} un</span>
+                    <td className="px-3 py-3 text-right">
+                      <span className={`inline-flex items-center gap-0.5 ${lucroColor} text-xs font-bold px-1.5 py-0.5 rounded ${marginBg}`}>
+                        <TrendingUp className="w-3 h-3" />{lucro.toFixed(1)}%
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => setProductModalOpen(true)}
-                          className="p-2 rounded-lg hover:bg-[#1E1E2E] text-[#6E6E80] transition-colors"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product)}
-                          className="p-2 rounded-lg hover:bg-red-500/10 text-[#6E6E80] hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                    <td className="px-3 py-3 text-right">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${(product.stock || 0) > 10 ? 'bg-lufit-teal/10 text-lufit-teal' : (product.stock || 0) > 0 ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400'}`}>
+                        {product.stock || 0} un
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <button onClick={() => setProductModalOpen(true)} className="p-1.5 rounded-lg hover:bg-[#1E1E2E] text-[#6E6E80] transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => handleDelete(product)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#6E6E80] hover:text-red-400 transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
                     </td>
                   </tr>
