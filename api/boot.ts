@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.6.0 CADASTRO PRODUTO: upload foto + cat/sub/marca DB + tabela completa
-console.log("[LUFIT OS] Boot v2.6.0 — Cadastro de produtos revolucionado");
+// Force Railway rebuild — v2.6.2 TABELA PRODUTOS: custo ultima compra + custo atual + custo medio + margem% + preço ajustável
+console.log("[LUFIT OS] Boot v2.6.2 — Tabela produtos completa com custos e margem");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.6.0-cadastro-produto",
+  version: "2.6.2-tabela-produtos-custos",
   timestamp: new Date().toISOString(),
 }));
 
