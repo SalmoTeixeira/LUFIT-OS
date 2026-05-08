@@ -44,8 +44,38 @@ function calculateInstallments(amount: number): InstallmentOption[] {
   return results;
 }
 
+/* ── Error Boundary para evitar tela branca ── */
+import { Component } from 'react';
+import type { ReactNode } from 'react';
+
+class CheckoutErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: string }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: '' };
+  }
+  static getDerivedStateFromError(err: Error) {
+    return { hasError: true, error: err.message };
+  }
+  componentDidCatch(err: Error, info: any) {
+    console.error('[CheckoutError]', err, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+          <AlertTriangle className="w-16 h-16 text-red-400 mb-4" />
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Algo deu errado no checkout</h1>
+          <p className="text-gray-500 mb-4 max-w-md">{this.state.error}</p>
+          <a href="/" className="bg-lufit-teal text-white px-6 py-2 rounded-lg font-semibold hover:bg-lufit-teal/90 transition-colors">Voltar para a loja</a>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /* ── Checkout Page ── */
-export default function CheckoutPage() {
+function CheckoutPageInner() {
   const {
     cart, cartTotal, cartCount, wholesaleGroups, discountTotal, finalTotal,
     clearCart, customer,
@@ -833,5 +863,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <CheckoutErrorBoundary>
+      <CheckoutPageInner />
+    </CheckoutErrorBoundary>
   );
 }

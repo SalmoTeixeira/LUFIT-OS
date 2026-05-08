@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.6.5 FIX: carrinho subtotal + frete Goiania 399 + tela branca checkout
-console.log("[LUFIT OS] Boot v2.6.5 — Frete e carrinho corrigidos");
+// Force Railway rebuild — v2.6.6 FIX: logos clicaveis + header/footer limpo + Lupo/Selene + tela branca protegida
+console.log("[LUFIT OS] Boot v2.6.6 — UI e checkout corrigidos");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.6.5-fix-frete-carrinho",
+  version: "2.6.6-ui-checkout-fix",
   timestamp: new Date().toISOString(),
 }));
 
