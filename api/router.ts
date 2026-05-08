@@ -15,6 +15,7 @@ import { financeRouter } from "./finance-router";
 import { stockRouter } from "./stock-router";
 import { blingRouter } from "./bling-router";
 import { whatsappRouter } from "./whatsapp-router";
+import { customerRouter } from "./customer-router";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -36,6 +37,7 @@ export const appRouter = createRouter({
   stock: stockRouter,
   bling: blingRouter,
   whatsapp: whatsappRouter,
+  customer: customerRouter,
 });
 
 export type AppRouter = typeof appRouter;

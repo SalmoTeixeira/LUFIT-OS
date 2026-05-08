@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.5.0 FASE 4 FINAL: WhatsApp real + auto-confirmação pedido
-console.log("[LUFIT OS] Boot v2.5.0 — FASE 4 WhatsApp Automático 100%");
+// Force Railway rebuild — v2.5.1 ADMIN COMPLETO: Dashboard real + Pedidos + Clientes
+console.log("[LUFIT OS] Boot v2.5.1 — Painel administrativo 100% funcional");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.5.0-fase4-whatsapp-final",
+  version: "2.5.1-admin-completo",
   timestamp: new Date().toISOString(),
 }));
 
