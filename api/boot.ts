@@ -210,10 +210,25 @@ if (env.isProduction) {
       createdAt TIMESTAMP DEFAULT NOW()
     )`);
 
-    // Cria indexes
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_phone_idx ON whatsappMessages (phoneNumber)`);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_status_idx ON whatsappMessages (status)`);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_event_idx ON whatsappMessages (eventType)`);
+    // Cria indexes (wrapped individually — index creation may fail if table creation was skipped)
+    try {
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_phone_idx ON whatsappMessages (phoneNumber)`);
+      console.log('[LUFIT-OS] WhatsApp: index wm_phone_idx criado/verificado');
+    } catch (idxErr) {
+      console.warn('[LUFIT-OS] WhatsApp: nao foi possivel criar wm_phone_idx (tabela pode nao existir ainda):', (idxErr as Error).message);
+    }
+    try {
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_status_idx ON whatsappMessages (status)`);
+      console.log('[LUFIT-OS] WhatsApp: index wm_status_idx criado/verificado');
+    } catch (idxErr) {
+      console.warn('[LUFIT-OS] WhatsApp: nao foi possivel criar wm_status_idx (tabela pode nao existir ainda):', (idxErr as Error).message);
+    }
+    try {
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_event_idx ON whatsappMessages (eventType)`);
+      console.log('[LUFIT-OS] WhatsApp: index wm_event_idx criado/verificado');
+    } catch (idxErr) {
+      console.warn('[LUFIT-OS] WhatsApp: nao foi possivel criar wm_event_idx (tabela pode nao existir ainda):', (idxErr as Error).message);
+    }
 
     // Insere templates padrao se tabela vazia
     const existing = await db.select().from(whatsappTemplates).limit(1);
@@ -239,32 +254,54 @@ if (env.isProduction) {
     const db = getDb();
     const { categories, brands } = await import("../db/schema");
     const { count } = await import("drizzle-orm");
-    const [catCount] = await db.select({ count: count() }).from(categories);
-    if ((catCount?.count ?? 0) === 0) {
-      await db.insert(categories).values([
-        { name: 'Leggings', slug: 'leggings', sortOrder: 1 },
-        { name: 'Tops & Croppeds', slug: 'tops', sortOrder: 2 },
-        { name: 'Macaquinhos', slug: 'macaquinhos', sortOrder: 3 },
-        { name: 'Shorts & Bermudas', slug: 'shorts', sortOrder: 4 },
-        { name: 'Blusas & Camisetas', slug: 'blusas', sortOrder: 5 },
-        { name: 'Conjuntos', slug: 'conjuntos', sortOrder: 6 },
-        { name: 'Casacos & Jaquetas', slug: 'casacos', sortOrder: 7 },
-        { name: 'Moda Praia', slug: 'praia', sortOrder: 8 },
-        { name: 'Masculino', slug: 'masculino', sortOrder: 9 },
-        { name: 'Linha Infantil', slug: 'infantil', sortOrder: 10 },
-        { name: 'Moda Íntima', slug: 'intima', sortOrder: 11 },
-        { name: 'Acessórios', slug: 'acessorios', sortOrder: 12 },
-      ]);
-      console.log('[LUFIT-OS] Auto-seed: 12 categorias inseridas');
+
+    // Seed categories — wrapped in try-catch in case the table doesn't exist yet
+    try {
+      const [catCount] = await db.select({ count: count() }).from(categories);
+      if ((catCount?.count ?? 0) === 0) {
+        await db.insert(categories).values([
+          { name: 'Leggings', slug: 'leggings', sortOrder: 1 },
+          { name: 'Tops & Croppeds', slug: 'tops', sortOrder: 2 },
+          { name: 'Macaquinhos', slug: 'macaquinhos', sortOrder: 3 },
+          { name: 'Shorts & Bermudas', slug: 'shorts', sortOrder: 4 },
+          { name: 'Blusas & Camisetas', slug: 'blusas', sortOrder: 5 },
+          { name: 'Conjuntos', slug: 'conjuntos', sortOrder: 6 },
+          { name: 'Casacos & Jaquetas', slug: 'casacos', sortOrder: 7 },
+          { name: 'Moda Praia', slug: 'praia', sortOrder: 8 },
+          { name: 'Masculino', slug: 'masculino', sortOrder: 9 },
+          { name: 'Linha Infantil', slug: 'infantil', sortOrder: 10 },
+          { name: 'Moda Íntima', slug: 'intima', sortOrder: 11 },
+          { name: 'Acessórios', slug: 'acessorios', sortOrder: 12 },
+        ]);
+        console.log('[LUFIT-OS] Auto-seed: 12 categorias inseridas');
+      }
+    } catch (catErr) {
+      const msg = (catErr as Error).message;
+      if (msg.includes("doesn't exist") || msg.includes("does not exist") || msg.includes("ER_NO_SUCH_TABLE")) {
+        console.warn('[LUFIT-OS] Auto-seed: tabela categories ainda nao existe, pulando seed');
+      } else {
+        console.warn('[LUFIT-OS] Auto-seed categorias erro:', msg);
+      }
     }
-    const [brandCount] = await db.select({ count: count() }).from(brands);
-    if ((brandCount?.count ?? 0) === 0) {
-      await db.insert(brands).values([
-        { name: 'LUFIT', slug: 'lufit' },
-        { name: 'LUPO', slug: 'lupo' },
-        { name: 'SELENE', slug: 'selene' },
-      ]);
-      console.log('[LUFIT-OS] Auto-seed: 3 marcas inseridas');
+
+    // Seed brands — wrapped in try-catch in case the table doesn't exist yet
+    try {
+      const [brandCount] = await db.select({ count: count() }).from(brands);
+      if ((brandCount?.count ?? 0) === 0) {
+        await db.insert(brands).values([
+          { name: 'LUFIT', slug: 'lufit' },
+          { name: 'LUPO', slug: 'lupo' },
+          { name: 'SELENE', slug: 'selene' },
+        ]);
+        console.log('[LUFIT-OS] Auto-seed: 3 marcas inseridas');
+      }
+    } catch (brandErr) {
+      const msg = (brandErr as Error).message;
+      if (msg.includes("doesn't exist") || msg.includes("does not exist") || msg.includes("ER_NO_SUCH_TABLE")) {
+        console.warn('[LUFIT-OS] Auto-seed: tabela brands ainda nao existe, pulando seed');
+      } else {
+        console.warn('[LUFIT-OS] Auto-seed marcas erro:', msg);
+      }
     }
   } catch (e) {
     console.warn('[LUFIT-OS] Auto-seed categorias/marcas erro:', (e as Error).message);
