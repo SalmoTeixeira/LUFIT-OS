@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
 import { trpc } from '@/providers/trpc';
@@ -45,8 +46,6 @@ function calculateInstallments(amount: number): InstallmentOption[] {
 }
 
 /* ── Error Boundary para evitar tela branca ── */
-import { Component } from 'react';
-import type { ReactNode } from 'react';
 
 class CheckoutErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: string }> {
   constructor(props: { children: ReactNode }) {
@@ -116,9 +115,17 @@ function CheckoutPageInner() {
   const sendWhatsAppConfirmation = trpc.whatsapp.sendOrderConfirmation.useMutation();
 
   // Computed totals
-  const subtotal = finalTotal;
+  const subtotal = finalTotal || 0;
   const shippingCost = selectedShipping?.cost ?? 0;
   const total = subtotal + shippingCost;
+
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (cart.length === 0) {
+      // Show empty cart message instead of crashing
+      setPaymentError('Seu carrinho está vazio. Adicione produtos antes de finalizar a compra.');
+    }
+  }, [cart]);
 
   // Generate installments when payment method changes
   useEffect(() => {

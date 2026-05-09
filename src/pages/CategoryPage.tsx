@@ -135,13 +135,15 @@ export default function CategoryPage() {
                   </Link>
                 </div>
               ) : banner.slug === 'lupo' ? (
-                <Link to="/">
-                  <img src="/logo-lupo.png" alt="Lupo Sport" className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
-                </Link>
+                <div className="flex flex-col items-center gap-1 mb-3">
+                  <Link to="/"><img src="/logo-lupo.png" alt="Lupo Sport" className="h-16 sm:h-20 md:h-24 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" /></Link>
+                  <Link to="/"><img src="/logo-lufit-nobg.png" alt="LUFIT" className="h-6 sm:h-8 w-auto drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)] opacity-80" /></Link>
+                </div>
               ) : banner.slug === 'selene' ? (
-                <Link to="/">
-                  <img src="/logo-selene.png" alt="Selene" className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
-                </Link>
+                <div className="flex flex-col items-center gap-1 mb-3">
+                  <Link to="/"><img src="/logo-selene.png" alt="Selene" className="h-16 sm:h-20 md:h-24 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" /></Link>
+                  <Link to="/"><img src="/logo-lufit-nobg.png" alt="LUFIT" className="h-6 sm:h-8 w-auto drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)] opacity-80" /></Link>
+                </div>
               ) : (
                 <Link to="/">
                   <img src="/logo-lufit-nobg.png" alt="LUFIT" className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
