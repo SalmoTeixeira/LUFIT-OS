@@ -211,9 +211,24 @@ if (env.isProduction) {
     )`);
 
     // Cria indexes
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_phone_idx ON whatsappMessages (phoneNumber)`);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_status_idx ON whatsappMessages (status)`);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_event_idx ON whatsappMessages (eventType)`);
+    try {
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_phone_idx ON whatsappMessages (phoneNumber)`);
+      console.log('[LUFIT-OS] WhatsApp: index wm_phone_idx criado/verificado');
+    } catch (e) {
+      console.warn('[LUFIT-OS] WhatsApp: index wm_phone_idx erro (pode ja existir):', (e as Error).message);
+    }
+    try {
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_status_idx ON whatsappMessages (status)`);
+      console.log('[LUFIT-OS] WhatsApp: index wm_status_idx criado/verificado');
+    } catch (e) {
+      console.warn('[LUFIT-OS] WhatsApp: index wm_status_idx erro (pode ja existir):', (e as Error).message);
+    }
+    try {
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS wm_event_idx ON whatsappMessages (eventType)`);
+      console.log('[LUFIT-OS] WhatsApp: index wm_event_idx criado/verificado');
+    } catch (e) {
+      console.warn('[LUFIT-OS] WhatsApp: index wm_event_idx erro (pode ja existir):', (e as Error).message);
+    }
 
     // Insere templates padrao se tabela vazia
     const existing = await db.select().from(whatsappTemplates).limit(1);
@@ -235,10 +250,11 @@ if (env.isProduction) {
   // ═════════════════════════════════════════════════════════════════════
   // AUTO-SEED: Categorias e Marcas padrão
   // ═════════════════════════════════════════════════════════════════════
+  const db = getDb();
+  const { categories, brands } = await import("../db/schema");
+  const { count } = await import("drizzle-orm");
+
   try {
-    const db = getDb();
-    const { categories, brands } = await import("../db/schema");
-    const { count } = await import("drizzle-orm");
     const [catCount] = await db.select({ count: count() }).from(categories);
     if ((catCount?.count ?? 0) === 0) {
       await db.insert(categories).values([
@@ -257,6 +273,16 @@ if (env.isProduction) {
       ]);
       console.log('[LUFIT-OS] Auto-seed: 12 categorias inseridas');
     }
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (msg.includes('Table') || msg.includes('table') || msg.includes('exist')) {
+      console.warn('[LUFIT-OS] Auto-seed categorias: tabela nao encontrada (migration pendente):', msg);
+    } else {
+      console.warn('[LUFIT-OS] Auto-seed categorias erro:', msg);
+    }
+  }
+
+  try {
     const [brandCount] = await db.select({ count: count() }).from(brands);
     if ((brandCount?.count ?? 0) === 0) {
       await db.insert(brands).values([
@@ -267,6 +293,11 @@ if (env.isProduction) {
       console.log('[LUFIT-OS] Auto-seed: 3 marcas inseridas');
     }
   } catch (e) {
-    console.warn('[LUFIT-OS] Auto-seed categorias/marcas erro:', (e as Error).message);
+    const msg = (e as Error).message;
+    if (msg.includes('Table') || msg.includes('table') || msg.includes('exist')) {
+      console.warn('[LUFIT-OS] Auto-seed marcas: tabela nao encontrada (migration pendente):', msg);
+    } else {
+      console.warn('[LUFIT-OS] Auto-seed marcas erro:', msg);
+    }
   }
 }
