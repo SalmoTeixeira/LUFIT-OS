@@ -282,3 +282,4 @@ if (env.isProduction) {
     console.warn('[LUFIT-OS] Auto-seed categorias/marcas erro:', (e as Error).message);
   }
 }
+// force 1778411224
