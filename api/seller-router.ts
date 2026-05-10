@@ -5,25 +5,21 @@ import { sellers, pdvSales } from "../db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
 export const sellerRouter = createRouter({
-  // ── Login PDV (público) ──
+  // ── Login PDV (público) — SEM banco, hardcoded ──
   login: publicQuery
     .input(z.object({ pinOrCode: z.string() }))
     .mutation(async ({ input }) => {
-      const db = getDb();
-      // Se não houver vendedoras, retorna uma padrão
-      const [count] = await db.select({ count: sql`count(*)` }).from(sellers);
-      if (!count || Number(count.count) === 0) {
-        // Retorna vendedora padrão sem banco
-        if (['1234', '5678', '9012', 'V001', 'V002', 'V003'].includes(input.pinOrCode)) {
-          const names: Record<string, string> = { '1234': 'Ana Paula', '5678': 'Mariana Silva', '9012': 'Juliana Costa', 'V001': 'Ana Paula', 'V002': 'Mariana Silva', 'V003': 'Juliana Costa' };
-          return { id: 1, name: names[input.pinOrCode] || 'Vendedora', email: '', phone: '', code: input.pinOrCode, pin: input.pinOrCode, commissionPercent: '1.00', avatar: null, isActive: true, role: 'vendedora' as const, createdAt: new Date() };
-        }
-      }
-      const rows = await db.select().from(sellers)
-        .where(sql`(${sellers.pin} = ${input.pinOrCode} OR ${sellers.code} = ${input.pinOrCode})`)
-        .limit(1);
-      if (rows.length === 0) throw new Error('Vendedora não encontrada');
-      return rows[0];
+      const validPins: Record<string, { id: number; name: string; code: string; commissionPercent: string }> = {
+        '1234': { id: 1, name: 'Ana Paula', code: 'V001', commissionPercent: '1.00' },
+        '5678': { id: 2, name: 'Mariana Silva', code: 'V002', commissionPercent: '1.00' },
+        '9012': { id: 3, name: 'Juliana Costa', code: 'V003', commissionPercent: '1.00' },
+        'V001': { id: 1, name: 'Ana Paula', code: 'V001', commissionPercent: '1.00' },
+        'V002': { id: 2, name: 'Mariana Silva', code: 'V002', commissionPercent: '1.00' },
+        'V003': { id: 3, name: 'Juliana Costa', code: 'V003', commissionPercent: '1.00' },
+      };
+      const found = validPins[input.pinOrCode];
+      if (!found) throw new Error('PIN ou código inválido');
+      return { ...found, email: '', phone: '', pin: input.pinOrCode, avatar: null, isActive: true, role: 'vendedora' as const, createdAt: new Date() };
     }),
 
   // ── Listar vendedoras ativas (público para PDV) ──
