@@ -14,7 +14,7 @@ import { eq } from "drizzle-orm";
 const app = new Hono<{ Bindings: HttpBindings }>();
 
 // Force Railway rebuild — v3.0.0 FASE 5: PDV Balcão + Vendedoras + Comissão 1% + Modo Offline
-console.log("[LUFIT OS] Boot v3.0.5 — PDV login hardcoded sem banco");
+console.log("[LUFIT OS] Boot v3.0.6 — PDV subtotal fix + banner Lupo/Selene sem logo LUFIT");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "3.0.5-pdv-hardcoded",
+  version: "3.0.6-pdv-subtotal-fix",
   timestamp: new Date().toISOString(),
 }));
 
