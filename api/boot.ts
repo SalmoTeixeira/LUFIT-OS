@@ -14,7 +14,7 @@ import { eq } from "drizzle-orm";
 const app = new Hono<{ Bindings: HttpBindings }>();
 
 // Force Railway rebuild — v3.0.0 FASE 5: PDV Balcão + Vendedoras + Comissão 1% + Modo Offline
-console.log("[LUFIT OS] Boot v3.0.3 — PDV login boolean mysql fix");
+console.log("[LUFIT OS] Boot v3.0.4 — PDV login bypass modo emergencia");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "3.0.3-pdv-login-fix",
+  version: "3.0.4-pdv-login-bypass",
   timestamp: new Date().toISOString(),
 }));
 
