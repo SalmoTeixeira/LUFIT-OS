@@ -14,7 +14,7 @@ import { eq } from "drizzle-orm";
 const app = new Hono<{ Bindings: HttpBindings }>();
 
 // Force Railway rebuild — v2.6.7 FIX: checkout import corrigido + logo LUFIT em Lupo/Selene + carrinho vazio
-console.log("[LUFIT OS] Boot v2.6.7 — Checkout funcional e banners corrigidos");
+console.log("[LUFIT OS] Boot v2.7.0 FINAL — Checkout reescrito + 27 estados + retirar na loja + frete Goiania 399");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.6.7-checkout-fix-final",
+  version: "2.7.0-final-checkout",
   timestamp: new Date().toISOString(),
 }));
 
