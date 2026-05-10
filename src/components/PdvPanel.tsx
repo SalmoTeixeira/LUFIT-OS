@@ -119,9 +119,9 @@ export default function PdvPanel() {
     }));
   };
 
-  // Calculated values
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const total = Math.max(0, subtotal - discount);
+  // Calculated values — garantir que são numbers
+  const subtotal = cart.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 0), 0);
+  const total = Math.max(0, subtotal - (Number(discount) || 0));
   const commissionAmount = seller ? (total * (Number(seller.commissionPercent) || 1)) / 100 : 0;
 
   // Complete sale
@@ -132,17 +132,17 @@ export default function PdvPanel() {
     const saleData = {
       sellerId: seller?.id || 1,
       items: cart.map(item => ({
-        productId: item.id, name: item.name, price: item.price,
-        qty: item.qty, size: item.size, color: item.color, sku: item.sku,
+        productId: String(item.id), name: item.name, price: Number(item.price) || 0,
+        qty: Number(item.qty) || 1, size: item.size, color: item.color, sku: item.sku,
       })),
-      subtotal,
-      discount,
-      total,
+      subtotal: Number(subtotal) || 0,
+      discount: Number(discount) || 0,
+      total: Number(total) || 0,
       paymentMethod: paymentMethod as any,
       customerName: customerName || 'Cliente Avulso',
       customerPhone: customerPhone || undefined,
       commissionPercent: Number(seller?.commissionPercent) || 1,
-      commissionAmount,
+      commissionAmount: Number(commissionAmount) || 0,
       isOffline: !isOnline,
     };
 
