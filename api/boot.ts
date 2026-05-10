@@ -14,7 +14,7 @@ import { eq } from "drizzle-orm";
 const app = new Hono<{ Bindings: HttpBindings }>();
 
 // Force Railway rebuild — v3.0.0 FASE 5: PDV Balcão + Vendedoras + Comissão 1% + Modo Offline
-console.log("[LUFIT OS] Boot v3.0.0 — FASE 5 PDV Balcão ativo");
+console.log("[LUFIT OS] Boot v3.0.1 — PDV com 3 vendedoras padrao");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "3.0.0-fase5-pdv-balacao",
+  version: "3.0.1-pdv-vendedoras-seed",
   timestamp: new Date().toISOString(),
 }));
 
@@ -265,6 +265,18 @@ if (env.isProduction) {
         { name: 'SELENE', slug: 'selene' },
       ]);
       console.log('[LUFIT-OS] Auto-seed: 3 marcas inseridas');
+    }
+
+    // Seed vendedoras padrão
+    const { sellers } = await import("../db/schema");
+    const [sellerCount] = await db.select({ count: count() }).from(sellers);
+    if ((sellerCount?.count ?? 0) === 0) {
+      await db.insert(sellers).values([
+        { name: 'Ana Paula', email: 'ana@lufit.com.br', phone: '62999990001', code: 'V001', pin: '1234', commissionPercent: '1.00', isActive: true, role: 'vendedora' },
+        { name: 'Mariana Silva', email: 'mariana@lufit.com.br', phone: '62999990002', code: 'V002', pin: '5678', commissionPercent: '1.00', isActive: true, role: 'vendedora' },
+        { name: 'Juliana Costa', email: 'juliana@lufit.com.br', phone: '62999990003', code: 'V003', pin: '9012', commissionPercent: '1.00', isActive: true, role: 'gerente' },
+      ]);
+      console.log('[LUFIT-OS] Auto-seed: 3 vendedoras inseridas (V001/PIN:1234, V002/PIN:5678, V003/PIN:9012)');
     }
   } catch (e) {
     console.warn('[LUFIT-OS] Auto-seed categorias/marcas erro:', (e as Error).message);
