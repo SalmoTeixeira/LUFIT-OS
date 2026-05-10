@@ -124,7 +124,7 @@ export default function CategoryPage() {
           <div className={`absolute inset-0 flex flex-col items-${banner.textPosition} justify-center px-6 sm:px-12 lg:px-20 text-${banner.textColor === 'light' ? 'white' : 'gray-900'}`}>
             <div className={`text-${banner.textPosition === 'center' ? 'center' : banner.textPosition} max-w-xl`}>
               <p className="text-xs sm:text-sm tracking-[0.3em] uppercase mb-2 opacity-80">
-                {banner.theme === 'praia' ? 'Beachwear Collection' : banner.theme === 'fitness' ? 'Performance Wear' : banner.theme === 'luxo' ? 'Sport Luxe' : 'LUFIT Collection'}
+                {banner.slug === 'lupo' ? 'Lupo Sport' : banner.slug === 'selene' ? 'Selene' : banner.theme === 'praia' ? 'Beachwear Collection' : banner.theme === 'fitness' ? 'Performance Wear' : banner.theme === 'luxo' ? 'Sport Luxe' : 'LUFIT Collection'}
               </p>
               {/* Logo vazada — cada categoria com sua marca */}
               {banner.slug === 'infantil' || banner.slug === 'kids' ? (
