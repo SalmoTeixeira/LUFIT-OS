@@ -26,6 +26,7 @@ import AdminPage from '@/pages/AdminPage';
 import AdminLoginPage from '@/pages/Login';
 import NotFoundPage from '@/pages/NotFound';
 import CheckoutPage from '@/pages/CheckoutPage';
+import PdvPanel from '@/components/PdvPanel';
 import RegisterPage from '@/pages/RegisterPage';
 import ConceitoPraiaPage from '@/pages/ConceitoPraiaPage';
 import ConceitoFitnessPage from '@/pages/ConceitoFitnessPage';
@@ -72,6 +73,7 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/pdv" element={<PdvPanel />} />
           <Route path="/cadastro" element={<RegisterPage />} />
           <Route path="/not-found" element={<NotFoundPage />} />
           <Route path="/conceito/praia" element={<Layout><ConceitoPraiaPage /></Layout>} />

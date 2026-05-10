@@ -1513,3 +1513,65 @@ export const shippingSettings = mysqlTable("shippingSettings", {
 
 export type ShippingSetting = typeof shippingSettings.$inferSelect;
 export type InsertShippingSetting = typeof shippingSettings.$inferInsert;
+
+// ═════════════════════════════════════════════════════════════════════
+// FASE 5 — PDV BALCÃO: VENDEDORAS E VENDAS FÍSICAS
+// ═════════════════════════════════════════════════════════════════════
+
+export const sellers = mysqlTable("sellers", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  code: varchar("code", { length: 20 }).notNull().unique(), // V001, V002...
+  pin: varchar("pin", { length: 10 }), // senha numérica para login rápido no PDV
+  commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).default("1.00"),
+  avatar: text("avatar"),
+  isActive: boolean("isActive").default(true),
+  role: mysqlEnum("role", ["vendedora", "gerente", "admin"]).default("vendedora"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("seller_code_idx").on(table.code),
+  index("seller_active_idx").on(table.isActive),
+]);
+
+export type Seller = typeof sellers.$inferSelect;
+export type InsertSeller = typeof sellers.$inferInsert;
+
+export const pdvSales = mysqlTable("pdvSales", {
+  id: serial("id").primaryKey(),
+  sellerId: bigint("sellerId", { mode: "number", unsigned: true }).notNull(),
+  sellerName: varchar("sellerName", { length: 255 }),
+  // Dados da venda
+  items: json("items").$type<Array<{
+    productId: string; name: string; price: number; qty: number;
+    size: string; color: string; sku: string;
+  }>>(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  discount: decimal("discount", { precision: 10, scale: 2 }).default("0.00"),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  // Comissão
+  commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).default("1.00"),
+  commissionAmount: decimal("commissionAmount", { precision: 10, scale: 2 }).default("0.00"),
+  // Pagamento
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "cartao_credito", "cartao_debito", "dinheiro", "boleto"]).notNull(),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "approved", "cancelled"]).default("approved"),
+  // Cliente (opcional — venda avulsa)
+  customerName: varchar("customerName", { length: 255 }),
+  customerPhone: varchar("customerPhone", { length: 20 }),
+  // Modo
+  isOffline: boolean("isOffline").default(false),
+  syncedAt: timestamp("syncedAt"),
+  // NF
+  invoiceNumber: varchar("invoiceNumber", { length: 100 }),
+  // Observações
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("pdv_seller_idx").on(table.sellerId),
+  index("pdv_payment_idx").on(table.paymentMethod),
+  index("pdv_date_idx").on(table.createdAt),
+]);
+
+export type PdvSale = typeof pdvSales.$inferSelect;
+export type InsertPdvSale = typeof pdvSales.$inferInsert;

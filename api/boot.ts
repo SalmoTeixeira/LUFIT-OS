@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v2.6.7 FIX: checkout import corrigido + logo LUFIT em Lupo/Selene + carrinho vazio
-console.log("[LUFIT OS] Boot v2.7.0 FINAL — Checkout reescrito + 27 estados + retirar na loja + frete Goiania 399");
+// Force Railway rebuild — v3.0.0 FASE 5: PDV Balcão + Vendedoras + Comissão 1% + Modo Offline
+console.log("[LUFIT OS] Boot v3.0.0 — FASE 5 PDV Balcão ativo");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "2.7.0-final-checkout",
+  version: "3.0.0-fase5-pdv-balacao",
   timestamp: new Date().toISOString(),
 }));
 
