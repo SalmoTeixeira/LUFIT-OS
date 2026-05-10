@@ -15,6 +15,7 @@ import NfDespachoTab from '@/components/admin/NfDespachoTab';
 import FinanceiroTab from '@/components/admin/FinanceiroTab';
 import EstoqueTab from '@/components/admin/EstoqueTab';
 import WhatsAppTab from '@/components/admin/WhatsAppTab';
+import Dashboard from '@/components/admin/Dashboard';
 
 /* ── Admin Guard ── */
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -178,8 +179,7 @@ export default function AdminPage() {
   );
 }
 
-// Tabs importados de @/components/admin/ (externos, com dados reais)
-import Dashboard from '@/components/admin/Dashboard';
+/* ── Dashboard wrapper ── */
 function DashboardTab() { return <Dashboard />; }
 
 /* ── Config Tab ── */
