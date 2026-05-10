@@ -1,14 +1,26 @@
 import { z } from "zod";
-import { createRouter, adminQuery } from "./middleware";
+import { createRouter, adminQuery, publicQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import { sellers, pdvSales } from "../db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
 export const sellerRouter = createRouter({
-  // ── Listar vendedoras ──
-  list: adminQuery.query(async () => {
+  // ── Login PDV (público) ──
+  login: publicQuery
+    .input(z.object({ pinOrCode: z.string() }))
+    .mutation(async ({ input }) => {
+      const db = getDb();
+      const rows = await db.select().from(sellers)
+        .where(sql`(${sellers.pin} = ${input.pinOrCode} OR ${sellers.code} = ${input.pinOrCode}) AND ${sellers.isActive} = true`)
+        .limit(1);
+      if (rows.length === 0) throw new Error('Vendedora não encontrada');
+      return rows[0];
+    }),
+
+  // ── Listar vendedoras ativas (público para PDV) ──
+  list: publicQuery.query(async () => {
     const db = getDb();
-    return db.select().from(sellers).orderBy(desc(sellers.createdAt));
+    return db.select().from(sellers).where(eq(sellers.isActive, true)).orderBy(desc(sellers.createdAt));
   }),
 
   // ── Criar vendedora ──

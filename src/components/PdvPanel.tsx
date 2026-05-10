@@ -59,6 +59,20 @@ export default function PdvPanel() {
 
   // Fetch sellers
   const { data: sellersList } = trpc.seller.list.useQuery();
+  const sellerLogin = trpc.seller.login.useMutation({
+    onSuccess: (data) => {
+      setSeller({
+        id: data.id,
+        name: data.name,
+        code: data.code,
+        pin: data.pin,
+        commissionPercent: Number(data.commissionPercent) || 1,
+      });
+    },
+    onError: () => {
+      alert('Código ou PIN incorreto!');
+    },
+  });
   const createSale = trpc.pdv.createSale.useMutation({
     onSuccess: (data) => {
       setLastSale(data);
@@ -72,19 +86,8 @@ export default function PdvPanel() {
 
   // Login with PIN
   const handleLogin = () => {
-    if (!sellersList) return;
-    const found = sellersList.find((s: any) => s.pin === pinInput || s.code === pinInput);
-    if (found) {
-      setSeller({
-        id: found.id,
-        name: found.name,
-        code: found.code,
-        pin: found.pin,
-        commissionPercent: Number(found.commissionPercent) || 1,
-      });
-    } else {
-      alert('Código ou PIN incorreto!');
-    }
+    if (!pinInput.trim()) { alert('Digite seu código ou PIN!'); return; }
+    sellerLogin.mutate({ pinOrCode: pinInput.trim() });
   };
 
   // Add to cart
