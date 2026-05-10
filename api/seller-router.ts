@@ -11,7 +11,7 @@ export const sellerRouter = createRouter({
     .mutation(async ({ input }) => {
       const db = getDb();
       const rows = await db.select().from(sellers)
-        .where(sql`(${sellers.pin} = ${input.pinOrCode} OR ${sellers.code} = ${input.pinOrCode}) AND ${sellers.isActive} = true`)
+        .where(sql`(${sellers.pin} = ${input.pinOrCode} OR ${sellers.code} = ${input.pinOrCode})`)
         .limit(1);
       if (rows.length === 0) throw new Error('Vendedora não encontrada');
       return rows[0];
