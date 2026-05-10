@@ -161,9 +161,33 @@ export default function LoginPage() {
                     <div><label className="block text-sm font-medium text-gray-500 mb-1">Estado*</label>
                       <select required className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-lufit-teal bg-white">
                         <option value="">Selecione</option>
-                        <option>GO</option><option>SP</option><option>RJ</option><option>MG</option><option>DF</option>
-                        <option>BA</option><option>RS</option><option>PR</option><option>SC</option><option>MS</option>
-                        <option>MT</option><option>PA</option><option>CE</option><option>PE</option><option>RN</option>
+                        <option value="AC">AC - Acre</option>
+                        <option value="AL">AL - Alagoas</option>
+                        <option value="AP">AP - Amapá</option>
+                        <option value="AM">AM - Amazonas</option>
+                        <option value="BA">BA - Bahia</option>
+                        <option value="CE">CE - Ceará</option>
+                        <option value="DF">DF - Distrito Federal</option>
+                        <option value="ES">ES - Espírito Santo</option>
+                        <option value="GO">GO - Goiás</option>
+                        <option value="MA">MA - Maranhão</option>
+                        <option value="MT">MT - Mato Grosso</option>
+                        <option value="MS">MS - Mato Grosso do Sul</option>
+                        <option value="MG">MG - Minas Gerais</option>
+                        <option value="PA">PA - Pará</option>
+                        <option value="PB">PB - Paraíba</option>
+                        <option value="PR">PR - Paraná</option>
+                        <option value="PE">PE - Pernambuco</option>
+                        <option value="PI">PI - Piauí</option>
+                        <option value="RJ">RJ - Rio de Janeiro</option>
+                        <option value="RN">RN - Rio Grande do Norte</option>
+                        <option value="RS">RS - Rio Grande do Sul</option>
+                        <option value="RO">RO - Rondônia</option>
+                        <option value="RR">RR - Roraima</option>
+                        <option value="SC">SC - Santa Catarina</option>
+                        <option value="SP">SP - São Paulo</option>
+                        <option value="SE">SE - Sergipe</option>
+                        <option value="TO">TO - Tocantins</option>
                       </select>
                     </div>
                   </div>
