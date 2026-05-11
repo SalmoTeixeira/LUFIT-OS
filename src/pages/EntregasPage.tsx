@@ -38,13 +38,6 @@ export default function EntregasPage() {
             </div>
           </div>
 
-          <h2 className="text-xl font-bold text-lufit-dark mt-8 mb-4">FRETE GRÁTIS</h2>
-          <div className="bg-lufit-teal/5 border border-lufit-teal/20 rounded-lg p-5 mb-8">
-            <p className="text-gray-600 mb-2"><strong>Sudeste:</strong> Frete grátis para compras acima de R$ 149,99</p>
-            <p className="text-gray-600 mb-2"><strong>Centro-Oeste e Sul:</strong> Frete grátis para compras acima de R$ 199,99</p>
-            <p className="text-gray-600"><strong>Norte e Nordeste:</strong> Frete grátis para compras acima de R$ 349,99</p>
-          </div>
-
           <h2 className="text-xl font-bold text-lufit-dark mt-8 mb-4">RASTREAMENTO</h2>
           <p className="text-gray-600 mb-6">
             Assim que seu pedido for enviado, você receberá um e-mail com o código de rastreamento e o link para acompanhar a entrega em tempo real.

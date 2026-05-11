@@ -245,81 +245,44 @@ export default function AtacadoPage() {
         </div>
       </section>
 
-      {/* ═══════ CADASTRO FORM ── mesmo formulário do cliente + checkbox revenda ═══════ */}
+      {/* ═══════ CADASTRO ── redireciona para cadastro unificado ═══════ */}
       <section id="cadastro" className="border-t border-gray-200 bg-gray-50">
         <div className="mx-auto max-w-2xl px-4 py-16">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Cadastro para Revendedora</h2>
             <p className="text-sm text-gray-500 mt-2">
-              O mesmo cadastro de cliente da LUFIT. Marque abaixo que deseja ser revendedora.
+              Use o mesmo cadastro de cliente da LUFIT. Na página de cadastro, marque a opção "Sou Revendedor/Atacado".
             </p>
           </div>
 
-          {!submitted ? (
-            <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-2xl border border-gray-200 p-6 sm:p-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-gray-600">Nome completo *</label>
-                  <input required type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-[#2DD4A8]" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">E-mail *</label>
-                  <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-[#2DD4A8]" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Telefone *</label>
-                  <input required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(62) 99999-9999"
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#2DD4A8]" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Nome da loja/empresa</label>
-                  <input type="text" value={form.storeName} onChange={(e) => setForm({ ...form, storeName: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-[#2DD4A8]" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">CNPJ (opcional)</label>
-                  <input type="text" value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} placeholder="00.000.000/0000-00"
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#2DD4A8]" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Cidade/Estado *</label>
-                  <input required type="text" value={form.cityState} onChange={(e) => setForm({ ...form, cityState: e.target.value })} placeholder="Goiânia/GO"
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#2DD4A8]" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-gray-600">Previsão de volume mensal</label>
-                <select value={form.volume} onChange={(e) => setForm({ ...form, volume: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-[#2DD4A8]">
-                  <option value="12-23">12 a 23 peças (5% OFF)</option>
-                  <option value="24-47">24 a 47 peças (10% OFF)</option>
-                  <option value="48+">48+ peças (15% OFF)</option>
-                </select>
-              </div>
-
-              <button type="submit"
-                className="w-full rounded-xl bg-[#2DD4A8] py-3.5 text-sm font-bold text-black transition-all hover:bg-[#2DD4A8]/90 flex items-center justify-center gap-2">
-                SOLICITAR CADASTRO ATACADO <ArrowRight className="h-4 w-4" />
-              </button>
-
-              <p className="text-center text-[10px] text-gray-400">Cadastro unificado. Você será marcada como revendedora no banco LUFIT.</p>
-            </form>
-          ) : (
-            <div className="text-center py-8 space-y-4 bg-white rounded-2xl border border-gray-200 p-8">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#00E676]/10">
-                <CheckCircle2 className="h-8 w-8 text-[#00E676]" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">Solicitação Enviada!</h3>
-              <p className="text-sm text-gray-500">A equipe da LUFIT vai analisar seus dados e ativar seu perfil de revendedora em até 24 horas.</p>
-              <button onClick={() => navigate('/')}
-                className="mt-4 rounded-xl border border-gray-200 px-6 py-2.5 text-sm font-medium text-gray-600 hover:border-[#2DD4A8]">
-                Voltar ao site
-              </button>
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 text-center space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#2DD4A8]/10">
+              <ShoppingBag className="h-8 w-8 text-[#2DD4A8]" />
             </div>
-          )}
+            <h3 className="text-lg font-bold text-gray-900">Cadastro Unificado LUFIT</h3>
+            <p className="text-sm text-gray-500">
+              Crie sua conta única na LUFIT. Durante o cadastro, marque <strong>"Sou Revendedor/Atacado"</strong> para ativar seus descontos progressivos.
+            </p>
+            <div className="grid grid-cols-3 gap-3 py-3">
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-lg font-bold text-[#2DD4A8]">5% OFF</p>
+                <p className="text-[10px] text-gray-500">12 a 23 peças</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-lg font-bold text-[#2DD4A8]">10% OFF</p>
+                <p className="text-[10px] text-gray-500">24 a 47 peças</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-lg font-bold text-[#2DD4A8]">15% OFF</p>
+                <p className="text-[10px] text-gray-500">48+ peças</p>
+              </div>
+            </div>
+            <button onClick={() => navigate('/cadastro', { state: { isWholesale: true } })}
+              className="w-full rounded-xl bg-[#2DD4A8] py-3.5 text-sm font-bold text-black transition-all hover:bg-[#2DD4A8]/90 flex items-center justify-center gap-2">
+              CRIAR CONTA LUFIT <ArrowRight className="h-4 w-4" />
+            </button>
+            <p className="text-center text-[10px] text-gray-400">Cadastro unificado. Você será marcada como revendedora no banco LUFIT.</p>
+          </div>
         </div>
       </section>
 

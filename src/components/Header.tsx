@@ -30,15 +30,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const fitnessSubmenu = [
-  { label: 'Leggings', href: '/categoria/leggings' },
-  { label: 'Tops e Croppeds', href: '/categoria/tops' },
-  { label: 'Macaquinhos', href: '/categoria/macaquinhos' },
-  { label: 'Macacões', href: '/categoria/macacoes' },
-  { label: 'Shorts e Bermudas', href: '/categoria/shorts' },
-  { label: 'Blusas e Camisetas', href: '/categoria/blusas' },
-  { label: 'Conjuntos', href: '/categoria/conjuntos' },
-  { label: 'Casacos e Jaquetas', href: '/categoria/casacos' },
-  { label: 'Calças', href: '/categoria/calcas' },
+  { label: 'Ver Todos Fitness', href: '/categoria/fitness' },
 ];
 
 const lupoSubmenu = [

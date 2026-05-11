@@ -63,11 +63,11 @@ function BannerCarousel() {
 function SizeSelector() {
   const sizes = ['P', 'M', 'G', 'GG'];
   return (
-    <section className="py-10 bg-white">
+    <section className="py-6 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <h2 className="text-xl sm:text-2xl font-bold font-heading text-center text-lufit-dark mb-6">COMPRE SEUS LOOKS POR TAMANHO</h2>
-        <div className="flex justify-center gap-3 sm:gap-4">
-          {sizes.map(size => <Link key={size} to={`/categoria/leggings?tamanho=${size}`} className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center border-2 border-lufit-dark text-lufit-dark font-bold text-lg sm:text-xl md:text-2xl rounded-lg hover:bg-lufit-dark hover:text-white transition-all">{size}</Link>)}
+        <h2 className="text-lg sm:text-xl font-bold font-heading text-center text-lufit-dark mb-4">COMPRE SEUS LOOKS POR TAMANHO</h2>
+        <div className="flex justify-center gap-2 sm:gap-3">
+          {sizes.map(size => <Link key={size} to={`/categoria/leggings?tamanho=${size}`} className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center border-2 border-lufit-dark text-lufit-dark font-bold text-sm sm:text-base rounded-lg hover:bg-lufit-dark hover:text-white transition-all">{size}</Link>)}
         </div>
       </div>
     </section>

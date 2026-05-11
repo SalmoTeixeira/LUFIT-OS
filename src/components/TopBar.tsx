@@ -2,16 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, User, ChevronDown, LogIn, UserPlus, MessageCircle } from 'lucide-react';
 
-const PHONES = [
-  { label: 'Vendas', number: '(62) 99394-0034' },
-  { label: 'WhatsApp', number: '(62) 99394-0034' },
-  { label: 'Atacado', number: '(62) 99394-0034' },
-];
-
 export default function TopBar() {
   const [loginOpen, setLoginOpen] = useState(false);
-  const [phoneIndex, setPhoneIndex] = useState(0);
-  const [phoneVisible, setPhoneVisible] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,39 +16,16 @@ export default function TopBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Rotacao de telefones a cada 3 segundos com fade
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPhoneVisible(false);
-      setTimeout(() => {
-        setPhoneIndex((prev) => (prev + 1) % PHONES.length);
-        setPhoneVisible(true);
-      }, 300);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const currentPhone = PHONES[phoneIndex];
-
   return (
     <div className="bg-lufit-dark text-white relative z-[60]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center justify-between relative">
-          {/* Desktop Left - Phone rotating */}
+          {/* Desktop Left - Static WhatsApp */}
           <div className="hidden sm:flex items-center gap-2 text-sm w-[200px]">
-            <div className={`transition-opacity duration-300 ${phoneVisible ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="flex items-center gap-2">
-                {currentPhone.label === 'WhatsApp' ? (
-                  <MessageCircle className="w-4 h-4 text-green-400 shrink-0" />
-                ) : (
-                  <Phone className="w-4 h-4 text-lufit-teal shrink-0" />
-                )}
-                <div className="text-gray-300">
-                  <span className="text-[10px] text-gray-500 block leading-tight">{currentPhone.label}</span>
-                  <span className="font-medium text-sm leading-tight">{currentPhone.number}</span>
-                </div>
-              </div>
-            </div>
+            <a href="https://wa.me/5562993940034" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#2DD4A8] transition-colors">
+              <MessageCircle className="w-4 h-4 text-green-400 shrink-0" />
+              <span className="font-medium text-sm leading-tight">(62) 99394-0034</span>
+            </a>
           </div>
 
           {/* Desktop Center - Logo */}
@@ -68,22 +37,14 @@ export default function TopBar() {
             />
           </Link>
 
-          {/* Mobile Center - Phone rotating (substitui logo) */}
-          <div className="flex sm:hidden items-center gap-2 flex-1">
-            <div className={`transition-opacity duration-300 ${phoneVisible ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="flex items-center gap-1.5">
-                {currentPhone.label === 'WhatsApp' ? (
-                  <MessageCircle className="w-3.5 h-3.5 text-green-400 shrink-0" />
-                ) : (
-                  <Phone className="w-3.5 h-3.5 text-lufit-teal shrink-0" />
-                )}
-                <div>
-                  <span className="text-[9px] text-gray-500 block leading-tight">{currentPhone.label}</span>
-                  <span className="font-medium text-xs leading-tight">{currentPhone.number}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Mobile Center - Logo */}
+          <Link to="/" className="flex sm:hidden items-center flex-1">
+            <img 
+              src="/logo-lufit-v2.png" 
+              alt="LUFIT" 
+              className="h-[40px] w-auto rounded" 
+            />
+          </Link>
 
           {/* Desktop Right - Entrar Dropdown */}
           <div className="hidden sm:block relative" ref={dropdownRef}>

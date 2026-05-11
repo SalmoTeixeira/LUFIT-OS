@@ -50,7 +50,7 @@ export default function PagamentosPage() {
               <CreditCard className="w-6 h-6 text-lufit-teal" />
               <h3 className="font-bold text-lufit-dark">Cartão de Crédito</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Parcelamos em até 12x sem juros nas principais bandeiras:</p>
+            <p className="text-sm text-gray-600 mb-4">Parcelamos em até 12x nas principais bandeiras:</p>
             <div className="flex flex-wrap gap-2">
               <VisaIcon /><MastercardIcon /><AmexIcon /><EloIcon /><HipercardIcon /><DinersIcon />
             </div>
@@ -60,7 +60,7 @@ export default function PagamentosPage() {
               <Smartphone className="w-6 h-6 text-lufit-teal" />
               <h3 className="font-bold text-lufit-dark">Pix</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Pagamento instantâneo com <strong>desconto à vista</strong> sobre o valor total.</p>
+            <p className="text-sm text-gray-600 mb-4">Pagamento instantâneo com o valor total.</p>
             <div className="flex gap-2"><PixIcon /></div>
           </div>
           <div className="bg-white rounded-xl border p-6">
@@ -77,10 +77,9 @@ export default function PagamentosPage() {
               <h3 className="font-bold text-lufit-dark">Descontos Especiais</h3>
             </div>
             <ul className="text-sm text-gray-600 space-y-2">
-              <li>Pix: desconto à vista</li>
-              <li>Boleto: desconto à vista</li>
-              <li>Cartão em até 12x sem juros</li>
-              <li>Frete grátis acima de R$ 149,99 (Sudeste)</li>
+              <li>PIX: pagamento instantâneo</li>
+              <li>Boleto: compensação em até 2 dias úteis</li>
+              <li>Cartão em até 12x</li>
             </ul>
           </div>
         </div>
