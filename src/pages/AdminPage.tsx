@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, DollarSign,
   Warehouse, Settings, LogOut, Sun, Moon, Building2, FileText, MessageCircle,
-  CheckCircle, Clock, ChevronLeft
+  CheckCircle, Clock, ChevronLeft, BarChart3, Receipt, UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,9 @@ import FinanceiroTab from '@/components/admin/FinanceiroTab';
 import EstoqueTab from '@/components/admin/EstoqueTab';
 import WhatsAppTab from '@/components/admin/WhatsAppTab';
 import Dashboard from '@/components/admin/Dashboard';
+import PdvDashboard from '@/components/admin/PdvDashboard';
+import PdvSalesTab from '@/components/admin/PdvSalesTab';
+import SellerManagement from '@/components/admin/SellerManagement';
 
 /* ── Admin Guard ── */
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -72,6 +75,9 @@ const TABS = [
   { id: 'nf', label: 'NF / Despacho', icon: FileText },
   { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
   { id: 'estoque', label: 'Estoque', icon: Warehouse },
+  { id: 'pdv-dashboard', label: 'PDV Dashboard', icon: BarChart3 },
+  { id: 'pdv-vendas', label: 'PDV Vendas', icon: Receipt },
+  { id: 'pdv-vendedoras', label: 'PDV Vendedoras', icon: UserCheck },
   { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { id: 'config', label: 'Configurações', icon: Settings },
 ] as const;
@@ -169,6 +175,9 @@ export default function AdminPage() {
               {tab === 'nf' && <NfDespachoTab />}
               {tab === 'financeiro' && <FinanceiroTab />}
               {tab === 'estoque' && <EstoqueTab />}
+              {tab === 'pdv-dashboard' && <PdvDashboardTab />}
+              {tab === 'pdv-vendas' && <PdvSalesAdminTab />}
+              {tab === 'pdv-vendedoras' && <SellerManagement />}
               {tab === 'whatsapp' && <WhatsAppTab />}
               {tab === 'config' && <ConfigTab />}
             </main>
@@ -179,8 +188,10 @@ export default function AdminPage() {
   );
 }
 
-/* ── Dashboard wrapper ── */
+/* ── Dashboard wrappers ── */
 function DashboardTab() { return <Dashboard />; }
+function PdvDashboardTab() { return <PdvDashboard />; }
+function PdvSalesAdminTab() { return <PdvSalesTab />; }
 
 /* ── Config Tab ── */
 function ConfigTab() {
