@@ -204,8 +204,8 @@ export const categoryBanners: CategoryBanner[] = [
     ctaText: 'Conferir Conceito',
     ctaLink: '/conceito/selene',
     textPosition: 'center',
-    textColor: 'dark',
-    overlayOpacity: 0.2,
+    textColor: 'light',
+    overlayOpacity: 0.35,
     theme: 'clean',
   },
   {
