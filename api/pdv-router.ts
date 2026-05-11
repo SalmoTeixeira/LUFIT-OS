@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createRouter, adminQuery, publicQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { pdvSales } from "../db/schema";
+import { pdvSales, sellers } from "../db/schema";
 import { eq, desc, sql, count } from "drizzle-orm";
 
 export const pdvRouter = createRouter({
@@ -62,12 +62,20 @@ export const pdvRouter = createRouter({
     }).optional())
     .query(async ({ input }) => {
       const db = getDb();
+      const allSellers = await db.select().from(sellers);
+      let sales;
       if (input?.sellerId) {
-        return db.select().from(pdvSales)
+        sales = await db.select().from(pdvSales)
           .where(eq(pdvSales.sellerId, input.sellerId))
           .orderBy(desc(pdvSales.createdAt)).limit(input.limit);
+      } else {
+        sales = await db.select().from(pdvSales).orderBy(desc(pdvSales.createdAt)).limit(input?.limit || 50);
       }
-      return db.select().from(pdvSales).orderBy(desc(pdvSales.createdAt)).limit(input?.limit || 50);
+      // Enrich with seller names
+      return sales.map((sale: any) => {
+        const seller = allSellers.find(s => s.id === sale.sellerId);
+        return { ...sale, sellerName: seller?.name || `Vendedora #${sale.sellerId}` };
+      });
     }),
 
   // ── Listar vendas recentes (público para PDV) ──
@@ -89,10 +97,31 @@ export const pdvRouter = createRouter({
     const [monthTotal] = await db.select({
       total: sql`COALESCE(SUM(${pdvSales.total}), 0)`,
     }).from(pdvSales).where(sql`MONTH(${pdvSales.createdAt}) = MONTH(CURDATE()) AND YEAR(${pdvSales.createdAt}) = YEAR(CURDATE())`);
+    const [totalCommission] = await db.select({
+      total: sql`COALESCE(SUM(${pdvSales.commissionAmount}), 0)`,
+    }).from(pdvSales);
+
+    // Breakdown by payment method
+    const byMethod = await db.select({
+      method: pdvSales.paymentMethod,
+      count: count(),
+      total: sql`COALESCE(SUM(${pdvSales.total}), 0)`,
+    }).from(pdvSales).groupBy(pdvSales.paymentMethod);
+
+    const byPaymentMethod: Record<string, { count: number; total: number }> = {};
+    for (const row of byMethod) {
+      byPaymentMethod[String(row.method)] = {
+        count: Number(row.count) || 0,
+        total: Number(row.total) || 0,
+      };
+    }
+
     return {
       todaySales: todayCount?.count || 0,
       todayTotal: Number(todayTotal?.total) || 0,
       monthTotal: Number(monthTotal?.total) || 0,
+      totalCommission: Number(totalCommission?.total) || 0,
+      byPaymentMethod,
     };
   }),
 });
