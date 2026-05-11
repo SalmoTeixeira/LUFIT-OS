@@ -70,6 +70,14 @@ export const pdvRouter = createRouter({
       return db.select().from(pdvSales).orderBy(desc(pdvSales.createdAt)).limit(input?.limit || 50);
     }),
 
+  // ── Listar vendas recentes (público para PDV) ──
+  recentSales: publicQuery
+    .input(z.object({ limit: z.number().default(50) }).optional())
+    .query(async ({ input }) => {
+      const db = getDb();
+      return db.select().from(pdvSales).orderBy(desc(pdvSales.createdAt)).limit(input?.limit || 50);
+    }),
+
   // ── Stats do PDV ──
   stats: adminQuery.query(async () => {
     const db = getDb();

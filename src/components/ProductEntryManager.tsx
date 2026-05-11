@@ -4,7 +4,9 @@ import {
   Plus, Trash2, Barcode, FileText,
   CreditCard, ChevronDown, ChevronUp, ScanLine,
   Save, X, Ruler, Weight, Hash, Tag, DollarSign,
-  Layers, Boxes, AlertCircle, Palette, Image
+  Layers, Boxes, AlertCircle, Palette, Image,
+  Calendar, QrCode, Receipt, Banknote, Calculator,
+  ShoppingBag, Percent
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -148,8 +150,29 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
 
   /* ── BLOCO 4: COMPRA/FINANCEIRO ── */
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentCondition, setPaymentCondition] = useState('pix');
+  const [paymentDetails, setPaymentDetails] = useState('');
+  const [invoiceTotal, setInvoiceTotal] = useState('');
+  const [installments, setInstallments] = useState('1');
+  const [cardType, setCardType] = useState('');
+  const [pixKey, setPixKey] = useState('');
+  const [dueDates, setDueDates] = useState<{ date: string; amount: string }[]>([]);
   const [notes, setNotes] = useState('');
+
+  // Calcular valor total da nota automaticamente baseado na grade
+  const calculatedInvoiceTotal = gradeRows.reduce((sum, row) => {
+    const cost = Number(row.currentCost) || 0;
+    const qty = Number(row.qty) || 0;
+    return sum + (cost * qty);
+  }, 0);
+
+  // Sincronizar invoiceTotal quando a grade mudar (se o campo estiver vazio)
+  useState(() => {
+    if (calculatedInvoiceTotal > 0 && !invoiceTotal) {
+      setInvoiceTotal(calculatedInvoiceTotal.toFixed(2));
+    }
+  });
 
   /* ── BLOCO 5: tRPC MUTATIONS ── */
   const createProduct = trpc.product.create.useMutation({
@@ -720,40 +743,216 @@ export default function ProductEntryManager({ onClose }: { onClose: () => void }
         )}
       </div>
 
-      {/* ═════ BLOCO 4: DADOS DE COMPRA / FINANCEIRO ═════ */}
+      {/* ═════ BLOCO 4: COMPRA / FINANCEIRO COMPLETO ═════ */}
       <div className="border border-[#1E1E2E] rounded-xl overflow-hidden">
         <button onClick={() => setB4Open(!b4Open)} className="w-full flex items-center justify-between px-4 py-3 bg-[#14141E] hover:bg-[#1A1A28] transition-colors">
           <div className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-lufit-teal" />
+            <Receipt className="w-4 h-4 text-lufit-teal" />
             <span className="text-sm font-semibold">Bloco 4: Compra / Financeiro</span>
+            {invoiceNumber && <span className="text-[10px] bg-lufit-teal/20 text-lufit-teal px-1.5 py-0.5 rounded">{invoiceNumber}</span>}
           </div>
           {b4Open ? <ChevronUp className="w-4 h-4 text-[#6E6E80]" /> : <ChevronDown className="w-4 h-4 text-[#6E6E80]" />}
         </button>
         {b4Open && (
           <div className="p-4 space-y-4 bg-[#0A0A0F]">
+            {/* Alerta documento obrigatório */}
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-400">
-                <strong>Documento obrigatório:</strong> Informe o número da Nota Fiscal ou do Pedido/Recibo. 
-                Se não houver nota fiscal, use o número do pedido ao fornecedor.
+                <strong>Documento obrigatório:</strong> Informe o número da Nota Fiscal ou do Pedido/Recibo.
+                Se não houver nota fiscal, utilize o número do pedido ao fornecedor.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Linha 1: NF + Data + Valor Total */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-[#A0A0B0] flex items-center gap-1"><FileText className="w-3 h-3" /> Nº Nota Fiscal ou Pedido *</label>
-                <Input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} placeholder="NF-e: 000.000.001 ou Pedido: PED-2024-001" className="bg-[#0A0A0F] border-[#1E1E2E] text-white" />
+                <label className="text-xs text-[#A0A0B0] flex items-center gap-1"><FileText className="w-3 h-3" /> Nº NF ou Pedido *</label>
+                <Input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} placeholder="NF-e: 000.000.001" className="bg-[#0A0A0F] border-[#1E1E2E] text-white" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-[#A0A0B0] flex items-center gap-1"><CreditCard className="w-3 h-3" /> Condição de Pagamento *</label>
-                <select value={paymentCondition} onChange={e => setPaymentCondition(e.target.value)} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
-                  <option value="pix">PIX / À Vista</option>
-                  <option value="card">Cartão de Crédito</option>
-                  <option value="boleto">Boleto</option>
-                  <option value="prazo">Prazo (30/60/90 dias)</option>
-                </select>
+                <label className="text-xs text-[#A0A0B0] flex items-center gap-1"><Calendar className="w-3 h-3" /> Data da Compra</label>
+                <Input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="bg-[#0A0A0F] border-[#1E1E2E] text-white" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-[#A0A0B0] flex items-center gap-1"><DollarSign className="w-3 h-3" /> Valor Total da Nota (R$)</label>
+                <Input type="number" step="0.01" value={invoiceTotal} onChange={e => setInvoiceTotal(e.target.value)} placeholder="0,00" className="bg-[#0A0A0F] border-[#1E1E2E] text-white font-semibold" />
               </div>
             </div>
-            <div className="space-y-1"><label className="text-xs text-[#A0A0B0]">Observações</label><textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white resize-none" placeholder="Notas sobre a compra..." /></div>
+
+            {/* Linha 2: Condição de Pagamento */}
+            <div className="space-y-2">
+              <label className="text-xs text-[#A0A0B0] flex items-center gap-1"><CreditCard className="w-3 h-3" /> Condição de Pagamento *</label>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: 'pix', label: 'PIX / À Vista', icon: QrCode },
+                  { id: 'cartao_credito', label: 'Cartão Crédito', icon: CreditCard },
+                  { id: 'cartao_debito', label: 'Cartão Débito', icon: CreditCard },
+                  { id: 'boleto', label: 'Boleto', icon: Receipt },
+                  { id: 'prazo', label: 'Prazo', icon: Calendar },
+                ].map((method) => {
+                  const Icon = method.icon;
+                  return (
+                    <button key={method.id} type="button" onClick={() => setPaymentCondition(method.id)}
+                      className={`p-2.5 rounded-lg border text-center transition-all ${
+                        paymentCondition === method.id ? 'border-lufit-teal bg-lufit-teal/10' : 'border-[#1E1E2E] hover:border-lufit-teal/30'
+                      }`}>
+                      <Icon className={`w-4 h-4 mx-auto mb-1 ${paymentCondition === method.id ? 'text-lufit-teal' : 'text-[#6E6E80]'}`} />
+                      <p className="text-[9px] text-white">{method.label}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Detalhes por tipo de pagamento */}
+            {paymentCondition === 'pix' && (
+              <div className="grid grid-cols-2 gap-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-emerald-400 flex items-center gap-1"><QrCode className="w-3 h-3" /> Chave PIX do Fornecedor</label>
+                  <Input value={pixKey} onChange={e => setPixKey(e.target.value)} placeholder="CPF, CNPJ, Email, Celular ou Chave Aleatória" className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-emerald-400 flex items-center gap-1"><Receipt className="w-3 h-3" /> Nº Comprovante / TXID</label>
+                  <Input value={paymentDetails} onChange={e => setPaymentDetails(e.target.value)} placeholder="ID da transação PIX" className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                </div>
+              </div>
+            )}
+
+            {paymentCondition === 'cartao_credito' && (
+              <div className="grid grid-cols-3 gap-3 bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-blue-400 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Bandeira do Cartão</label>
+                  <select value={cardType} onChange={e => setCardType(e.target.value)} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="">Selecione...</option>
+                    <option value="visa">Visa</option>
+                    <option value="mastercard">Mastercard</option>
+                    <option value="elo">Elo</option>
+                    <option value="amex">American Express</option>
+                    <option value="hipercard">Hipercard</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-blue-400 flex items-center gap-1"><Hash className="w-3 h-3" /> Parcelas</label>
+                  <select value={installments} onChange={e => setInstallments(e.target.value)} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => (
+                      <option key={n} value={String(n)}>{n}x {n > 1 ? `de R$ ${((parseFloat(invoiceTotal || '0') || 0) / n).toFixed(2).replace('.', ',')}` : 'à vista'}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-blue-400 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Valor da Parcela</label>
+                  <Input readOnly value={invoiceTotal && installments ? `R$ ${((parseFloat(invoiceTotal) || 0) / (parseInt(installments) || 1)).toFixed(2).replace('.', ',')}` : '—'} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                </div>
+              </div>
+            )}
+
+            {paymentCondition === 'cartao_debito' && (
+              <div className="grid grid-cols-2 gap-3 bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-indigo-400 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Bandeira do Cartão</label>
+                  <select value={cardType} onChange={e => setCardType(e.target.value)} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="">Selecione...</option>
+                    <option value="visa">Visa</option>
+                    <option value="mastercard">Mastercard</option>
+                    <option value="elo">Elo</option>
+                    <option value="amex">American Express</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-indigo-400 flex items-center gap-1"><Banknote className="w-3 h-3" /> Valor Débito</label>
+                  <Input readOnly value={invoiceTotal ? `R$ ${(parseFloat(invoiceTotal) || 0).toFixed(2).replace('.', ',')}` : '—'} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                </div>
+              </div>
+            )}
+
+            {paymentCondition === 'boleto' && (
+              <div className="grid grid-cols-2 gap-3 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-purple-400 flex items-center gap-1"><Receipt className="w-3 h-3" /> Nº do Boleto / Linha Digitável</label>
+                  <Input value={paymentDetails} onChange={e => setPaymentDetails(e.target.value)} placeholder="34191.79001 01043.510047 91020.150008 8 9467002600" className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-purple-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> Vencimento do Boleto</label>
+                  <Input type="date" value={dueDates[0]?.date || ''} onChange={e => setDueDates([{ date: e.target.value, amount: invoiceTotal || '' }])} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-sm" />
+                </div>
+              </div>
+            )}
+
+            {paymentCondition === 'prazo' && (
+              <div className="space-y-3 bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-amber-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> Datas e Valores de Vencimento</label>
+                  <button type="button" onClick={() => {
+                    const total = parseFloat(invoiceTotal || '0') || 0;
+                    const count = dueDates.length || 1;
+                    const parcelValue = (total / count).toFixed(2);
+                    const baseDate = new Date();
+                    setDueDates(Array.from({ length: count }, (_, i) => {
+                      const d = new Date(baseDate);
+                      d.setDate(d.getDate() + ((i + 1) * 30));
+                      return { date: d.toISOString().split('T')[0], amount: parcelValue };
+                    }));
+                  }} className="text-[10px] text-lufit-teal hover:underline">Auto-gerar 30/60/90 dias</button>
+                </div>
+                <div className="space-y-2">
+                  {dueDates.length === 0 ? (
+                    <div className="text-center py-3 text-[#6E6E80] text-xs">
+                      <Calendar className="w-6 h-6 mx-auto mb-1 opacity-50" />
+                      <p>Adicione as datas de vencimento</p>
+                    </div>
+                  ) : (
+                    dueDates.map((due, i) => (
+                      <div key={i} className="grid grid-cols-3 gap-2 items-center">
+                        <div className="text-xs text-[#6E6E80]">Parcela {i + 1}</div>
+                        <Input type="date" value={due.date} onChange={e => {
+                          const updated = [...dueDates];
+                          updated[i] = { ...updated[i], date: e.target.value };
+                          setDueDates(updated);
+                        }} className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-xs" />
+                        <div className="flex gap-1">
+                          <Input type="number" step="0.01" value={due.amount} onChange={e => {
+                            const updated = [...dueDates];
+                            updated[i] = { ...updated[i], amount: e.target.value };
+                            setDueDates(updated);
+                          }} placeholder="0,00" className="bg-[#0A0A0F] border-[#1E1E2E] text-white text-xs" />
+                          {dueDates.length > 1 && (
+                            <button type="button" onClick={() => setDueDates(prev => prev.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-300"><Trash2 className="w-3 h-3" /></button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <button type="button" onClick={() => setDueDates(prev => [...prev, { date: '', amount: '' }])}
+                    className="w-full py-1.5 border border-dashed border-[#1E1E2E] rounded-lg text-xs text-[#6E6E80] hover:border-lufit-teal/30 hover:text-lufit-teal transition-colors flex items-center justify-center gap-1">
+                    <Plus className="w-3 h-3" /> Adicionar Vencimento
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Resumo Financeiro */}
+            <div className="bg-[#14141E] border border-[#1E1E2E] rounded-lg p-3 space-y-2">
+              <p className="text-xs font-semibold text-lufit-teal flex items-center gap-1"><Calculator className="w-3 h-3" /> Resumo Financeiro da Compra</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex justify-between text-[#A0A0B0]"><span>Valor Total da NF:</span><span className="text-white font-medium">{invoiceTotal ? `R$ ${parseFloat(invoiceTotal).toFixed(2).replace('.', ',')}` : '—'}</span></div>
+                <div className="flex justify-between text-[#A0A0B0]"><span>Forma de Pagamento:</span><span className="text-white font-medium">
+                  {paymentCondition === 'pix' ? 'PIX' : paymentCondition === 'cartao_credito' ? `Cartão Crédito ${installments}x` : paymentCondition === 'cartao_debito' ? 'Cartão Débito' : paymentCondition === 'boleto' ? 'Boleto' : 'A Prazo'}
+                </span></div>
+                {cardType && <div className="flex justify-between text-[#A0A0B0]"><span>Bandeira:</span><span className="text-white font-medium uppercase">{cardType}</span></div>}
+                {gradeRows.length > 0 && (
+                  <div className="flex justify-between text-[#A0A0B0]"><span>Itens na Grade:</span><span className="text-white font-medium">{gradeRows.filter(r => r.qty > 0).length} variações</span></div>
+                )}
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div className="space-y-1">
+              <label className="text-xs text-[#A0A0B0] flex items-center gap-1"><ShoppingBag className="w-3 h-3" /> Observações / Descrição da Compra</label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full bg-[#0A0A0F] border border-[#1E1E2E] rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-lufit-teal" placeholder="Descreva detalhes da compra: nome do vendedor do fornecedor, descontos obtidos, prazos negociados, observações sobre a mercadoria..." />
+            </div>
           </div>
         )}
       </div>
