@@ -57,7 +57,7 @@ function App() {
           <Route path="/" element={<Layout><HomePage /></Layout>} />
           <Route path="/categoria/:slug" element={<Layout><CategoryPage /></Layout>} />
           <Route path="/produto/:id" element={<Layout><ProductPage /></Layout>} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<RegisterPage />} />
           <Route path="/desejos" element={<Layout><WishlistPage /></Layout>} />
           <Route path="/atendimento" element={<Layout><AtendimentoPage /></Layout>} />
           <Route path="/sobre" element={<Layout><SobrePage /></Layout>} />
