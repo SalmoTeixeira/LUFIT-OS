@@ -55,6 +55,11 @@ const faqs = [
       'Temos uma tabela de medidas completa em cada página de produto. Clique no link "Tabela de medidas" ao lado dos tamanhos disponíveis. Se ainda tiver dúvidas, nosso time de atendimento pode ajudar pelo WhatsApp.',
   },
   {
+    question: 'Como saber minhas medidas?',
+    answer:
+      'Para encontrar seu tamanho ideal, meça sua cintura (na altura do umbigo), quadril (na parte mais larga) e busto. Compare suas medidas com a tabela disponível em cada página de produto, ao lado dos tamanhos. Se estiver entre dois tamanhos, recomendamos o maior para maior conforto.',
+  },
+  {
     question: 'A LUFIT tem loja física?',
     answer:
       'Sim! Nossa loja física fica em Goiânia, GO. Endereço: Av. Goiânia, Qd. 73 - Lt 10 - Jardim Guanabara I. Horário: Seg a Sex 09h-19h, Sáb 09h-13h.',

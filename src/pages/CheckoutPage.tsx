@@ -49,6 +49,7 @@ export default function CheckoutPage() {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [deliveryType, setDeliveryType] = useState<'shipping' | 'pickup' | 'moto'>('shipping');
+  const [pickupTab, setPickupTab] = useState<'propria' | 'moto' | 'terceiros'>('propria');
   const [pickupCode, setPickupCode] = useState('');
 
   /* ── UI state ── */
@@ -284,7 +285,7 @@ export default function CheckoutPage() {
           <Link to="/" className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <img src="/logo.jpg" alt="LUFIT" className="h-8" />
+          <img src="/logo-lufit-nobg.png" alt="LUFIT" className="h-8" />
           <span className="text-sm font-semibold text-gray-900">Checkout</span>
           <div className="ml-auto flex items-center gap-1.5 text-sm text-gray-600">
             <ShieldCheck className="w-4 h-4 text-lufit-teal" />
@@ -346,29 +347,112 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Retirar na Loja */}
+            {/* Retirar na Loja — 3 Abas */}
             {deliveryType === 'pickup' && (
-              <div className="bg-lufit-teal/5 border border-lufit-teal/20 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-lufit-teal mb-2 flex items-center gap-2">
+              <div className="bg-lufit-teal/5 border border-lufit-teal/20 rounded-xl p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-lufit-teal flex items-center gap-2">
                   <Store className="w-4 h-4" />Retirada na Loja
                 </h3>
-                <p className="text-xs text-gray-600 mb-3">
-                  Endereço: Av. T-63, 1850 - St. Marista, Goiânia - GO, 74180-100
+                <p className="text-xs text-gray-600">
+                  Av. T-63, 1850 - St. Marista, Goiânia - GO, 74180-100
                 </p>
-                <div className="bg-white rounded-lg p-3 border border-lufit-teal/20">
-                  <p className="text-xs text-gray-500 mb-1">Seu código de retirada:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-lg font-bold text-lufit-teal tracking-wider">{pickupCode || 'Clique para gerar'}</code>
+
+                {/* Abas de retirada */}
+                <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <button onClick={() => setPickupTab('propria')} className={`flex-1 py-2 text-xs font-medium transition-colors ${pickupTab === 'propria' ? 'bg-lufit-teal text-white' : 'text-gray-500 hover:text-lufit-teal'}`}>
+                    Própria
+                  </button>
+                  <button onClick={() => setPickupTab('moto')} className={`flex-1 py-2 text-xs font-medium transition-colors ${pickupTab === 'moto' ? 'bg-lufit-teal text-white' : 'text-gray-500 hover:text-lufit-teal'}`}>
+                    Moto/Uber
+                  </button>
+                  <button onClick={() => setPickupTab('terceiros')} className={`flex-1 py-2 text-xs font-medium transition-colors ${pickupTab === 'terceiros' ? 'bg-lufit-teal text-white' : 'text-gray-500 hover:text-lufit-teal'}`}>
+                    Terceiros
+                  </button>
+                </div>
+
+                {/* Aba 1: Retirada Própria */}
+                {pickupTab === 'propria' && (
+                  <div className="bg-white rounded-lg p-3 border border-lufit-teal/20 space-y-2">
+                    <p className="text-xs text-gray-600">
+                      O <strong>próprio comprador</strong> retira o pedido na loja.
+                    </p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                      <p className="text-[10px] text-amber-700 font-medium">Obrigatório na retirada:</p>
+                      <ul className="text-[10px] text-amber-600 list-disc list-inside">
+                        <li>Documento pessoal com foto (RG ou CNH)</li>
+                        <li>Código de retirada</li>
+                      </ul>
+                    </div>
                     {!pickupCode && (
-                      <button onClick={generatePickupCode} className="px-3 py-1 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90">
-                        Gerar Código
+                      <button onClick={generatePickupCode} className="w-full px-3 py-2 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90 font-medium">
+                        Gerar Código de Retirada
                       </button>
                     )}
+                    {pickupCode && (
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Seu código:</p>
+                        <code className="text-xl font-bold text-lufit-teal tracking-widest">{pickupCode}</code>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[10px] text-gray-400 mt-2">
-                    Apresente este código + documento na loja. Válido por 7 dias.
-                  </p>
-                </div>
+                )}
+
+                {/* Aba 2: Moto/Uber */}
+                {pickupTab === 'moto' && (
+                  <div className="bg-white rounded-lg p-3 border border-lufit-teal/20 space-y-2">
+                    <p className="text-xs text-gray-600">
+                      Você envia um <strong>Motoboy, Moto Uber ou Uber</strong> para retirar o pedido na loja.
+                    </p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                      <p className="text-[10px] text-amber-700 font-medium">Obrigatório na retirada pelo motorista:</p>
+                      <ul className="text-[10px] text-amber-600 list-disc list-inside">
+                        <li>Código de retirada (obrigatório)</li>
+                        <li>Nome do comprador informado</li>
+                      </ul>
+                    </div>
+                    {!pickupCode && (
+                      <button onClick={generatePickupCode} className="w-full px-3 py-2 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90 font-medium">
+                        Gerar Código para Moto/Uber
+                      </button>
+                    )}
+                    {pickupCode && (
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Código para o motoboy/uber:</p>
+                        <code className="text-xl font-bold text-lufit-teal tracking-widest">{pickupCode}</code>
+                        <p className="text-[10px] text-gray-400 mt-1">Envie este código ao motorista</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Aba 3: Terceiros */}
+                {pickupTab === 'terceiros' && (
+                  <div className="bg-white rounded-lg p-3 border border-lufit-teal/20 space-y-2">
+                    <p className="text-xs text-gray-600">
+                      Uma <strong>pessoa autorizada</strong> (amigo, familiar, conhecido) retira o pedido em seu nome.
+                    </p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                      <p className="text-[10px] text-amber-700 font-medium">Obrigatório na retirada pela pessoa autorizada:</p>
+                      <ul className="text-[10px] text-amber-600 list-disc list-inside">
+                        <li>Código de retirada (indispensável)</li>
+                        <li>Documento com foto do terceiro</li>
+                        <li>Nome do comprador informado</li>
+                      </ul>
+                    </div>
+                    {!pickupCode && (
+                      <button onClick={generatePickupCode} className="w-full px-3 py-2 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90 font-medium">
+                        Gerar Código para Terceiros
+                      </button>
+                    )}
+                    {pickupCode && (
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Código para o terceiro:</p>
+                        <code className="text-xl font-bold text-lufit-teal tracking-widest">{pickupCode}</code>
+                        <p className="text-[10px] text-gray-400 mt-1">Envie este código à pessoa autorizada</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
