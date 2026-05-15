@@ -31,7 +31,7 @@ export default function TermosPage() {
 
           <h2 className="text-xl font-bold text-lufit-dark mt-8 mb-4">3. PAGAMENTO</h2>
           <p className="text-gray-600 mb-6">
-            Aceitamos cartão de crédito (Visa, Mastercard, Elo, Amex, Hipercard, Diners), Pix, boleto bancário e cartão de débito. O parcelamento em até 12x sem juros está sujeito à análise de crédito pela operadora do cartão. Compras via Pix possuem desconto à vista.
+            Aceitamos cartão de crédito (Visa, Mastercard, Elo, Amex, Hipercard, Diners), Pix, boleto bancário e cartão de débito. Parcelamos em até 12x nos cartões de crédito. Os encargos de parcelamento são de responsabilidade da operadora do cartão do cliente.
           </p>
 
           <h2 className="text-xl font-bold text-lufit-dark mt-8 mb-4">4. ENTREGA</h2>

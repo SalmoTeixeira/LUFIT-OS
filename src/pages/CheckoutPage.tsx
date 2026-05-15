@@ -50,6 +50,7 @@ export default function CheckoutPage() {
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [deliveryType, setDeliveryType] = useState<'shipping' | 'pickup' | 'moto'>('shipping');
   const [pickupCode, setPickupCode] = useState('');
+  const [pickupTab, setPickupTab] = useState<'propria' | 'moto' | 'terceiros'>('propria');
 
   /* ── UI state ── */
   const [loadingCep, setLoadingCep] = useState(false);
@@ -284,7 +285,7 @@ export default function CheckoutPage() {
           <Link to="/" className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <img src="/logo.jpg" alt="LUFIT" className="h-8" />
+          <img src="/logo-lufit-nobg.png" alt="LUFIT" className="h-8" />
           <span className="text-sm font-semibold text-gray-900">Checkout</span>
           <div className="ml-auto flex items-center gap-1.5 text-sm text-gray-600">
             <ShieldCheck className="w-4 h-4 text-lufit-teal" />
@@ -349,26 +350,88 @@ export default function CheckoutPage() {
             {/* Retirar na Loja */}
             {deliveryType === 'pickup' && (
               <div className="bg-lufit-teal/5 border border-lufit-teal/20 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-lufit-teal mb-2 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-lufit-teal mb-3 flex items-center gap-2">
                   <Store className="w-4 h-4" />Retirada na Loja
                 </h3>
-                <p className="text-xs text-gray-600 mb-3">
-                  Endereço: Av. T-63, 1850 - St. Marista, Goiânia - GO, 74180-100
-                </p>
-                <div className="bg-white rounded-lg p-3 border border-lufit-teal/20">
-                  <p className="text-xs text-gray-500 mb-1">Seu código de retirada:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-lg font-bold text-lufit-teal tracking-wider">{pickupCode || 'Clique para gerar'}</code>
-                    {!pickupCode && (
-                      <button onClick={generatePickupCode} className="px-3 py-1 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90">
-                        Gerar Código
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-2">
-                    Apresente este código + documento na loja. Válido por 7 dias.
-                  </p>
+                {/* Tabs */}
+                <div className="flex gap-1 mb-4 bg-white rounded-lg p-1 border border-lufit-teal/20">
+                  {([
+                    { id: 'propria', label: 'Própria' },
+                    { id: 'moto', label: 'Moto-Uber' },
+                    { id: 'terceiros', label: 'Terceiros' },
+                  ] as const).map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setPickupTab(tab.id); generatePickupCode(); }}
+                      className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${pickupTab === tab.id ? 'bg-lufit-teal text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
+                {pickupTab === 'propria' && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-3">
+                      Endereço: Av. T-63, 1850 - St. Marista, Goiânia - GO, 74180-100
+                    </p>
+                    <div className="bg-white rounded-lg p-3 border border-lufit-teal/20">
+                      <p className="text-xs text-gray-500 mb-1">Seu código de retirada (Própria):</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-lg font-bold text-lufit-teal tracking-wider">{pickupCode || 'Clique para gerar'}</code>
+                        {!pickupCode && (
+                          <button onClick={generatePickupCode} className="px-3 py-1 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90">
+                            Gerar Código
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-2">
+                        Apresente este código + documento na loja. Válido por 7 dias.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {pickupTab === 'moto' && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-3">
+                      Entrega via Moto-Uber. O entregador retira na loja e leva até você.
+                    </p>
+                    <div className="bg-white rounded-lg p-3 border border-lufit-teal/20">
+                      <p className="text-xs text-gray-500 mb-1">Código para o entregador (Moto-Uber):</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-lg font-bold text-lufit-teal tracking-wider">{pickupCode || 'Clique para gerar'}</code>
+                        {!pickupCode && (
+                          <button onClick={generatePickupCode} className="px-3 py-1 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90">
+                            Gerar Código
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-2">
+                        Informe este código ao entregador no momento da coleta. Válido por 24h.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {pickupTab === 'terceiros' && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-3">
+                      Retirada por terceiro autorizado. Apresente o código e documento do responsável.
+                    </p>
+                    <div className="bg-white rounded-lg p-3 border border-lufit-teal/20">
+                      <p className="text-xs text-gray-500 mb-1">Código para terceiro autorizado:</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-lg font-bold text-lufit-teal tracking-wider">{pickupCode || 'Clique para gerar'}</code>
+                        {!pickupCode && (
+                          <button onClick={generatePickupCode} className="px-3 py-1 bg-lufit-teal text-white text-xs rounded-lg hover:bg-lufit-teal/90">
+                            Gerar Código
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-2">
+                        O terceiro deve apresentar este código + documento de identidade. Válido por 7 dias.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
