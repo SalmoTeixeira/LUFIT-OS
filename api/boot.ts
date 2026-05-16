@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "3.0.7-banners-novos-lupo-selene",
+  version: "3.5.0",
   timestamp: new Date().toISOString(),
 }));
 
