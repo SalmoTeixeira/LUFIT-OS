@@ -24,7 +24,7 @@ export default function TopBar() {
           <div className="hidden sm:flex items-center gap-2 text-sm w-[200px]">
             <a href="https://wa.me/5562993940034" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#2DD4A8] transition-colors">
               <MessageCircle className="w-4 h-4 text-green-400 shrink-0" />
-              <span className="font-medium text-sm leading-tight">(62) 99394-0034</span>
+              <span className="font-medium text-sm leading-tight">(62) 98413-7182</span>
             </a>
           </div>
 

@@ -42,7 +42,7 @@ const faqs = [
   {
     question: 'Como funciona a troca?',
     answer:
-      'Você tem até 7 dias após o recebimento para solicitar a troca. A peça deve estar com a etiqueta e sem sinais de uso. Entre em contato pelo WhatsApp (62) 99394-0034 para iniciar o processo.',
+      'Você tem até 7 dias após o recebimento para solicitar a troca. A peça deve estar com a etiqueta e sem sinais de uso. Entre em contato pelo WhatsApp (62) 98413-7182 para iniciar o processo.',
   },
   {
     question: 'Quais as formas de pagamento?',
@@ -154,7 +154,7 @@ export default function AtendimentoPage() {
                   </div>
                   <div>
                     <div className="text-sm text-gray-400">Vendas</div>
-                    <div className="font-medium">(62) 99394-0034 | (62) 99449-0177</div>
+                    <div className="font-medium">(62) 98413-7182 | (62) 99449-0177</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
