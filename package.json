@@ -18,8 +18,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "deploy": "RAILWAY_API_TOKEN=ea2726dd-6e10-4a9d-bee6-2a54e830a4df RAILWAY_SERVICE_ID=3878e309-8d6e-4b17-af6a-b78c730412ec RAILWAY_ENV_ID=d06fd2b5-7caa-41fe-bcaf-b7ba68d515ac npx tsx scripts/deploy.ts",
-    "push-deploy": "git add -A && git commit -m \"deploy: $(date +%Y-%m-%d_%H:%M)\" && git push origin main && npm run deploy"
+    "push-deploy": "git add -A && git commit -m \"deploy: vercel auto\" && git push origin main"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",
