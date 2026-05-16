@@ -50,7 +50,7 @@ export default function EntregasPage() {
             <p className="text-sm text-gray-600 flex items-start gap-2"><AlertCircle className="w-4 h-4 text-lufit-teal mt-0.5 shrink-0" /> Após 3 tentativas de entrega sem sucesso, o pedido retornará ao centro de distribuição.</p>
           </div>
 
-          <p className="text-sm text-gray-500 mt-8">Dúvidas? Entre em contato pelo WhatsApp (62) 99394-0034.</p>
+          <p className="text-sm text-gray-500 mt-8">Dúvidas? Entre em contato pelo WhatsApp (62) 98413-7182.</p>
         </div>
       </div>
     </main>

@@ -45,7 +45,7 @@ export default function LojasPage() {
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Phone className="w-4 h-4 text-lufit-teal" />
-                (62) 99394-0034 | (62) 99449-0177
+                (62) 98413-7182 | (62) 99449-0177
               </div>
             </div>
             <a

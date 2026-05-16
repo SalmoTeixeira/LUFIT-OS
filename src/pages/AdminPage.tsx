@@ -205,7 +205,7 @@ function ConfigTab() {
             <div className="flex justify-between"><span className="text-[#6E6E80]">Nome Fantasia</span><span className="text-white">LUFIT Moda Praia e Fitness</span></div>
             <div className="flex justify-between"><span className="text-[#6E6E80]">CNPJ</span><span className="text-white">50.493.781/0001-71</span></div>
             <div className="flex justify-between"><span className="text-[#6E6E80]">Razão Social</span><span className="text-white">LU MODA FITNESS LTDA</span></div>
-            <div className="flex justify-between"><span className="text-[#6E6E80]">WhatsApp</span><span className="text-white">(62) 99394-0034</span></div>
+            <div className="flex justify-between"><span className="text-[#6E6E80]">WhatsApp</span><span className="text-white">(62) 98413-7182</span></div>
             <div className="flex justify-between"><span className="text-[#6E6E80]">E-mail</span><span className="text-white">lufitmoda@gmail.com</span></div>
           </div>
         </div>

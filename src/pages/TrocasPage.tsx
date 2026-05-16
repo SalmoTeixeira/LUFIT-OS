@@ -40,7 +40,7 @@ export default function TrocasPage() {
 
           <h2 className="text-xl font-bold text-lufit-dark mt-8 mb-4">COMO SOLICITAR UMA TROCA</h2>
           <ol className="list-decimal pl-6 text-gray-600 space-y-3 mb-8">
-            <li>Entre em contato pelo WhatsApp <strong>(62) 99394-0034</strong> ou e-mail <strong>lufitmoda@gmail.com</strong> informando o número do pedido.</li>
+            <li>Entre em contato pelo WhatsApp <strong>(62) 98413-7182</strong> ou e-mail <strong>lufitmoda@gmail.com</strong> informando o número do pedido.</li>
             <li>Aguarde a autorização com as instruções de envio.</li>
             <li>Envie o produto na embalagem original, com etiqueta e sem sinais de uso.</li>
             <li>Assim que recebermos, analisaremos e enviaremos o novo produto ou efetuaremos o estorno.</li>
