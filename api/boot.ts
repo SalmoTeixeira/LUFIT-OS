@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
-// Force Railway rebuild — v3.0.0 FASE 5: PDV Balcão + Vendedoras + Comissão 1% + Modo Offline
-console.log("[LUFIT OS] Boot v3.0.7 — Banners Lupo/Selene NOVAS imagens sem logo LUFIT");
+// Force Railway rebuild — v3.5.0
+console.log("[LUFIT OS] Boot v3.5.0");
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
