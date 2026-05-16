@@ -22,7 +22,7 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/api/health", (c) => c.json({
   status: "ok",
   service: "lufit-os",
-  version: "3.4.0",
+  version: "3.0.9",
   timestamp: new Date().toISOString(),
 }));
 
@@ -290,5 +290,6 @@ if (env.isProduction) {
 // DEPLOY FORCE 1778448692
 
 // REBUILD FORCE 1778449511
-// FORCE REBUILD 1778449915 v3.0.7
+// FORCE REBUILD 1778456115 v3.0.8 — fix vite cache + admin page
 // v3.0.8 deploy 1778456115
+// FORCE REBUILD 1778942000 v3.0.9 — fix vite cache + admin page loading
