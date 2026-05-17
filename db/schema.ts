@@ -1,6 +1,5 @@
 import {
   pgTable,
-  pgEnum,
   serial,
   varchar,
   text,
@@ -35,7 +34,7 @@ export const users = pgTable("users", {
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 320 }),
   avatar: text("avatar"),
-  role: pgEnum("role", ["user", "admin", "manager", "seller", "finance", "stockist", "marketing"]).default("user").notNull(),
+  role: varchar("role", { length: 50 }).default("user").notNull(),
   isActive: boolean("isActive").default(true),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
@@ -75,7 +74,7 @@ export type InsertCategory = typeof categories.$inferInsert;
 
 export const subcategories = pgTable("subcategories", {
   id: serial("id").primaryKey(),
-  categoryId: biginteger("categoryId", { mode: "number" }).notNull(),
+  categoryId: bigint("categoryId", { mode: "number" }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull(),
   description: text("description"),
@@ -115,9 +114,9 @@ export type InsertBrand = typeof brands.$inferInsert;
 
 export const productPurchaseHistory = pgTable("productPurchaseHistory", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number" }).notNull(),
+  variationId: bigint("variationId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number" }),
   invoiceNumber: varchar("invoiceNumber", { length: 100 }),
   qty: integer("qty").default(0).notNull(),
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
@@ -143,10 +142,10 @@ export const products = pgTable("products", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
   costPrice: decimal("costPrice", { precision: 10, scale: 2 }),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  subcategoryId: biginteger("subcategoryId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number" }),
+  subcategoryId: bigint("subcategoryId", { mode: "number" }),
   // Fornecedor e NCM (nota fiscal)
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number" }),
   ncm: varchar("ncm", { length: 15 }),
   // Código de barras (opcional no pai, obrigatório nas variações)
   ean: varchar("ean", { length: 20 }),
@@ -157,7 +156,7 @@ export const products = pgTable("products", {
   origin: varchar("origin", { length: 100 }),
   brand: varchar("brand", { length: 100 }).default("LUFIT"),
   collection: varchar("collection", { length: 100 }),
-  season: pgEnum("season", ["verao", "inverno", "primavera", "outono", "cruzeiro", "perene"]),
+  season: varchar("season", { length: 50 }),
   year: integer("year").default(2025),
   // Imagens
   images: json("images").$type<string[]>(),
@@ -192,7 +191,7 @@ export type InsertProduct = typeof products.$inferInsert;
 
 export const productVariations = pgTable("productVariations", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
+  productId: bigint("productId", { mode: "number" }).notNull(),
   sku: varchar("sku", { length: 100 }).notNull().unique(),
   ean: varchar("ean", { length: 20 }),
   barcode: varchar("barcode", { length: 50 }),
@@ -235,7 +234,7 @@ export type InsertProductVariation = typeof productVariations.$inferInsert;
 
 export const productColors = pgTable("productColors", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
+  productId: bigint("productId", { mode: "number" }).notNull(),
   name: varchar("name", { length: 50 }).notNull(),
   hexColor: varchar("hexColor", { length: 7 }),
   imageUrl: text("imageUrl"),
@@ -257,7 +256,7 @@ export const warehouses = pgTable("warehouses", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
-  type: pgEnum("type", ["central", "loja", "cd", "externo"]).default("central"),
+  type: varchar("type", { length: 50 }).default("central"),
   addressStreet: varchar("addressStreet", { length: 255 }),
   addressNumber: varchar("addressNumber", { length: 20 }),
   addressComplement: varchar("addressComplement", { length: 100 }),
@@ -281,18 +280,18 @@ export type InsertWarehouse = typeof warehouses.$inferInsert;
 
 export const stockMovements = pgTable("stockMovements", {
   id: serial("id").primaryKey(),
-  variationId: biginteger("variationId", { mode: "number" }).notNull(),
-  warehouseId: biginteger("warehouseId", { mode: "number" }),
-  type: pgEnum("type", ["in", "out", "adjustment", "return", "transfer_in", "transfer_out", "damage", "production"]).notNull(),
+  variationId: bigint("variationId", { mode: "number" }).notNull(),
+  warehouseId: bigint("warehouseId", { mode: "number" }),
+  type: varchar("type", { length: 50 }).notNull(),
   quantity: integer("quantity").notNull(),
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
   reason: text("reason"),
   reference: varchar("reference", { length: 255 }),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
-  purchaseOrderItemId: biginteger("purchaseOrderItemId", { mode: "number" }),
-  orderId: biginteger("orderId", { mode: "number" }),
-  orderItemId: biginteger("orderItemId", { mode: "number" }),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number" }),
+  purchaseOrderItemId: bigint("purchaseOrderItemId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }),
+  orderItemId: bigint("orderItemId", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("sm_variation_idx").on(table.variationId),
@@ -314,9 +313,9 @@ export type InsertStockMovement = typeof stockMovements.$inferInsert;
 export const purchaseOrders = pgTable("purchaseOrders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("orderNumber", { length: 50 }).notNull().unique(),
-  supplierId: biginteger("supplierId", { mode: "number" }).notNull(),
-  warehouseId: biginteger("warehouseId", { mode: "number" }),
-  status: pgEnum("status", ["draft", "sent", "confirmed", "partial", "received", "cancelled", "returned"])
+  supplierId: bigint("supplierId", { mode: "number" }).notNull(),
+  warehouseId: bigint("warehouseId", { mode: "number" }),
+  status: varchar("status", { length: 50 })
     .default("draft")
     .notNull(),
   // Tipo de compra: formal (com nota fiscal) ou informal (sem nota)
@@ -333,8 +332,8 @@ export const purchaseOrders = pgTable("purchaseOrders", {
   cancelledAt: timestamp("cancelledAt"),
   // Outros
   notes: text("notes"),
-  paymentStatus: pgEnum("paymentStatus", ["pending", "partial", "paid"]).default("pending"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  paymentStatus: varchar("paymentStatus", { length: 50 }).default("pending"),
+  createdBy: bigint("createdBy", { mode: "number" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("po_number_idx").on(table.orderNumber),
@@ -352,9 +351,9 @@ export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
 
 export const purchaseOrderItems = pgTable("purchaseOrderItems", {
   id: serial("id").primaryKey(),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }).notNull(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number" }).notNull(),
+  productId: bigint("productId", { mode: "number" }).notNull(),
+  variationId: bigint("variationId", { mode: "number" }),
   description: varchar("description", { length: 255 }),
   quantity: integer("quantity").notNull().default(1),
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }).notNull(),
@@ -384,9 +383,9 @@ export const bankAccounts = pgTable("bankAccounts", {
   agency: varchar("agency", { length: 20 }),
   account: varchar("account", { length: 30 }),
   accountDigit: varchar("accountDigit", { length: 5 }),
-  type: pgEnum("type", ["checking", "savings", "investment", "digital_wallet"]).default("checking"),
+  type: varchar("type", { length: 50 }).default("checking"),
   pixKey: varchar("pixKey", { length: 100 }),
-  pixKeyType: pgEnum("pixKeyType", ["cnpj", "cpf", "email", "phone", "random"]),
+  pixKeyType: varchar("pixKeyType", { length: 50 }),
   openingBalance: decimal("openingBalance", { precision: 12, scale: 2 }).default("0"),
   currentBalance: decimal("currentBalance", { precision: 12, scale: 2 }).default("0"),
   isActive: boolean("isActive").default(true),
@@ -406,8 +405,8 @@ export const costCenters = pgTable("costCenters", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
-  type: pgEnum("type", ["revenue", "expense", "asset", "liability"]).default("expense").notNull(),
-  parentId: biginteger("parentId", { mode: "number" }),
+  type: varchar("type", { length: 50 }).default("expense").notNull(),
+  parentId: bigint("parentId", { mode: "number" }),
   description: text("description"),
   budget: decimal("budget", { precision: 12, scale: 2 }).default("0"),
   isActive: boolean("isActive").default(true),
@@ -429,26 +428,26 @@ export const accountsPayable = pgTable("accountsPayable", {
   id: serial("id").primaryKey(),
   documentNumber: varchar("documentNumber", { length: 100 }),
   description: varchar("description", { length: 255 }).notNull(),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  supplierId: biginteger("supplierId", { mode: "number" }),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number" }),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 12, scale: 2 }).default("0"),
   interest: decimal("interest", { precision: 12, scale: 2 }).default("0"),
-  status: pgEnum("status", ["pending", "scheduled", "partial", "paid", "overdue", "cancelled", "disputed"])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   issueDate: date("issueDate"),
   dueDate: date("dueDate").notNull(),
   paidAt: timestamp("paidAt"),
   // Fornecedores pagam via: PIX, Boleto, Transferência, Dinheiro, Cartão
-  paymentMethod: pgEnum("paymentMethod", ["pix", "boleto", "transfer", "cash", "card", "other"]),
-  bankAccountId: biginteger("bankAccountId", { mode: "number" }),
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
+  bankAccountId: bigint("bankAccountId", { mode: "number" }),
   attachmentUrl: text("attachmentUrl"),
   notes: text("notes"),
   recurrenceGroupId: varchar("recurrenceGroupId", { length: 50 }),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ap_supplier_idx").on(table.supplierId),
@@ -470,27 +469,27 @@ export const accountsReceivable = pgTable("accountsReceivable", {
   id: serial("id").primaryKey(),
   documentNumber: varchar("documentNumber", { length: 100 }),
   description: varchar("description", { length: 255 }).notNull(),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  customerId: biginteger("customerId", { mode: "number" }),
-  orderId: biginteger("orderId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number" }),
+  customerId: bigint("customerId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 12, scale: 2 }).default("0"),
   interest: decimal("interest", { precision: 12, scale: 2 }).default("0"),
   installmentCount: integer("installmentCount").default(1),
   installmentNumber: integer("installmentNumber").default(1),
-  status: pgEnum("status", ["pending", "scheduled", "partial", "paid", "overdue", "cancelled", "disputed", "refunded"])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   issueDate: date("issueDate"),
   dueDate: date("dueDate"),
   paidAt: timestamp("paidAt"),
   // SITE: apenas PIX e Cartão (crédito/débito). Boleto REMOVIDO do e-commerce.
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card"]),
-  bankAccountId: biginteger("bankAccountId", { mode: "number" }),
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
+  bankAccountId: bigint("bankAccountId", { mode: "number" }),
   gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
   notes: text("notes"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ar_customer_idx").on(table.customerId),
@@ -510,20 +509,20 @@ export type InsertAccountsReceivable = typeof accountsReceivable.$inferInsert;
 export const cashBook = pgTable("cashBook", {
   id: serial("id").primaryKey(),
   date: date("date").notNull(),
-  type: pgEnum("type", ["in", "out"]).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   description: varchar("description", { length: 255 }).notNull(),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  accountsReceivableId: biginteger("accountsReceivableId", { mode: "number" }),
-  accountsPayableId: biginteger("accountsPayableId", { mode: "number" }),
-  orderId: biginteger("orderId", { mode: "number" }),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
-  salesRepId: biginteger("salesRepId", { mode: "number" }),
-  bankAccountId: biginteger("bankAccountId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number" }),
+  accountsReceivableId: bigint("accountsReceivableId", { mode: "number" }),
+  accountsPayableId: bigint("accountsPayableId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number" }),
+  salesRepId: bigint("salesRepId", { mode: "number" }),
+  bankAccountId: bigint("bankAccountId", { mode: "number" }),
   balanceAfter: decimal("balanceAfter", { precision: 12, scale: 2 }).notNull(),
   isReconciled: boolean("isReconciled").default(false),
   reconciledAt: timestamp("reconciledAt"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("cb_date_idx").on(table.date),
@@ -543,8 +542,8 @@ export type InsertCashBook = typeof cashBook.$inferInsert;
 
 export const priceHistory = pgTable("priceHistory", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number" }).notNull(),
+  variationId: bigint("variationId", { mode: "number" }),
   costPrice: decimal("costPrice", { precision: 10, scale: 2 }).notNull(),
   salePrice: decimal("salePrice", { precision: 10, scale: 2 }).notNull(),
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
@@ -552,7 +551,7 @@ export const priceHistory = pgTable("priceHistory", {
   marginValue: decimal("marginValue", { precision: 10, scale: 2 }),
   effectiveDate: date("effectiveDate").notNull(),
   reason: text("reason"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ph_product_idx").on(table.productId),
@@ -575,7 +574,7 @@ export const customers = pgTable("customers", {
   phone: varchar("phone", { length: 50 }),
   whatsapp: varchar("whatsapp", { length: 50 }),
   document: varchar("document", { length: 20 }),
-  documentType: pgEnum("documentType", ["cpf", "cnpj"]).default("cpf"),
+  documentType: varchar("documentType", { length: 50 }).default("cpf"),
   // Endereço
   addressStreet: varchar("addressStreet", { length: 255 }),
   addressNumber: varchar("addressNumber", { length: 20 }),
@@ -585,13 +584,13 @@ export const customers = pgTable("customers", {
   addressState: varchar("addressState", { length: 2 }),
   addressZip: varchar("addressZip", { length: 20 }),
   // REDE SOCIAL OBRIGATÓRIA — capturamos onde o cliente nos encontrou
-  socialNetworkType: pgEnum("socialNetworkType", ["instagram", "tiktok", "facebook", "linkedin", "whatsapp", "google", "other"]).notNull(),
+  socialNetworkType: varchar("socialNetworkType", { length: 50 }).notNull(),
   socialNetworkHandle: varchar("socialNetworkHandle", { length: 100 }).notNull(), // @lufitcliente
   // CRM
   source: varchar("source", { length: 50 }),
   birthday: date("birthday"),
   notes: text("notes"),
-  segment: pgEnum("segment", ["vip", "regular", "atacado", "revenda", "influencer", "staff"]).default("regular"),
+  segment: varchar("segment", { length: 50 }).default("regular"),
   // CLUBE VIP — gatilho psicológico (sem desconto no varejo, só prestígio no painel)
   isVip: boolean("isVip").default(false),
   // ATACADO vs VAREJO — define se recebe descontos escalonados
@@ -602,7 +601,7 @@ export const customers = pgTable("customers", {
   averageTicket: decimal("averageTicket", { precision: 10, scale: 2 }).default("0"),
   lastOrderAt: timestamp("lastOrderAt"),
   // Preferências
-  preferredPayment: pgEnum("preferredPayment", ["pix", "credit_card", "debit_card"]),
+  preferredPayment: varchar("preferredPayment", { length: 50 }),
   // Flags
   isActive: boolean("isActive").default(true),
   optedInMarketing: boolean("optedInMarketing").default(true),
@@ -642,8 +641,8 @@ export type InsertCustomerTag = typeof customerTags.$inferInsert;
 
 export const customerTagAssignments = pgTable("customerTagAssignments", {
   id: serial("id").primaryKey(),
-  customerId: biginteger("customerId", { mode: "number" }).notNull(),
-  tagId: biginteger("tagId", { mode: "number" }).notNull(),
+  customerId: bigint("customerId", { mode: "number" }).notNull(),
+  tagId: bigint("tagId", { mode: "number" }).notNull(),
   assignedAt: timestamp("assignedAt").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("cta_unique_idx").on(table.customerId, table.tagId),
@@ -661,12 +660,12 @@ export const suppliers = pgTable("suppliers", {
   legalName: varchar("legalName", { length: 255 }),
   // Documento: CNPJ (formal) ou CPF (informal pessoa física)
   document: varchar("document", { length: 20 }).notNull(),
-  documentType: pgEnum("documentType", ["cpf", "cnpj", "rg", "passport"]).default("cnpj").notNull(),
+  documentType: varchar("documentType", { length: 50 }).default("cnpj").notNull(),
   stateRegistration: varchar("stateRegistration", { length: 50 }),
-  type: pgEnum("type", ["factory", "atelier", "distributor", "importer", "raw_material", "logistics"])
+  type: varchar("type", { length: 50 })
     .default("factory")
     .notNull(),
-  status: pgEnum("status", ["active", "inactive", "blocked", "prospect"]).default("active").notNull(),
+  status: varchar("status", { length: 50 }).default("active").notNull(),
   rating: integer("rating").default(5),
   // INFORMAL: compra sem nota fiscal, pagamento geralmente em PIX/dinheiro
   isInformal: boolean("isInformal").default(false),
@@ -708,7 +707,7 @@ export type InsertSupplier = typeof suppliers.$inferInsert;
 
 export const supplierContacts = pgTable("supplierContacts", {
   id: serial("id").primaryKey(),
-  supplierId: biginteger("supplierId", { mode: "number" }).notNull(),
+  supplierId: bigint("supplierId", { mode: "number" }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   role: varchar("role", { length: 100 }),
   email: varchar("email", { length: 320 }),
@@ -729,15 +728,15 @@ export type InsertSupplierContact = typeof supplierContacts.$inferInsert;
 
 export const supplierBankAccounts = pgTable("supplierBankAccounts", {
   id: serial("id").primaryKey(),
-  supplierId: biginteger("supplierId", { mode: "number" }).notNull(),
+  supplierId: bigint("supplierId", { mode: "number" }).notNull(),
   bankCode: varchar("bankCode", { length: 10 }),
   bankName: varchar("bankName", { length: 100 }),
   agency: varchar("agency", { length: 20 }),
   account: varchar("account", { length: 30 }),
   accountDigit: varchar("accountDigit", { length: 5 }),
-  accountType: pgEnum("accountType", ["checking", "savings"]).default("checking"),
+  accountType: varchar("accountType", { length: 50 }).default("checking"),
   pixKey: varchar("pixKey", { length: 100 }),
-  pixKeyType: pgEnum("pixKeyType", ["cnpj", "cpf", "email", "phone", "random"]),
+  pixKeyType: varchar("pixKeyType", { length: 50 }),
   isPrimary: boolean("isPrimary").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
@@ -757,7 +756,7 @@ export const salesReps = pgTable("salesReps", {
   phone: varchar("phone", { length: 50 }),
   whatsapp: varchar("whatsapp", { length: 50 }),
   // Comissão: 1% fixo para todas as vendedoras da LUFIT
-  commissionType: pgEnum("commissionType", ["percentage", "fixed", "tiered", "hybrid"])
+  commissionType: varchar("commissionType", { length: 50 })
     .default("percentage")
     .notNull(),
   commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).default("1.00"),
@@ -765,7 +764,7 @@ export const salesReps = pgTable("salesReps", {
   // Metas
   monthlyTarget: decimal("monthlyTarget", { precision: 12, scale: 2 }).default("10000.00"),
   // Vínculo a login do sistema
-  userId: biginteger("userId", { mode: "number" }),
+  userId: bigint("userId", { mode: "number" }),
   // Tipo: human ou AI agent
   isAiAgent: boolean("isAiAgent").default(false),
   // Descrição do agente (ex: "IA Fallback — atende quando vendedoras ausentes")
@@ -788,21 +787,21 @@ export type InsertSalesRep = typeof salesReps.$inferInsert;
 
 export const commissions = pgTable("commissions", {
   id: serial("id").primaryKey(),
-  salesRepId: biginteger("salesRepId", { mode: "number" }).notNull(),
-  orderId: biginteger("orderId", { mode: "number" }),
-  customerId: biginteger("customerId", { mode: "number" }),
+  salesRepId: bigint("salesRepId", { mode: "number" }).notNull(),
+  orderId: bigint("orderId", { mode: "number" }),
+  customerId: bigint("customerId", { mode: "number" }),
   baseAmount: decimal("baseAmount", { precision: 12, scale: 2 }).notNull(),
   rateApplied: decimal("rateApplied", { precision: 5, scale: 2 }).notNull(),
   fixedApplied: decimal("fixedApplied", { precision: 10, scale: 2 }).default("0"),
   calculatedValue: decimal("calculatedValue", { precision: 12, scale: 2 }).notNull(),
-  status: pgEnum("status", ["pending", "approved", "paid", "cancelled", "clawback"])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   approvedAt: timestamp("approvedAt"),
   paidAt: timestamp("paidAt"),
   paymentReference: varchar("paymentReference", { length: 255 }),
   isReturnDeduction: boolean("isReturnDeduction").default(false),
-  originalCommissionId: biginteger("originalCommissionId", { mode: "number" }),
+  originalCommissionId: bigint("originalCommissionId", { mode: "number" }),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
@@ -823,7 +822,7 @@ export type InsertCommission = typeof commissions.$inferInsert;
 
 export const wholesalePricingRules = pgTable("wholesalePricingRules", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
+  productId: bigint("productId", { mode: "number" }).notNull(),
   minQuantity: integer("minQuantity").notNull(), // 12, 24, 48
   maxQuantity: integer("maxQuantity"), // null = acima do mínimo (open-ended)
   discountPercent: decimal("discountPercent", { precision: 5, scale: 2 }).notNull(), // 5.00, 10.00, 15.00
@@ -847,24 +846,15 @@ export type InsertWholesalePricingRule = typeof wholesalePricingRules.$inferInse
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("orderNumber", { length: 50 }).notNull().unique(),
-  customerId: biginteger("customerId", { mode: "number" }).notNull(),
-  salesRepId: biginteger("salesRepId", { mode: "number" }), // quem vendeu (Flaviane, Nayane, Alessandra, ou AI_AGENT)
+  customerId: bigint("customerId", { mode: "number" }).notNull(),
+  salesRepId: bigint("salesRepId", { mode: "number" }), // quem vendeu (Flaviane, Nayane, Alessandra, ou AI_AGENT)
   // Status
-  status: pgEnum("status", [
-    "pending",
-    "paid",
-    "processing",
-    "shipped",
-    "delivered",
-    "cancelled",
-    "refunded",
-    "returned",
-  ])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   // SITE: apenas PIX e Cartão (crédito/débito). Boleto PROIBIDO no checkout.
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card"]),
-  paymentStatus: pgEnum("paymentStatus", ["pending", "approved", "rejected", "refunded", "partial"])
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
+  paymentStatus: varchar("paymentStatus", { length: 50 })
     .default("pending")
     .notNull(),
   // Financeiros
@@ -885,14 +875,14 @@ export const orders = pgTable("orders", {
   deliveredAt: timestamp("deliveredAt"),
   estimatedDeliveryDate: date("estimatedDeliveryDate"),
   // Origem
-  source: pgEnum("source", ["website", "instagram", "tiktok", "facebook", "whatsapp", "marketplace", "loja_fisica", "phone", "event"]).default("website"),
+  source: varchar("source", { length: 50 }).default("website"),
   campaign: varchar("campaign", { length: 100 }),
   // Cupom
   couponCode: varchar("couponCode", { length: 50 }),
   couponDiscount: decimal("couponDiscount", { precision: 12, scale: 2 }).default("0"),
   // Comissão
   commissionAmount: decimal("commissionAmount", { precision: 10, scale: 2 }).default("0"),
-  commissionStatus: pgEnum("commissionStatus", ["pending", "calculated", "paid"]).default("pending"),
+  commissionStatus: varchar("commissionStatus", { length: 50 }).default("pending"),
   // Nota Fiscal (futuro)
   invoiceNumber: varchar("invoiceNumber", { length: 50 }),
   invoiceSeries: varchar("invoiceSeries", { length: 10 }),
@@ -922,9 +912,9 @@ export type InsertOrder = typeof orders.$inferInsert;
 
 export const orderItems = pgTable("orderItems", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }).notNull(),
+  productId: bigint("productId", { mode: "number" }).notNull(),
+  variationId: bigint("variationId", { mode: "number" }),
   productName: varchar("productName", { length: 255 }).notNull(),
   sku: varchar("sku", { length: 100 }),
   quantity: integer("quantity").notNull().default(1),
@@ -963,7 +953,7 @@ export const abandonedCarts = pgTable("abandonedCarts", {
     { productId: number; variationId?: number; name: string; quantity: number; price: number; size?: string; color?: string }[]
   >(),
   totalValue: decimal("totalValue", { precision: 12, scale: 2 }).default("0"),
-  status: pgEnum("status", ["new", "contacted", "converted", "lost"])
+  status: varchar("status", { length: 50 })
     .default("new")
     .notNull(),
   lastActionAt: timestamp("lastActionAt").defaultNow().notNull(),
@@ -976,7 +966,7 @@ export const abandonedCarts = pgTable("abandonedCarts", {
   smsSentAt: timestamp("smsSentAt"),
   pushSentAt: timestamp("pushSentAt"),
   // Conversão
-  convertedOrderId: biginteger("convertedOrderId", { mode: "number" }),
+  convertedOrderId: bigint("convertedOrderId", { mode: "number" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ac_status_idx").on(table.status),
@@ -994,18 +984,18 @@ export type InsertAbandonedCart = typeof abandonedCarts.$inferInsert;
 
 export const paymentTransactions = pgTable("paymentTransactions", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
-  customerId: biginteger("customerId", { mode: "number" }).notNull(),
-  gateway: pgEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
+  orderId: bigint("orderId", { mode: "number" }).notNull(),
+  customerId: bigint("customerId", { mode: "number" }).notNull(),
+  gateway: varchar("gateway", { length: 50 }).default("mercado_pago"),
   gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
   gatewayPaymentId: varchar("gatewayPaymentId", { length: 255 }),
-  type: pgEnum("type", ["pix", "credit_card", "debit_card", "boleto", "wallet"]).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
   installments: integer("installments").default(1),
   installmentAmount: decimal("installmentAmount", { precision: 10, scale: 2 }),
   interestRate: decimal("interestRate", { precision: 5, scale: 2 }).default("0"),
-  status: pgEnum("status", ["pending", "processing", "approved", "rejected", "cancelled", "refunded", "chargeback"])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   pixQrCode: text("pixQrCode"),
@@ -1037,7 +1027,7 @@ export type InsertPaymentTransaction = typeof paymentTransactions.$inferInsert;
 
 export const shippingQuotes = pgTable("shippingQuotes", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }),
   zipCode: varchar("zipCode", { length: 20 }).notNull(),
   addressState: varchar("addressState", { length: 2 }),
   addressCity: varchar("addressCity", { length: 100 }),
@@ -1064,11 +1054,11 @@ export type InsertShippingQuote = typeof shippingQuotes.$inferInsert;
 
 export const auditLogs = pgTable("auditLogs", {
   id: serial("id").primaryKey(),
-  userId: biginteger("userId", { mode: "number" }),
+  userId: bigint("userId", { mode: "number" }),
   userName: varchar("userName", { length: 255 }),
-  action: pgEnum("action", ["create", "update", "delete", "login", "logout", "export", "import", "approve", "reject", "pay", "cancel"]).notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
   entityType: varchar("entityType", { length: 50 }).notNull(),
-  entityId: biginteger("entityId", { mode: "number" }),
+  entityId: bigint("entityId", { mode: "number" }),
   entityName: varchar("entityName", { length: 255 }),
   oldValues: json("oldValues"),
   newValues: json("newValues"),
@@ -1089,7 +1079,7 @@ export const auditLogs = pgTable("auditLogs", {
 // Regras de NF por canal de venda
 export const nfRules = pgTable("nfRules", {
   id: serial("id").primaryKey(),
-  channel: pgEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"])
+  channel: varchar("channel", { length: 50 })
     .notNull(),
   // Se true, emite NF automaticamente sem perguntar
   autoEmit: boolean("autoEmit").default(false),
@@ -1114,7 +1104,7 @@ export type InsertNfRule = typeof nfRules.$inferInsert;
 export const saleReceipts = pgTable("saleReceipts", {
   id: serial("id").primaryKey(),
   receiptNumber: varchar("receiptNumber", { length: 50 }).notNull().unique(),
-  orderId: biginteger("orderId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }),
   customerName: varchar("customerName", { length: 255 }),
   customerDocument: varchar("customerDocument", { length: 20 }),
   customerEmail: varchar("customerEmail", { length: 320 }),
@@ -1127,13 +1117,13 @@ export const saleReceipts = pgTable("saleReceipts", {
   discountAmount: decimal("discountAmount", { precision: 12, scale: 2 }).default("0"),
   shippingCost: decimal("shippingCost", { precision: 10, scale: 2 }).default("0"),
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card", "cash", "boleto", "other"]).notNull(),
+  paymentMethod: varchar("paymentMethod", { length: 50 }).notNull(),
   paymentTransactionId: varchar("paymentTransactionId", { length: 255 }),
   // Motivo de não ter NF
-  noNfReason: pgEnum("noNfReason", ["client_declined", "gift", "below_threshold", "informal_sale", "other"]),
+  noNfReason: varchar("noNfReason", { length: 50 }),
   noNfReasonDetail: text("noNfReasonDetail"),
   // Canal de venda
-  channel: pgEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"]).default("ecommerce"),
+  channel: varchar("channel", { length: 50 }).default("ecommerce"),
   // Destino (para regras de obrigatoriedade)
   destinationState: varchar("destinationState", { length: 2 }),
   destinationCity: varchar("destinationCity", { length: 100 }),
@@ -1153,8 +1143,8 @@ export type InsertSaleReceipt = typeof saleReceipts.$inferInsert;
 // Log de NF-e emitidas via Bling
 export const nfeLog = pgTable("nfeLog", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
-  receiptId: biginteger("receiptId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }).notNull(),
+  receiptId: bigint("receiptId", { mode: "number" }),
   // Dados da NF
   blingNfeId: varchar("blingNfeId", { length: 100 }),
   nfNumber: varchar("nfNumber", { length: 20 }),
@@ -1165,7 +1155,7 @@ export const nfeLog = pgTable("nfeLog", {
   pdfUrl: text("pdfUrl"),
   danfeUrl: text("danfeUrl"),
   // Status
-  status: pgEnum("status", ["pending", "processing", "authorized", "cancelled", "rejected", "error"])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   errorMessage: text("errorMessage"),
@@ -1197,10 +1187,10 @@ export const payables = pgTable("payables", {
   documentNumber: varchar("documentNumber", { length: 100 }),
   description: varchar("description", { length: 255 }).notNull(),
   // Fornecedor (opcional — pode ser despesa sem fornecedor cadastrado)
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number" }),
   supplierName: varchar("supplierName", { length: 255 }),
   // Origem (compra, despesa, imposto, etc)
-  origin: pgEnum("origin", ["purchase", "expense", "tax", "salary", "rent", "other"]).default("purchase"),
+  origin: varchar("origin", { length: 50 }).default("purchase"),
   // Valores
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
@@ -1212,15 +1202,15 @@ export const payables = pgTable("payables", {
   dueDate: timestamp("dueDate").notNull(),
   paidDate: timestamp("paidDate"),
   // Status
-  status: pgEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "scheduled"])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   // Forma de pagamento
-  paymentMethod: pgEnum("paymentMethod", ["pix", "bank_transfer", "boleto", "cash", "credit_card", "other"]),
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
   // Categoria
   category: varchar("category", { length: 100 }),
   // Nota fiscal de entrada (vinculo)
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number" }),
   // Observações
   notes: text("notes"),
   // Alerta enviado
@@ -1241,10 +1231,10 @@ export type InsertPayable = typeof payables.$inferInsert;
 // Contas a Receber (vendas)
 export const receivables = pgTable("receivables", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
+  orderId: bigint("orderId", { mode: "number" }).notNull(),
   receiptNumber: varchar("receiptNumber", { length: 50 }),
   // Cliente
-  customerId: biginteger("customerId", { mode: "number" }),
+  customerId: bigint("customerId", { mode: "number" }),
   customerName: varchar("customerName", { length: 255 }),
   customerDocument: varchar("customerDocument", { length: 20 }),
   // Valores
@@ -1258,16 +1248,16 @@ export const receivables = pgTable("receivables", {
   dueDate: timestamp("dueDate").notNull(),
   receivedDate: timestamp("receivedDate"),
   // Status
-  status: pgEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "refunded", "chargeback"])
+  status: varchar("status", { length: 50 })
     .default("pending")
     .notNull(),
   // Forma de pagamento
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card", "boleto", "cash", "wallet", "other"]).notNull(),
+  paymentMethod: varchar("paymentMethod", { length: 50 }).notNull(),
   // Gateway (Mercado Pago, etc)
-  gateway: pgEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
+  gateway: varchar("gateway", { length: 50 }).default("mercado_pago"),
   gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
   // Canal
-  channel: pgEnum("channel", ["ecommerce", "retail", "wholesale", "marketplace"]).default("ecommerce"),
+  channel: varchar("channel", { length: 50 }).default("ecommerce"),
   // Parcelas (cartão)
   installments: integer("installments").default(1),
   // Observações
@@ -1288,10 +1278,10 @@ export type InsertReceivable = typeof receivables.$inferInsert;
 export const cashFlowEntries = pgTable("cashFlowEntries", {
   id: serial("id").primaryKey(),
   // Tipo
-  type: pgEnum("type", ["income", "expense"]).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
   // Origem (vinculo a outras tabelas)
-  source: pgEnum("source", ["sale", "payable", "receivable", "manual", "transfer", "adjustment"]).notNull(),
-  sourceId: biginteger("sourceId", { mode: "number" }),
+  source: varchar("source", { length: 50 }).notNull(),
+  sourceId: bigint("sourceId", { mode: "number" }),
   // Descrição
   description: varchar("description", { length: 255 }).notNull(),
   // Categoria
@@ -1302,7 +1292,7 @@ export const cashFlowEntries = pgTable("cashFlowEntries", {
   // Data do lançamento
   entryDate: timestamp("entryDate").defaultNow().notNull(),
   // Método
-  paymentMethod: pgEnum("paymentMethod", ["pix", "bank_transfer", "cash", "credit_card", "debit_card", "boleto", "other"]),
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
   // Saldo acumulado após este lançamento
   runningBalance: decimal("runningBalance", { precision: 12, scale: 2 }).notNull(),
   // Observações
@@ -1327,14 +1317,14 @@ export type InsertCashFlowEntry = typeof cashFlowEntries.$inferInsert;
 // Alertas de estoque (reposição, excesso, vencimento)
 export const stockAlerts = pgTable("stockAlerts", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number" }).notNull(),
+  variationId: bigint("variationId", { mode: "number" }),
   productName: varchar("productName", { length: 255 }).notNull(),
   sku: varchar("sku", { length: 100 }),
   size: varchar("size", { length: 50 }),
   color: varchar("color", { length: 50 }),
   // Tipo de alerta
-  alertType: pgEnum("alertType", ["below_min", "above_max", "zero_stock", "expiring", "slow_moving", "dead_stock"])
+  alertType: varchar("alertType", { length: 50 })
     .notNull(),
   // Estoque atual vs mínimo/máximo
   currentStock: integer("currentStock").notNull(),
@@ -1343,9 +1333,9 @@ export const stockAlerts = pgTable("stockAlerts", {
   // Sugestão de compra
   suggestedQty: integer("suggestedQty").default(0),
   // Fornecedor sugerido
-  suggestedSupplierId: biginteger("suggestedSupplierId", { mode: "number" }),
+  suggestedSupplierId: bigint("suggestedSupplierId", { mode: "number" }),
   // Status
-  status: pgEnum("status", ["active", "resolved", "ignored"]).default("active").notNull(),
+  status: varchar("status", { length: 50 }).default("active").notNull(),
   resolvedAt: timestamp("resolvedAt"),
   resolvedBy: varchar("resolvedBy", { length: 255 }),
   notes: text("notes"),
@@ -1363,24 +1353,14 @@ export type InsertStockAlert = typeof stockAlerts.$inferInsert;
 // Movimentações de estoque (histórico completo)
 export const productMovements = pgTable("productMovements", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number" }).notNull(),
+  variationId: bigint("variationId", { mode: "number" }),
   productName: varchar("productName", { length: 255 }),
   sku: varchar("sku", { length: 100 }),
   size: varchar("size", { length: 50 }),
   color: varchar("color", { length: 50 }),
   // Tipo de movimento
-  movementType: pgEnum("movementType", [
-    "purchase_in",      // Entrada por compra
-    "sale_out",         // Saída por venda
-    "return_in",        // Retorno de cliente
-    "return_out",       // Devolução a fornecedor
-    "adjustment",       // Ajuste de inventário
-    "transfer_in",      // Transferência entre depósitos (entrada)
-    "transfer_out",     // Transferência entre depósitos (saída)
-    "production_in",    // Entrada por produção
-    "waste",            // Perda/quebra
-  ]).notNull(),
+  movementType: varchar("movementType", { length: 50 }).notNull(),
   // Quantidade (positiva = entrada, negativa = saída)
   quantity: integer("quantity").notNull(),
   // Estoque antes e depois
@@ -1390,9 +1370,9 @@ export const productMovements = pgTable("productMovements", {
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
   // Documento de origem
   documentNumber: varchar("documentNumber", { length: 100 }),
-  orderId: biginteger("orderId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number" }),
   // Fornecedor (quando compra)
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number" }),
   supplierName: varchar("supplierName", { length: 255 }),
   // Observações
   notes: text("notes"),
@@ -1528,7 +1508,7 @@ export const sellers = pgTable("sellers", {
   commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).default("1.00"),
   avatar: text("avatar"),
   isActive: boolean("isActive").default(true),
-  role: pgEnum("role", ["vendedora", "gerente", "admin"]).default("vendedora"),
+  role: varchar("role", { length: 50 }).default("vendedora"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("seller_code_idx").on(table.code),
@@ -1540,7 +1520,7 @@ export type InsertSeller = typeof sellers.$inferInsert;
 
 export const pdvSales = pgTable("pdvSales", {
   id: serial("id").primaryKey(),
-  sellerId: biginteger("sellerId", { mode: "number" }).notNull(),
+  sellerId: bigint("sellerId", { mode: "number" }).notNull(),
   sellerName: varchar("sellerName", { length: 255 }),
   // Dados da venda
   items: json("items").$type<Array<{
@@ -1554,8 +1534,8 @@ export const pdvSales = pgTable("pdvSales", {
   commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).default("1.00"),
   commissionAmount: decimal("commissionAmount", { precision: 10, scale: 2 }).default("0.00"),
   // Pagamento
-  paymentMethod: pgEnum("paymentMethod", ["pix", "cartao_credito", "cartao_debito", "dinheiro", "boleto"]).notNull(),
-  paymentStatus: pgEnum("paymentStatus", ["pending", "approved", "cancelled"]).default("approved"),
+  paymentMethod: varchar("paymentMethod", { length: 50 }).notNull(),
+  paymentStatus: varchar("paymentStatus", { length: 50 }).default("approved"),
   // Cliente (opcional — venda avulsa)
   customerName: varchar("customerName", { length: 255 }),
   customerPhone: varchar("customerPhone", { length: 20 }),
