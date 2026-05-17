@@ -1,19 +1,19 @@
 import {
-  pgTable,
-  pgEnum,
+  mysqlTable,
+  mysqlEnum,
   serial,
   varchar,
   text,
   timestamp,
   decimal,
-  integer,
+  int,
   bigint,
   boolean,
   json,
   index,
   uniqueIndex,
   date,
-} from "drizzle-orm/pg-core";
+} from "drizzle-orm/mysql-core";
 
 // ═════════════════════════════════════════════════════════════════════
 //  LUFIT OS — SCHEMA v3.1 (Pós-Reunião de Diretoria)
@@ -29,13 +29,13 @@ import {
 // MÓDULO: AUTENTICAÇÃO / USUÁRIOS
 // ─────────────────────────────────────────────────────────────────────
 
-export const users = pgTable("users", {
+export const users = mysqlTable("users", {
   id: serial("id").primaryKey(),
   unionId: varchar("unionId", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 320 }),
   avatar: text("avatar"),
-  role: pgEnum("role", ["user", "admin", "manager", "seller", "finance", "stockist", "marketing"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "manager", "seller", "finance", "stockist", "marketing"]).default("user").notNull(),
   isActive: boolean("isActive").default(true),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
@@ -52,13 +52,13 @@ export type InsertUser = typeof users.$inferInsert;
 // MÓDULO OPERACIONAL — CATEGORIAS
 // ─────────────────────────────────────────────────────────────────────
 
-export const categories = pgTable("categories", {
+export const categories = mysqlTable("categories", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull(),
   description: text("description"),
   imageUrl: text("imageUrl"),
-  sortOrder: integer("sortOrder").default(0),
+  sortOrder: int("sortOrder").default(0),
   isActive: boolean("isActive").default(true),
   commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).default("0"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -73,13 +73,13 @@ export type InsertCategory = typeof categories.$inferInsert;
 // MÓDULO OPERACIONAL — SUBCATEGORIAS
 // ─────────────────────────────────────────────────────────────────────
 
-export const subcategories = pgTable("subcategories", {
+export const subcategories = mysqlTable("subcategories", {
   id: serial("id").primaryKey(),
-  categoryId: biginteger("categoryId", { mode: "number" }).notNull(),
+  categoryId: bigint("categoryId", { mode: "number", unsigned: true }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull(),
   description: text("description"),
-  sortOrder: integer("sortOrder").default(0),
+  sortOrder: int("sortOrder").default(0),
   isActive: boolean("isActive").default(true),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
@@ -94,7 +94,7 @@ export type InsertSubcategory = typeof subcategories.$inferInsert;
 // MÓDULO OPERACIONAL — MARCAS
 // ─────────────────────────────────────────────────────────────────────
 
-export const brands = pgTable("brands", {
+export const brands = mysqlTable("brands", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull(),
@@ -113,13 +113,13 @@ export type InsertBrand = typeof brands.$inferInsert;
 // MÓDULO OPERACIONAL — HISTÓRICO DE COMPRAS/ENTRADAS
 // ─────────────────────────────────────────────────────────────────────
 
-export const productPurchaseHistory = pgTable("productPurchaseHistory", {
+export const productPurchaseHistory = mysqlTable("productPurchaseHistory", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
   invoiceNumber: varchar("invoiceNumber", { length: 100 }),
-  qty: integer("qty").default(0).notNull(),
+  qty: int("qty").default(0).notNull(),
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
   totalCost: decimal("totalCost", { precision: 10, scale: 2 }),
   paymentCondition: varchar("paymentCondition", { length: 50 }),
@@ -133,7 +133,7 @@ export const productPurchaseHistory = pgTable("productPurchaseHistory", {
 
 export type ProductPurchaseHistory = typeof productPurchaseHistory.$inferSelect;
 
-export const products = pgTable("products", {
+export const products = mysqlTable("products", {
   id: serial("id").primaryKey(),
   sku: varchar("sku", { length: 100 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -143,10 +143,10 @@ export const products = pgTable("products", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
   costPrice: decimal("costPrice", { precision: 10, scale: 2 }),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  subcategoryId: biginteger("subcategoryId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number", unsigned: true }),
+  subcategoryId: bigint("subcategoryId", { mode: "number", unsigned: true }),
   // Fornecedor e NCM (nota fiscal)
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
   ncm: varchar("ncm", { length: 15 }),
   // Código de barras (opcional no pai, obrigatório nas variações)
   ean: varchar("ean", { length: 20 }),
@@ -157,8 +157,8 @@ export const products = pgTable("products", {
   origin: varchar("origin", { length: 100 }),
   brand: varchar("brand", { length: 100 }).default("LUFIT"),
   collection: varchar("collection", { length: 100 }),
-  season: pgEnum("season", ["verao", "inverno", "primavera", "outono", "cruzeiro", "perene"]),
-  year: integer("year").default(2025),
+  season: mysqlEnum("season", ["verao", "inverno", "primavera", "outono", "cruzeiro", "perene"]),
+  year: int("year").default(2025),
   // Imagens
   images: json("images").$type<string[]>(),
   // Atributos genéricos (para variações)
@@ -190,9 +190,9 @@ export type InsertProduct = typeof products.$inferInsert;
 // MÓDULO OPERACIONAL — VARIAÇÕES (GRADE / ESTOQUE REAL)
 // ─────────────────────────────────────────────────────────────────────
 
-export const productVariations = pgTable("productVariations", {
+export const productVariations = mysqlTable("productVariations", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
   sku: varchar("sku", { length: 100 }).notNull().unique(),
   ean: varchar("ean", { length: 20 }),
   barcode: varchar("barcode", { length: 50 }),
@@ -207,9 +207,9 @@ export const productVariations = pgTable("productVariations", {
   salePrice: decimal("salePrice", { precision: 10, scale: 2 }),
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
   // Estoque
-  stockQuantity: integer("stockQuantity").default(0).notNull(),
-  reservedQuantity: integer("reservedQuantity").default(0).notNull(),
-  minStockAlert: integer("minStockAlert").default(5),
+  stockQuantity: int("stockQuantity").default(0).notNull(),
+  reservedQuantity: int("reservedQuantity").default(0).notNull(),
+  minStockAlert: int("minStockAlert").default(5),
   // Dimensões específicas
   weightKg: decimal("weightKg", { precision: 8, scale: 3 }),
   lengthCm: decimal("lengthCm", { precision: 8, scale: 2 }),
@@ -217,7 +217,7 @@ export const productVariations = pgTable("productVariations", {
   heightCm: decimal("heightCm", { precision: 8, scale: 2 }),
   // Flags
   isActive: boolean("isActive").default(true),
-  position: integer("position").default(0),
+  position: int("position").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("var_sku_idx").on(table.sku),
@@ -233,13 +233,13 @@ export type InsertProductVariation = typeof productVariations.$inferInsert;
 // MÓDULO OPERACIONAL — CORES DOS PRODUTOS (Grade Dinâmica)
 // ─────────────────────────────────────────────────────────────────────
 
-export const productColors = pgTable("productColors", {
+export const productColors = mysqlTable("productColors", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
   name: varchar("name", { length: 50 }).notNull(),
   hexColor: varchar("hexColor", { length: 7 }),
   imageUrl: text("imageUrl"),
-  position: integer("position").default(0),
+  position: int("position").default(0),
   isActive: boolean("isActive").default(true),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
@@ -253,11 +253,11 @@ export type InsertProductColor = typeof productColors.$inferInsert;
 // MÓDULO OPERACIONAL — DEPÓSITOS / ARMAZÉNS
 // ─────────────────────────────────────────────────────────────────────
 
-export const warehouses = pgTable("warehouses", {
+export const warehouses = mysqlTable("warehouses", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
-  type: pgEnum("type", ["central", "loja", "cd", "externo"]).default("central"),
+  type: mysqlEnum("type", ["central", "loja", "cd", "externo"]).default("central"),
   addressStreet: varchar("addressStreet", { length: 255 }),
   addressNumber: varchar("addressNumber", { length: 20 }),
   addressComplement: varchar("addressComplement", { length: 100 }),
@@ -279,20 +279,20 @@ export type InsertWarehouse = typeof warehouses.$inferInsert;
 // MÓDULO OPERACIONAL — MOVIMENTAÇÕES DE ESTOQUE
 // ─────────────────────────────────────────────────────────────────────
 
-export const stockMovements = pgTable("stockMovements", {
+export const stockMovements = mysqlTable("stockMovements", {
   id: serial("id").primaryKey(),
-  variationId: biginteger("variationId", { mode: "number" }).notNull(),
-  warehouseId: biginteger("warehouseId", { mode: "number" }),
-  type: pgEnum("type", ["in", "out", "adjustment", "return", "transfer_in", "transfer_out", "damage", "production"]).notNull(),
-  quantity: integer("quantity").notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }).notNull(),
+  warehouseId: bigint("warehouseId", { mode: "number", unsigned: true }),
+  type: mysqlEnum("type", ["in", "out", "adjustment", "return", "transfer_in", "transfer_out", "damage", "production"]).notNull(),
+  quantity: int("quantity").notNull(),
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
   reason: text("reason"),
   reference: varchar("reference", { length: 255 }),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
-  purchaseOrderItemId: biginteger("purchaseOrderItemId", { mode: "number" }),
-  orderId: biginteger("orderId", { mode: "number" }),
-  orderItemId: biginteger("orderItemId", { mode: "number" }),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number", unsigned: true }),
+  purchaseOrderItemId: bigint("purchaseOrderItemId", { mode: "number", unsigned: true }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
+  orderItemId: bigint("orderItemId", { mode: "number", unsigned: true }),
+  createdBy: bigint("createdBy", { mode: "number", unsigned: true }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("sm_variation_idx").on(table.variationId),
@@ -311,12 +311,12 @@ export type InsertStockMovement = typeof stockMovements.$inferInsert;
 // Suporta FORNECEDORES FORMAIS (com nota) e INFORMAIS (sem nota)
 // ─────────────────────────────────────────────────────────────────────
 
-export const purchaseOrders = pgTable("purchaseOrders", {
+export const purchaseOrders = mysqlTable("purchaseOrders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("orderNumber", { length: 50 }).notNull().unique(),
-  supplierId: biginteger("supplierId", { mode: "number" }).notNull(),
-  warehouseId: biginteger("warehouseId", { mode: "number" }),
-  status: pgEnum("status", ["draft", "sent", "confirmed", "partial", "received", "cancelled", "returned"])
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }).notNull(),
+  warehouseId: bigint("warehouseId", { mode: "number", unsigned: true }),
+  status: mysqlEnum("status", ["draft", "sent", "confirmed", "partial", "received", "cancelled", "returned"])
     .default("draft")
     .notNull(),
   // Tipo de compra: formal (com nota fiscal) ou informal (sem nota)
@@ -333,8 +333,8 @@ export const purchaseOrders = pgTable("purchaseOrders", {
   cancelledAt: timestamp("cancelledAt"),
   // Outros
   notes: text("notes"),
-  paymentStatus: pgEnum("paymentStatus", ["pending", "partial", "paid"]).default("pending"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "partial", "paid"]).default("pending"),
+  createdBy: bigint("createdBy", { mode: "number", unsigned: true }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("po_number_idx").on(table.orderNumber),
@@ -350,17 +350,17 @@ export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
 // MÓDULO OPERACIONAL — ITENS DA ORDEM DE COMPRA
 // ─────────────────────────────────────────────────────────────────────
 
-export const purchaseOrderItems = pgTable("purchaseOrderItems", {
+export const purchaseOrderItems = mysqlTable("purchaseOrderItems", {
   id: serial("id").primaryKey(),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }).notNull(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number", unsigned: true }).notNull(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
   description: varchar("description", { length: 255 }),
-  quantity: integer("quantity").notNull().default(1),
+  quantity: int("quantity").notNull().default(1),
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }).notNull(),
   totalCost: decimal("totalCost", { precision: 10, scale: 2 }).notNull(),
   discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
-  receivedQuantity: integer("receivedQuantity").default(0),
+  receivedQuantity: int("receivedQuantity").default(0),
   batchNumber: varchar("batchNumber", { length: 50 }),
   expiryDate: date("expiryDate"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -376,7 +376,7 @@ export type InsertPurchaseOrderItem = typeof purchaseOrderItems.$inferInsert;
 // MÓDULO FINANCEIRO (TESOURARIA) — CONTAS BANCÁRIAS
 // ─────────────────────────────────────────────────────────────────────
 
-export const bankAccounts = pgTable("bankAccounts", {
+export const bankAccounts = mysqlTable("bankAccounts", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   bankCode: varchar("bankCode", { length: 10 }),
@@ -384,9 +384,9 @@ export const bankAccounts = pgTable("bankAccounts", {
   agency: varchar("agency", { length: 20 }),
   account: varchar("account", { length: 30 }),
   accountDigit: varchar("accountDigit", { length: 5 }),
-  type: pgEnum("type", ["checking", "savings", "investment", "digital_wallet"]).default("checking"),
+  type: mysqlEnum("type", ["checking", "savings", "investment", "digital_wallet"]).default("checking"),
   pixKey: varchar("pixKey", { length: 100 }),
-  pixKeyType: pgEnum("pixKeyType", ["cnpj", "cpf", "email", "phone", "random"]),
+  pixKeyType: mysqlEnum("pixKeyType", ["cnpj", "cpf", "email", "phone", "random"]),
   openingBalance: decimal("openingBalance", { precision: 12, scale: 2 }).default("0"),
   currentBalance: decimal("currentBalance", { precision: 12, scale: 2 }).default("0"),
   isActive: boolean("isActive").default(true),
@@ -402,12 +402,12 @@ export type InsertBankAccount = typeof bankAccounts.$inferInsert;
 // MÓDULO FINANCEIRO — CENTROS DE CUSTO / RECEITA
 // ─────────────────────────────────────────────────────────────────────
 
-export const costCenters = pgTable("costCenters", {
+export const costCenters = mysqlTable("costCenters", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
-  type: pgEnum("type", ["revenue", "expense", "asset", "liability"]).default("expense").notNull(),
-  parentId: biginteger("parentId", { mode: "number" }),
+  type: mysqlEnum("type", ["revenue", "expense", "asset", "liability"]).default("expense").notNull(),
+  parentId: bigint("parentId", { mode: "number", unsigned: true }),
   description: text("description"),
   budget: decimal("budget", { precision: 12, scale: 2 }).default("0"),
   isActive: boolean("isActive").default(true),
@@ -425,30 +425,30 @@ export type InsertCostCenter = typeof costCenters.$inferInsert;
 // Fornecedores usam: PIX, Boleto, Transferência, Dinheiro, Cartão, Outro
 // ─────────────────────────────────────────────────────────────────────
 
-export const accountsPayable = pgTable("accountsPayable", {
+export const accountsPayable = mysqlTable("accountsPayable", {
   id: serial("id").primaryKey(),
   documentNumber: varchar("documentNumber", { length: 100 }),
   description: varchar("description", { length: 255 }).notNull(),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  supplierId: biginteger("supplierId", { mode: "number" }),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number", unsigned: true }),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number", unsigned: true }),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 12, scale: 2 }).default("0"),
   interest: decimal("interest", { precision: 12, scale: 2 }).default("0"),
-  status: pgEnum("status", ["pending", "scheduled", "partial", "paid", "overdue", "cancelled", "disputed"])
+  status: mysqlEnum("status", ["pending", "scheduled", "partial", "paid", "overdue", "cancelled", "disputed"])
     .default("pending")
     .notNull(),
   issueDate: date("issueDate"),
   dueDate: date("dueDate").notNull(),
   paidAt: timestamp("paidAt"),
   // Fornecedores pagam via: PIX, Boleto, Transferência, Dinheiro, Cartão
-  paymentMethod: pgEnum("paymentMethod", ["pix", "boleto", "transfer", "cash", "card", "other"]),
-  bankAccountId: biginteger("bankAccountId", { mode: "number" }),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "boleto", "transfer", "cash", "card", "other"]),
+  bankAccountId: bigint("bankAccountId", { mode: "number", unsigned: true }),
   attachmentUrl: text("attachmentUrl"),
   notes: text("notes"),
   recurrenceGroupId: varchar("recurrenceGroupId", { length: 50 }),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number", unsigned: true }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ap_supplier_idx").on(table.supplierId),
@@ -466,31 +466,31 @@ export type InsertAccountsPayable = typeof accountsPayable.$inferInsert;
 // CLIENTES pagam via: PIX ou Cartão (crédito/débito) — SEM BOLETO no site
 // ─────────────────────────────────────────────────────────────────────
 
-export const accountsReceivable = pgTable("accountsReceivable", {
+export const accountsReceivable = mysqlTable("accountsReceivable", {
   id: serial("id").primaryKey(),
   documentNumber: varchar("documentNumber", { length: 100 }),
   description: varchar("description", { length: 255 }).notNull(),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  customerId: biginteger("customerId", { mode: "number" }),
-  orderId: biginteger("orderId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number", unsigned: true }),
+  customerId: bigint("customerId", { mode: "number", unsigned: true }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 12, scale: 2 }).default("0"),
   interest: decimal("interest", { precision: 12, scale: 2 }).default("0"),
-  installmentCount: integer("installmentCount").default(1),
-  installmentNumber: integer("installmentNumber").default(1),
-  status: pgEnum("status", ["pending", "scheduled", "partial", "paid", "overdue", "cancelled", "disputed", "refunded"])
+  installmentCount: int("installmentCount").default(1),
+  installmentNumber: int("installmentNumber").default(1),
+  status: mysqlEnum("status", ["pending", "scheduled", "partial", "paid", "overdue", "cancelled", "disputed", "refunded"])
     .default("pending")
     .notNull(),
   issueDate: date("issueDate"),
   dueDate: date("dueDate"),
   paidAt: timestamp("paidAt"),
   // SITE: apenas PIX e Cartão (crédito/débito). Boleto REMOVIDO do e-commerce.
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card"]),
-  bankAccountId: biginteger("bankAccountId", { mode: "number" }),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "credit_card", "debit_card"]),
+  bankAccountId: bigint("bankAccountId", { mode: "number", unsigned: true }),
   gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
   notes: text("notes"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number", unsigned: true }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ar_customer_idx").on(table.customerId),
@@ -507,23 +507,23 @@ export type InsertAccountsReceivable = typeof accountsReceivable.$inferInsert;
 // MÓDULO FINANCEIRO — FLUXO DE CAIXA (Livro Caixa)
 // ─────────────────────────────────────────────────────────────────────
 
-export const cashBook = pgTable("cashBook", {
+export const cashBook = mysqlTable("cashBook", {
   id: serial("id").primaryKey(),
   date: date("date").notNull(),
-  type: pgEnum("type", ["in", "out"]).notNull(),
+  type: mysqlEnum("type", ["in", "out"]).notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   description: varchar("description", { length: 255 }).notNull(),
-  categoryId: biginteger("categoryId", { mode: "number" }),
-  accountsReceivableId: biginteger("accountsReceivableId", { mode: "number" }),
-  accountsPayableId: biginteger("accountsPayableId", { mode: "number" }),
-  orderId: biginteger("orderId", { mode: "number" }),
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
-  salesRepId: biginteger("salesRepId", { mode: "number" }),
-  bankAccountId: biginteger("bankAccountId", { mode: "number" }),
+  categoryId: bigint("categoryId", { mode: "number", unsigned: true }),
+  accountsReceivableId: bigint("accountsReceivableId", { mode: "number", unsigned: true }),
+  accountsPayableId: bigint("accountsPayableId", { mode: "number", unsigned: true }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number", unsigned: true }),
+  salesRepId: bigint("salesRepId", { mode: "number", unsigned: true }),
+  bankAccountId: bigint("bankAccountId", { mode: "number", unsigned: true }),
   balanceAfter: decimal("balanceAfter", { precision: 12, scale: 2 }).notNull(),
   isReconciled: boolean("isReconciled").default(false),
   reconciledAt: timestamp("reconciledAt"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number", unsigned: true }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("cb_date_idx").on(table.date),
@@ -541,10 +541,10 @@ export type InsertCashBook = typeof cashBook.$inferInsert;
 // MÓDULO FINANCEIRO — HISTÓRICO DE PRECIFICAÇÃO
 // ─────────────────────────────────────────────────────────────────────
 
-export const priceHistory = pgTable("priceHistory", {
+export const priceHistory = mysqlTable("priceHistory", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
   costPrice: decimal("costPrice", { precision: 10, scale: 2 }).notNull(),
   salePrice: decimal("salePrice", { precision: 10, scale: 2 }).notNull(),
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
@@ -552,7 +552,7 @@ export const priceHistory = pgTable("priceHistory", {
   marginValue: decimal("marginValue", { precision: 10, scale: 2 }),
   effectiveDate: date("effectiveDate").notNull(),
   reason: text("reason"),
-  createdBy: biginteger("createdBy", { mode: "number" }),
+  createdBy: bigint("createdBy", { mode: "number", unsigned: true }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ph_product_idx").on(table.productId),
@@ -568,14 +568,14 @@ export type InsertPriceHistory = typeof priceHistory.$inferInsert;
 // Rede social obrigatória (Instagram, TikTok, Facebook, LinkedIn).
 // ─────────────────────────────────────────────────────────────────────
 
-export const customers = pgTable("customers", {
+export const customers = mysqlTable("customers", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 320 }).notNull(),
   name: varchar("name", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   whatsapp: varchar("whatsapp", { length: 50 }),
   document: varchar("document", { length: 20 }),
-  documentType: pgEnum("documentType", ["cpf", "cnpj"]).default("cpf"),
+  documentType: mysqlEnum("documentType", ["cpf", "cnpj"]).default("cpf"),
   // Endereço
   addressStreet: varchar("addressStreet", { length: 255 }),
   addressNumber: varchar("addressNumber", { length: 20 }),
@@ -585,24 +585,24 @@ export const customers = pgTable("customers", {
   addressState: varchar("addressState", { length: 2 }),
   addressZip: varchar("addressZip", { length: 20 }),
   // REDE SOCIAL OBRIGATÓRIA — capturamos onde o cliente nos encontrou
-  socialNetworkType: pgEnum("socialNetworkType", ["instagram", "tiktok", "facebook", "linkedin", "whatsapp", "google", "other"]).notNull(),
+  socialNetworkType: mysqlEnum("socialNetworkType", ["instagram", "tiktok", "facebook", "linkedin", "whatsapp", "google", "other"]).notNull(),
   socialNetworkHandle: varchar("socialNetworkHandle", { length: 100 }).notNull(), // @lufitcliente
   // CRM
   source: varchar("source", { length: 50 }),
   birthday: date("birthday"),
   notes: text("notes"),
-  segment: pgEnum("segment", ["vip", "regular", "atacado", "revenda", "influencer", "staff"]).default("regular"),
+  segment: mysqlEnum("segment", ["vip", "regular", "atacado", "revenda", "influencer", "staff"]).default("regular"),
   // CLUBE VIP — gatilho psicológico (sem desconto no varejo, só prestígio no painel)
   isVip: boolean("isVip").default(false),
   // ATACADO vs VAREJO — define se recebe descontos escalonados
   isWholesale: boolean("isWholesale").default(false),
   // Métricas
-  totalOrders: integer("totalOrders").default(0),
+  totalOrders: int("totalOrders").default(0),
   totalSpent: decimal("totalSpent", { precision: 12, scale: 2 }).default("0"),
   averageTicket: decimal("averageTicket", { precision: 10, scale: 2 }).default("0"),
   lastOrderAt: timestamp("lastOrderAt"),
   // Preferências
-  preferredPayment: pgEnum("preferredPayment", ["pix", "credit_card", "debit_card"]),
+  preferredPayment: mysqlEnum("preferredPayment", ["pix", "credit_card", "debit_card"]),
   // Flags
   isActive: boolean("isActive").default(true),
   optedInMarketing: boolean("optedInMarketing").default(true),
@@ -626,7 +626,7 @@ export type InsertCustomer = typeof customers.$inferInsert;
 // MÓDULO ENTIDADES — TAGS DE CLIENTE (CRM)
 // ─────────────────────────────────────────────────────────────────────
 
-export const customerTags = pgTable("customerTags", {
+export const customerTags = mysqlTable("customerTags", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   color: varchar("color", { length: 7 }).default("#2DD4A8"),
@@ -640,10 +640,10 @@ export const customerTags = pgTable("customerTags", {
 export type CustomerTag = typeof customerTags.$inferSelect;
 export type InsertCustomerTag = typeof customerTags.$inferInsert;
 
-export const customerTagAssignments = pgTable("customerTagAssignments", {
+export const customerTagAssignments = mysqlTable("customerTagAssignments", {
   id: serial("id").primaryKey(),
-  customerId: biginteger("customerId", { mode: "number" }).notNull(),
-  tagId: biginteger("tagId", { mode: "number" }).notNull(),
+  customerId: bigint("customerId", { mode: "number", unsigned: true }).notNull(),
+  tagId: bigint("tagId", { mode: "number", unsigned: true }).notNull(),
   assignedAt: timestamp("assignedAt").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("cta_unique_idx").on(table.customerId, table.tagId),
@@ -654,24 +654,24 @@ export const customerTagAssignments = pgTable("customerTagAssignments", {
 // Formal = CNPJ + Nota Fiscal | Informal = CPF ou sem documento, sem nota
 // ─────────────────────────────────────────────────────────────────────
 
-export const suppliers = pgTable("suppliers", {
+export const suppliers = mysqlTable("suppliers", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   legalName: varchar("legalName", { length: 255 }),
   // Documento: CNPJ (formal) ou CPF (informal pessoa física)
   document: varchar("document", { length: 20 }).notNull(),
-  documentType: pgEnum("documentType", ["cpf", "cnpj", "rg", "passport"]).default("cnpj").notNull(),
+  documentType: mysqlEnum("documentType", ["cpf", "cnpj", "rg", "passport"]).default("cnpj").notNull(),
   stateRegistration: varchar("stateRegistration", { length: 50 }),
-  type: pgEnum("type", ["factory", "atelier", "distributor", "importer", "raw_material", "logistics"])
+  type: mysqlEnum("type", ["factory", "atelier", "distributor", "importer", "raw_material", "logistics"])
     .default("factory")
     .notNull(),
-  status: pgEnum("status", ["active", "inactive", "blocked", "prospect"]).default("active").notNull(),
-  rating: integer("rating").default(5),
+  status: mysqlEnum("status", ["active", "inactive", "blocked", "prospect"]).default("active").notNull(),
+  rating: int("rating").default(5),
   // INFORMAL: compra sem nota fiscal, pagamento geralmente em PIX/dinheiro
   isInformal: boolean("isInformal").default(false),
   // Comercial
-  paymentTermDays: integer("paymentTermDays").default(30),
+  paymentTermDays: int("paymentTermDays").default(30),
   minOrderValue: decimal("minOrderValue", { precision: 12, scale: 2 }).default("0"),
   defaultShippingMethod: varchar("defaultShippingMethod", { length: 50 }),
   // Contato
@@ -706,9 +706,9 @@ export type InsertSupplier = typeof suppliers.$inferInsert;
 // MÓDULO ENTIDADES — CONTATOS DOS FORNECEDORES
 // ─────────────────────────────────────────────────────────────────────
 
-export const supplierContacts = pgTable("supplierContacts", {
+export const supplierContacts = mysqlTable("supplierContacts", {
   id: serial("id").primaryKey(),
-  supplierId: biginteger("supplierId", { mode: "number" }).notNull(),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   role: varchar("role", { length: 100 }),
   email: varchar("email", { length: 320 }),
@@ -727,17 +727,17 @@ export type InsertSupplierContact = typeof supplierContacts.$inferInsert;
 // MÓDULO ENTIDADES — CONTAS BANCÁRIAS DOS FORNECEDORES
 // ─────────────────────────────────────────────────────────────────────
 
-export const supplierBankAccounts = pgTable("supplierBankAccounts", {
+export const supplierBankAccounts = mysqlTable("supplierBankAccounts", {
   id: serial("id").primaryKey(),
-  supplierId: biginteger("supplierId", { mode: "number" }).notNull(),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }).notNull(),
   bankCode: varchar("bankCode", { length: 10 }),
   bankName: varchar("bankName", { length: 100 }),
   agency: varchar("agency", { length: 20 }),
   account: varchar("account", { length: 30 }),
   accountDigit: varchar("accountDigit", { length: 5 }),
-  accountType: pgEnum("accountType", ["checking", "savings"]).default("checking"),
+  accountType: mysqlEnum("accountType", ["checking", "savings"]).default("checking"),
   pixKey: varchar("pixKey", { length: 100 }),
-  pixKeyType: pgEnum("pixKeyType", ["cnpj", "cpf", "email", "phone", "random"]),
+  pixKeyType: mysqlEnum("pixKeyType", ["cnpj", "cpf", "email", "phone", "random"]),
   isPrimary: boolean("isPrimary").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
@@ -749,7 +749,7 @@ export const supplierBankAccounts = pgTable("supplierBankAccounts", {
 // AI_AGENT = fallback quando todas as humanas estão ausentes
 // ─────────────────────────────────────────────────────────────────────
 
-export const salesReps = pgTable("salesReps", {
+export const salesReps = mysqlTable("salesReps", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -757,7 +757,7 @@ export const salesReps = pgTable("salesReps", {
   phone: varchar("phone", { length: 50 }),
   whatsapp: varchar("whatsapp", { length: 50 }),
   // Comissão: 1% fixo para todas as vendedoras da LUFIT
-  commissionType: pgEnum("commissionType", ["percentage", "fixed", "tiered", "hybrid"])
+  commissionType: mysqlEnum("commissionType", ["percentage", "fixed", "tiered", "hybrid"])
     .default("percentage")
     .notNull(),
   commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).default("1.00"),
@@ -765,7 +765,7 @@ export const salesReps = pgTable("salesReps", {
   // Metas
   monthlyTarget: decimal("monthlyTarget", { precision: 12, scale: 2 }).default("10000.00"),
   // Vínculo a login do sistema
-  userId: biginteger("userId", { mode: "number" }),
+  userId: bigint("userId", { mode: "number", unsigned: true }),
   // Tipo: human ou AI agent
   isAiAgent: boolean("isAiAgent").default(false),
   // Descrição do agente (ex: "IA Fallback — atende quando vendedoras ausentes")
@@ -786,23 +786,23 @@ export type InsertSalesRep = typeof salesReps.$inferInsert;
 // MÓDULO ENTIDADES — LANÇAMENTOS DE COMISSÃO
 // ─────────────────────────────────────────────────────────────────────
 
-export const commissions = pgTable("commissions", {
+export const commissions = mysqlTable("commissions", {
   id: serial("id").primaryKey(),
-  salesRepId: biginteger("salesRepId", { mode: "number" }).notNull(),
-  orderId: biginteger("orderId", { mode: "number" }),
-  customerId: biginteger("customerId", { mode: "number" }),
+  salesRepId: bigint("salesRepId", { mode: "number", unsigned: true }).notNull(),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
+  customerId: bigint("customerId", { mode: "number", unsigned: true }),
   baseAmount: decimal("baseAmount", { precision: 12, scale: 2 }).notNull(),
   rateApplied: decimal("rateApplied", { precision: 5, scale: 2 }).notNull(),
   fixedApplied: decimal("fixedApplied", { precision: 10, scale: 2 }).default("0"),
   calculatedValue: decimal("calculatedValue", { precision: 12, scale: 2 }).notNull(),
-  status: pgEnum("status", ["pending", "approved", "paid", "cancelled", "clawback"])
+  status: mysqlEnum("status", ["pending", "approved", "paid", "cancelled", "clawback"])
     .default("pending")
     .notNull(),
   approvedAt: timestamp("approvedAt"),
   paidAt: timestamp("paidAt"),
   paymentReference: varchar("paymentReference", { length: 255 }),
   isReturnDeduction: boolean("isReturnDeduction").default(false),
-  originalCommissionId: biginteger("originalCommissionId", { mode: "number" }),
+  originalCommissionId: bigint("originalCommissionId", { mode: "number", unsigned: true }),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
@@ -821,11 +821,11 @@ export type InsertCommission = typeof commissions.$inferInsert;
 // 5% para 12 peças | 10% para 24 peças | 15% acima de 48 peças
 // ─────────────────────────────────────────────────────────────────────
 
-export const wholesalePricingRules = pgTable("wholesalePricingRules", {
+export const wholesalePricingRules = mysqlTable("wholesalePricingRules", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  minQuantity: integer("minQuantity").notNull(), // 12, 24, 48
-  maxQuantity: integer("maxQuantity"), // null = acima do mínimo (open-ended)
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  minQuantity: int("minQuantity").notNull(), // 12, 24, 48
+  maxQuantity: int("maxQuantity"), // null = acima do mínimo (open-ended)
   discountPercent: decimal("discountPercent", { precision: 5, scale: 2 }).notNull(), // 5.00, 10.00, 15.00
   isActive: boolean("isActive").default(true),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -844,13 +844,13 @@ export type InsertWholesalePricingRule = typeof wholesalePricingRules.$inferInse
 // Flag isWholesale para atacado.
 // ─────────────────────────────────────────────────────────────────────
 
-export const orders = pgTable("orders", {
+export const orders = mysqlTable("orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("orderNumber", { length: 50 }).notNull().unique(),
-  customerId: biginteger("customerId", { mode: "number" }).notNull(),
-  salesRepId: biginteger("salesRepId", { mode: "number" }), // quem vendeu (Flaviane, Nayane, Alessandra, ou AI_AGENT)
+  customerId: bigint("customerId", { mode: "number", unsigned: true }).notNull(),
+  salesRepId: bigint("salesRepId", { mode: "number", unsigned: true }), // quem vendeu (Flaviane, Nayane, Alessandra, ou AI_AGENT)
   // Status
-  status: pgEnum("status", [
+  status: mysqlEnum("status", [
     "pending",
     "paid",
     "processing",
@@ -863,8 +863,8 @@ export const orders = pgTable("orders", {
     .default("pending")
     .notNull(),
   // SITE: apenas PIX e Cartão (crédito/débito). Boleto PROIBIDO no checkout.
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card"]),
-  paymentStatus: pgEnum("paymentStatus", ["pending", "approved", "rejected", "refunded", "partial"])
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "credit_card", "debit_card"]),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "approved", "rejected", "refunded", "partial"])
     .default("pending")
     .notNull(),
   // Financeiros
@@ -875,7 +875,7 @@ export const orders = pgTable("orders", {
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
   // ATACADO: flag e desconto aplicado
   isWholesale: boolean("isWholesale").default(false),
-  wholesalePiecesCount: integer("wholesalePiecesCount").default(0), // total de peças no pedido atacado
+  wholesalePiecesCount: int("wholesalePiecesCount").default(0), // total de peças no pedido atacado
   wholesaleDiscountPercent: decimal("wholesaleDiscountPercent", { precision: 5, scale: 2 }).default("0"),
   // Frete / Logística
   shippingMethod: varchar("shippingMethod", { length: 100 }),
@@ -885,14 +885,14 @@ export const orders = pgTable("orders", {
   deliveredAt: timestamp("deliveredAt"),
   estimatedDeliveryDate: date("estimatedDeliveryDate"),
   // Origem
-  source: pgEnum("source", ["website", "instagram", "tiktok", "facebook", "whatsapp", "marketplace", "loja_fisica", "phone", "event"]).default("website"),
+  source: mysqlEnum("source", ["website", "instagram", "tiktok", "facebook", "whatsapp", "marketplace", "loja_fisica", "phone", "event"]).default("website"),
   campaign: varchar("campaign", { length: 100 }),
   // Cupom
   couponCode: varchar("couponCode", { length: 50 }),
   couponDiscount: decimal("couponDiscount", { precision: 12, scale: 2 }).default("0"),
   // Comissão
   commissionAmount: decimal("commissionAmount", { precision: 10, scale: 2 }).default("0"),
-  commissionStatus: pgEnum("commissionStatus", ["pending", "calculated", "paid"]).default("pending"),
+  commissionStatus: mysqlEnum("commissionStatus", ["pending", "calculated", "paid"]).default("pending"),
   // Nota Fiscal (futuro)
   invoiceNumber: varchar("invoiceNumber", { length: 50 }),
   invoiceSeries: varchar("invoiceSeries", { length: 10 }),
@@ -920,14 +920,14 @@ export type InsertOrder = typeof orders.$inferInsert;
 // MÓDULO VENDAS — ITENS DO PEDIDO
 // ─────────────────────────────────────────────────────────────────────
 
-export const orderItems = pgTable("orderItems", {
+export const orderItems = mysqlTable("orderItems", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }).notNull(),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
   productName: varchar("productName", { length: 255 }).notNull(),
   sku: varchar("sku", { length: 100 }),
-  quantity: integer("quantity").notNull().default(1),
+  quantity: int("quantity").notNull().default(1),
   unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(),
   totalPrice: decimal("totalPrice", { precision: 10, scale: 2 }).notNull(),
   discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
@@ -938,7 +938,7 @@ export const orderItems = pgTable("orderItems", {
   // Custo no momento da venda
   unitCostAtSale: decimal("unitCostAtSale", { precision: 10, scale: 2 }),
   // Devolução
-  returnedQuantity: integer("returnedQuantity").default(0),
+  returnedQuantity: int("returnedQuantity").default(0),
   returnReason: text("returnReason"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
@@ -954,7 +954,7 @@ export type InsertOrderItem = typeof orderItems.$inferInsert;
 // MÓDULO MARKETING — CARRINHOS ABANDONADOS
 // ─────────────────────────────────────────────────────────────────────
 
-export const abandonedCarts = pgTable("abandonedCarts", {
+export const abandonedCarts = mysqlTable("abandonedCarts", {
   id: serial("id").primaryKey(),
   customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
   customerName: varchar("customerName", { length: 255 }),
@@ -963,20 +963,20 @@ export const abandonedCarts = pgTable("abandonedCarts", {
     { productId: number; variationId?: number; name: string; quantity: number; price: number; size?: string; color?: string }[]
   >(),
   totalValue: decimal("totalValue", { precision: 12, scale: 2 }).default("0"),
-  status: pgEnum("status", ["new", "contacted", "converted", "lost"])
+  status: mysqlEnum("status", ["new", "contacted", "converted", "lost"])
     .default("new")
     .notNull(),
   lastActionAt: timestamp("lastActionAt").defaultNow().notNull(),
   recoveredAt: timestamp("recoveredAt"),
   couponCode: varchar("couponCode", { length: 50 }),
-  discountPercent: integer("discountPercent").default(0),
+  discountPercent: int("discountPercent").default(0),
   // Rastreamento de comunicação
   whatsappSentAt: timestamp("whatsappSentAt"),
   emailSentAt: timestamp("emailSentAt"),
   smsSentAt: timestamp("smsSentAt"),
   pushSentAt: timestamp("pushSentAt"),
   // Conversão
-  convertedOrderId: biginteger("convertedOrderId", { mode: "number" }),
+  convertedOrderId: bigint("convertedOrderId", { mode: "number", unsigned: true }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   index("ac_status_idx").on(table.status),
@@ -992,20 +992,20 @@ export type InsertAbandonedCart = typeof abandonedCarts.$inferInsert;
 // Integração futura: Mercado Pago / Pagar.me
 // ═════════════════════════════════════════════════════════════════════
 
-export const paymentTransactions = pgTable("paymentTransactions", {
+export const paymentTransactions = mysqlTable("paymentTransactions", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
-  customerId: biginteger("customerId", { mode: "number" }).notNull(),
-  gateway: pgEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }).notNull(),
+  customerId: bigint("customerId", { mode: "number", unsigned: true }).notNull(),
+  gateway: mysqlEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
   gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
   gatewayPaymentId: varchar("gatewayPaymentId", { length: 255 }),
-  type: pgEnum("type", ["pix", "credit_card", "debit_card", "boleto", "wallet"]).notNull(),
+  type: mysqlEnum("type", ["pix", "credit_card", "debit_card", "boleto", "wallet"]).notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
-  installments: integer("installments").default(1),
+  installments: int("installments").default(1),
   installmentAmount: decimal("installmentAmount", { precision: 10, scale: 2 }),
   interestRate: decimal("interestRate", { precision: 5, scale: 2 }).default("0"),
-  status: pgEnum("status", ["pending", "processing", "approved", "rejected", "cancelled", "refunded", "chargeback"])
+  status: mysqlEnum("status", ["pending", "processing", "approved", "rejected", "cancelled", "refunded", "chargeback"])
     .default("pending")
     .notNull(),
   pixQrCode: text("pixQrCode"),
@@ -1035,9 +1035,9 @@ export type InsertPaymentTransaction = typeof paymentTransactions.$inferInsert;
 // MÓDULO FRETE — COTAÇÕES (Kangu API)
 // ═════════════════════════════════════════════════════════════════════
 
-export const shippingQuotes = pgTable("shippingQuotes", {
+export const shippingQuotes = mysqlTable("shippingQuotes", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
   zipCode: varchar("zipCode", { length: 20 }).notNull(),
   addressState: varchar("addressState", { length: 2 }),
   addressCity: varchar("addressCity", { length: 100 }),
@@ -1045,7 +1045,7 @@ export const shippingQuotes = pgTable("shippingQuotes", {
   service: varchar("service", { length: 100 }),
   serviceCode: varchar("serviceCode", { length: 50 }),
   cost: decimal("cost", { precision: 10, scale: 2 }).notNull(),
-  estimatedDays: integer("estimatedDays"),
+  estimatedDays: int("estimatedDays"),
   totalWeightKg: decimal("totalWeightKg", { precision: 8, scale: 3 }),
   isSelected: boolean("isSelected").default(false),
   rawResponse: json("rawResponse"),
@@ -1062,13 +1062,13 @@ export type InsertShippingQuote = typeof shippingQuotes.$inferInsert;
 // MÓDULO CONFIGURAÇÃO — LOG DE AUDITORIA
 // ═════════════════════════════════════════════════════════════════════
 
-export const auditLogs = pgTable("auditLogs", {
+export const auditLogs = mysqlTable("auditLogs", {
   id: serial("id").primaryKey(),
-  userId: biginteger("userId", { mode: "number" }),
+  userId: bigint("userId", { mode: "number", unsigned: true }),
   userName: varchar("userName", { length: 255 }),
-  action: pgEnum("action", ["create", "update", "delete", "login", "logout", "export", "import", "approve", "reject", "pay", "cancel"]).notNull(),
+  action: mysqlEnum("action", ["create", "update", "delete", "login", "logout", "export", "import", "approve", "reject", "pay", "cancel"]).notNull(),
   entityType: varchar("entityType", { length: 50 }).notNull(),
-  entityId: biginteger("entityId", { mode: "number" }),
+  entityId: bigint("entityId", { mode: "number", unsigned: true }),
   entityName: varchar("entityName", { length: 255 }),
   oldValues: json("oldValues"),
   newValues: json("newValues"),
@@ -1087,9 +1087,9 @@ export const auditLogs = pgTable("auditLogs", {
 // ═════════════════════════════════════════════════════════════════════
 
 // Regras de NF por canal de venda
-export const nfRules = pgTable("nfRules", {
+export const nfRules = mysqlTable("nfRules", {
   id: serial("id").primaryKey(),
-  channel: pgEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"])
+  channel: mysqlEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"])
     .notNull(),
   // Se true, emite NF automaticamente sem perguntar
   autoEmit: boolean("autoEmit").default(false),
@@ -1111,10 +1111,10 @@ export type NfRule = typeof nfRules.$inferSelect;
 export type InsertNfRule = typeof nfRules.$inferInsert;
 
 // Recibos de venda (quando não emite NF)
-export const saleReceipts = pgTable("saleReceipts", {
+export const saleReceipts = mysqlTable("saleReceipts", {
   id: serial("id").primaryKey(),
   receiptNumber: varchar("receiptNumber", { length: 50 }).notNull().unique(),
-  orderId: biginteger("orderId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
   customerName: varchar("customerName", { length: 255 }),
   customerDocument: varchar("customerDocument", { length: 20 }),
   customerEmail: varchar("customerEmail", { length: 320 }),
@@ -1127,13 +1127,13 @@ export const saleReceipts = pgTable("saleReceipts", {
   discountAmount: decimal("discountAmount", { precision: 12, scale: 2 }).default("0"),
   shippingCost: decimal("shippingCost", { precision: 10, scale: 2 }).default("0"),
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card", "cash", "boleto", "other"]).notNull(),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "credit_card", "debit_card", "cash", "boleto", "other"]).notNull(),
   paymentTransactionId: varchar("paymentTransactionId", { length: 255 }),
   // Motivo de não ter NF
-  noNfReason: pgEnum("noNfReason", ["client_declined", "gift", "below_threshold", "informal_sale", "other"]),
+  noNfReason: mysqlEnum("noNfReason", ["client_declined", "gift", "below_threshold", "informal_sale", "other"]),
   noNfReasonDetail: text("noNfReasonDetail"),
   // Canal de venda
-  channel: pgEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"]).default("ecommerce"),
+  channel: mysqlEnum("channel", ["retail", "ecommerce", "wholesale", "marketplace"]).default("ecommerce"),
   // Destino (para regras de obrigatoriedade)
   destinationState: varchar("destinationState", { length: 2 }),
   destinationCity: varchar("destinationCity", { length: 100 }),
@@ -1151,10 +1151,10 @@ export type SaleReceipt = typeof saleReceipts.$inferSelect;
 export type InsertSaleReceipt = typeof saleReceipts.$inferInsert;
 
 // Log de NF-e emitidas via Bling
-export const nfeLog = pgTable("nfeLog", {
+export const nfeLog = mysqlTable("nfeLog", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
-  receiptId: biginteger("receiptId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }).notNull(),
+  receiptId: bigint("receiptId", { mode: "number", unsigned: true }),
   // Dados da NF
   blingNfeId: varchar("blingNfeId", { length: 100 }),
   nfNumber: varchar("nfNumber", { length: 20 }),
@@ -1165,7 +1165,7 @@ export const nfeLog = pgTable("nfeLog", {
   pdfUrl: text("pdfUrl"),
   danfeUrl: text("danfeUrl"),
   // Status
-  status: pgEnum("status", ["pending", "processing", "authorized", "cancelled", "rejected", "error"])
+  status: mysqlEnum("status", ["pending", "processing", "authorized", "cancelled", "rejected", "error"])
     .default("pending")
     .notNull(),
   errorMessage: text("errorMessage"),
@@ -1191,16 +1191,16 @@ export type InsertNfeLog = typeof nfeLog.$inferInsert;
 // ═════════════════════════════════════════════════════════════════════
 
 // Contas a Pagar (fornecedores, despesas)
-export const payables = pgTable("payables", {
+export const payables = mysqlTable("payables", {
   id: serial("id").primaryKey(),
   // Documento
   documentNumber: varchar("documentNumber", { length: 100 }),
   description: varchar("description", { length: 255 }).notNull(),
   // Fornecedor (opcional — pode ser despesa sem fornecedor cadastrado)
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
   supplierName: varchar("supplierName", { length: 255 }),
   // Origem (compra, despesa, imposto, etc)
-  origin: pgEnum("origin", ["purchase", "expense", "tax", "salary", "rent", "other"]).default("purchase"),
+  origin: mysqlEnum("origin", ["purchase", "expense", "tax", "salary", "rent", "other"]).default("purchase"),
   // Valores
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0"),
@@ -1212,15 +1212,15 @@ export const payables = pgTable("payables", {
   dueDate: timestamp("dueDate").notNull(),
   paidDate: timestamp("paidDate"),
   // Status
-  status: pgEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "scheduled"])
+  status: mysqlEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "scheduled"])
     .default("pending")
     .notNull(),
   // Forma de pagamento
-  paymentMethod: pgEnum("paymentMethod", ["pix", "bank_transfer", "boleto", "cash", "credit_card", "other"]),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "bank_transfer", "boleto", "cash", "credit_card", "other"]),
   // Categoria
   category: varchar("category", { length: 100 }),
   // Nota fiscal de entrada (vinculo)
-  purchaseOrderId: biginteger("purchaseOrderId", { mode: "number" }),
+  purchaseOrderId: bigint("purchaseOrderId", { mode: "number", unsigned: true }),
   // Observações
   notes: text("notes"),
   // Alerta enviado
@@ -1239,12 +1239,12 @@ export type Payable = typeof payables.$inferSelect;
 export type InsertPayable = typeof payables.$inferInsert;
 
 // Contas a Receber (vendas)
-export const receivables = pgTable("receivables", {
+export const receivables = mysqlTable("receivables", {
   id: serial("id").primaryKey(),
-  orderId: biginteger("orderId", { mode: "number" }).notNull(),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }).notNull(),
   receiptNumber: varchar("receiptNumber", { length: 50 }),
   // Cliente
-  customerId: biginteger("customerId", { mode: "number" }),
+  customerId: bigint("customerId", { mode: "number", unsigned: true }),
   customerName: varchar("customerName", { length: 255 }),
   customerDocument: varchar("customerDocument", { length: 20 }),
   // Valores
@@ -1258,18 +1258,18 @@ export const receivables = pgTable("receivables", {
   dueDate: timestamp("dueDate").notNull(),
   receivedDate: timestamp("receivedDate"),
   // Status
-  status: pgEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "refunded", "chargeback"])
+  status: mysqlEnum("status", ["pending", "paid", "overdue", "cancelled", "partial", "refunded", "chargeback"])
     .default("pending")
     .notNull(),
   // Forma de pagamento
-  paymentMethod: pgEnum("paymentMethod", ["pix", "credit_card", "debit_card", "boleto", "cash", "wallet", "other"]).notNull(),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "credit_card", "debit_card", "boleto", "cash", "wallet", "other"]).notNull(),
   // Gateway (Mercado Pago, etc)
-  gateway: pgEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
+  gateway: mysqlEnum("gateway", ["mercado_pago", "pagarme", "stripe", "cielo", "other"]).default("mercado_pago"),
   gatewayTransactionId: varchar("gatewayTransactionId", { length: 255 }),
   // Canal
-  channel: pgEnum("channel", ["ecommerce", "retail", "wholesale", "marketplace"]).default("ecommerce"),
+  channel: mysqlEnum("channel", ["ecommerce", "retail", "wholesale", "marketplace"]).default("ecommerce"),
   // Parcelas (cartão)
-  installments: integer("installments").default(1),
+  installments: int("installments").default(1),
   // Observações
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -1285,13 +1285,13 @@ export type Receivable = typeof receivables.$inferSelect;
 export type InsertReceivable = typeof receivables.$inferInsert;
 
 // Lançamentos de Caixa (entradas e saídas)
-export const cashFlowEntries = pgTable("cashFlowEntries", {
+export const cashFlowEntries = mysqlTable("cashFlowEntries", {
   id: serial("id").primaryKey(),
   // Tipo
-  type: pgEnum("type", ["income", "expense"]).notNull(),
+  type: mysqlEnum("type", ["income", "expense"]).notNull(),
   // Origem (vinculo a outras tabelas)
-  source: pgEnum("source", ["sale", "payable", "receivable", "manual", "transfer", "adjustment"]).notNull(),
-  sourceId: biginteger("sourceId", { mode: "number" }),
+  source: mysqlEnum("source", ["sale", "payable", "receivable", "manual", "transfer", "adjustment"]).notNull(),
+  sourceId: bigint("sourceId", { mode: "number", unsigned: true }),
   // Descrição
   description: varchar("description", { length: 255 }).notNull(),
   // Categoria
@@ -1302,7 +1302,7 @@ export const cashFlowEntries = pgTable("cashFlowEntries", {
   // Data do lançamento
   entryDate: timestamp("entryDate").defaultNow().notNull(),
   // Método
-  paymentMethod: pgEnum("paymentMethod", ["pix", "bank_transfer", "cash", "credit_card", "debit_card", "boleto", "other"]),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "bank_transfer", "cash", "credit_card", "debit_card", "boleto", "other"]),
   // Saldo acumulado após este lançamento
   runningBalance: decimal("runningBalance", { precision: 12, scale: 2 }).notNull(),
   // Observações
@@ -1325,27 +1325,27 @@ export type InsertCashFlowEntry = typeof cashFlowEntries.$inferInsert;
 // ═════════════════════════════════════════════════════════════════════
 
 // Alertas de estoque (reposição, excesso, vencimento)
-export const stockAlerts = pgTable("stockAlerts", {
+export const stockAlerts = mysqlTable("stockAlerts", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
   productName: varchar("productName", { length: 255 }).notNull(),
   sku: varchar("sku", { length: 100 }),
   size: varchar("size", { length: 50 }),
   color: varchar("color", { length: 50 }),
   // Tipo de alerta
-  alertType: pgEnum("alertType", ["below_min", "above_max", "zero_stock", "expiring", "slow_moving", "dead_stock"])
+  alertType: mysqlEnum("alertType", ["below_min", "above_max", "zero_stock", "expiring", "slow_moving", "dead_stock"])
     .notNull(),
   // Estoque atual vs mínimo/máximo
-  currentStock: integer("currentStock").notNull(),
-  minStock: integer("minStock").default(0),
-  maxStock: integer("maxStock").default(100),
+  currentStock: int("currentStock").notNull(),
+  minStock: int("minStock").default(0),
+  maxStock: int("maxStock").default(100),
   // Sugestão de compra
-  suggestedQty: integer("suggestedQty").default(0),
+  suggestedQty: int("suggestedQty").default(0),
   // Fornecedor sugerido
-  suggestedSupplierId: biginteger("suggestedSupplierId", { mode: "number" }),
+  suggestedSupplierId: bigint("suggestedSupplierId", { mode: "number", unsigned: true }),
   // Status
-  status: pgEnum("status", ["active", "resolved", "ignored"]).default("active").notNull(),
+  status: mysqlEnum("status", ["active", "resolved", "ignored"]).default("active").notNull(),
   resolvedAt: timestamp("resolvedAt"),
   resolvedBy: varchar("resolvedBy", { length: 255 }),
   notes: text("notes"),
@@ -1361,16 +1361,16 @@ export type StockAlert = typeof stockAlerts.$inferSelect;
 export type InsertStockAlert = typeof stockAlerts.$inferInsert;
 
 // Movimentações de estoque (histórico completo)
-export const productMovements = pgTable("productMovements", {
+export const productMovements = mysqlTable("productMovements", {
   id: serial("id").primaryKey(),
-  productId: biginteger("productId", { mode: "number" }).notNull(),
-  variationId: biginteger("variationId", { mode: "number" }),
+  productId: bigint("productId", { mode: "number", unsigned: true }).notNull(),
+  variationId: bigint("variationId", { mode: "number", unsigned: true }),
   productName: varchar("productName", { length: 255 }),
   sku: varchar("sku", { length: 100 }),
   size: varchar("size", { length: 50 }),
   color: varchar("color", { length: 50 }),
   // Tipo de movimento
-  movementType: pgEnum("movementType", [
+  movementType: mysqlEnum("movementType", [
     "purchase_in",      // Entrada por compra
     "sale_out",         // Saída por venda
     "return_in",        // Retorno de cliente
@@ -1382,17 +1382,17 @@ export const productMovements = pgTable("productMovements", {
     "waste",            // Perda/quebra
   ]).notNull(),
   // Quantidade (positiva = entrada, negativa = saída)
-  quantity: integer("quantity").notNull(),
+  quantity: int("quantity").notNull(),
   // Estoque antes e depois
-  stockBefore: integer("stockBefore").notNull(),
-  stockAfter: integer("stockAfter").notNull(),
+  stockBefore: int("stockBefore").notNull(),
+  stockAfter: int("stockAfter").notNull(),
   // Custo unitário no momento
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
   // Documento de origem
   documentNumber: varchar("documentNumber", { length: 100 }),
-  orderId: biginteger("orderId", { mode: "number" }),
+  orderId: bigint("orderId", { mode: "number", unsigned: true }),
   // Fornecedor (quando compra)
-  supplierId: biginteger("supplierId", { mode: "number" }),
+  supplierId: bigint("supplierId", { mode: "number", unsigned: true }),
   supplierName: varchar("supplierName", { length: 255 }),
   // Observações
   notes: text("notes"),
@@ -1416,7 +1416,7 @@ export type InsertAuditLog = typeof auditLogs.$inferInsert;
 // MÓDULO WHATSAPP — Automação de Mensagens
 // ═════════════════════════════════════════════════════════════════════
 
-export const whatsappConfig = pgTable("whatsappConfig", {
+export const whatsappConfig = mysqlTable("whatsappConfig", {
   id: serial("id").primaryKey(),
   phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(), // Número do WhatsApp da LUFIT (62 9...)
   businessName: varchar("businessName", { length: 100 }).default("LUFIT Moda"),
@@ -1430,7 +1430,7 @@ export const whatsappConfig = pgTable("whatsappConfig", {
   updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
-export const whatsappTemplates = pgTable("whatsappTemplates", {
+export const whatsappTemplates = mysqlTable("whatsappTemplates", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(), // ex: "order_confirmation"
   label: varchar("label", { length: 100 }).notNull(), // ex: "Pedido Confirmado"
@@ -1440,15 +1440,15 @@ export const whatsappTemplates = pgTable("whatsappTemplates", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
-export const whatsappMessages = pgTable("whatsappMessages", {
+export const whatsappMessages = mysqlTable("whatsappMessages", {
   id: serial("id").primaryKey(),
   phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
   templateName: varchar("templateName", { length: 100 }),
   body: text("body").notNull(),
   status: varchar("status", { length: 50 }).default("pending"), // pending, sent, delivered, read, failed
   eventType: varchar("eventType", { length: 50 }), // order_confirmed, shipped, low_stock, etc.
-  relatedOrderId: integer("relatedOrderId"),
-  relatedCustomerId: integer("relatedCustomerId"),
+  relatedOrderId: int("relatedOrderId"),
+  relatedCustomerId: int("relatedCustomerId"),
   sentAt: timestamp("sentAt"),
   deliveredAt: timestamp("deliveredAt"),
   readAt: timestamp("readAt"),
@@ -1473,7 +1473,7 @@ export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;
 // MÓDULO BLING — OAuth2 Tokens (NF-e)
 // ═════════════════════════════════════════════════════════════════════
 
-export const blingOAuth = pgTable("blingOAuth", {
+export const blingOAuth = mysqlTable("blingOAuth", {
   id: serial("id").primaryKey(),
   // Tokens OAuth2
   accessToken: text("accessToken"),
@@ -1501,7 +1501,7 @@ export type InsertBlingOAuth = typeof blingOAuth.$inferInsert;
 // MÓDULO FRETE — CONFIGURAÇÕES DE ENVIO (Melhor Envio)
 // ═════════════════════════════════════════════════════════════════════
 
-export const shippingSettings = pgTable("shippingSettings", {
+export const shippingSettings = mysqlTable("shippingSettings", {
   id: serial("id").primaryKey(),
   key: varchar("key", { length: 100 }).notNull().unique(),
   value: text("value"),
@@ -1518,7 +1518,7 @@ export type InsertShippingSetting = typeof shippingSettings.$inferInsert;
 // FASE 5 — PDV BALCÃO: VENDEDORAS E VENDAS FÍSICAS
 // ═════════════════════════════════════════════════════════════════════
 
-export const sellers = pgTable("sellers", {
+export const sellers = mysqlTable("sellers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
@@ -1528,7 +1528,7 @@ export const sellers = pgTable("sellers", {
   commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).default("1.00"),
   avatar: text("avatar"),
   isActive: boolean("isActive").default(true),
-  role: pgEnum("role", ["vendedora", "gerente", "admin"]).default("vendedora"),
+  role: mysqlEnum("role", ["vendedora", "gerente", "admin"]).default("vendedora"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("seller_code_idx").on(table.code),
@@ -1538,9 +1538,9 @@ export const sellers = pgTable("sellers", {
 export type Seller = typeof sellers.$inferSelect;
 export type InsertSeller = typeof sellers.$inferInsert;
 
-export const pdvSales = pgTable("pdvSales", {
+export const pdvSales = mysqlTable("pdvSales", {
   id: serial("id").primaryKey(),
-  sellerId: biginteger("sellerId", { mode: "number" }).notNull(),
+  sellerId: bigint("sellerId", { mode: "number", unsigned: true }).notNull(),
   sellerName: varchar("sellerName", { length: 255 }),
   // Dados da venda
   items: json("items").$type<Array<{
@@ -1554,8 +1554,8 @@ export const pdvSales = pgTable("pdvSales", {
   commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).default("1.00"),
   commissionAmount: decimal("commissionAmount", { precision: 10, scale: 2 }).default("0.00"),
   // Pagamento
-  paymentMethod: pgEnum("paymentMethod", ["pix", "cartao_credito", "cartao_debito", "dinheiro", "boleto"]).notNull(),
-  paymentStatus: pgEnum("paymentStatus", ["pending", "approved", "cancelled"]).default("approved"),
+  paymentMethod: mysqlEnum("paymentMethod", ["pix", "cartao_credito", "cartao_debito", "dinheiro", "boleto"]).notNull(),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "approved", "cancelled"]).default("approved"),
   // Cliente (opcional — venda avulsa)
   customerName: varchar("customerName", { length: 255 }),
   customerPhone: varchar("customerPhone", { length: 20 }),
