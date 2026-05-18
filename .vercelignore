@@ -1,0 +1,3 @@
+# Ignore backend files — Vercel should only build frontend
+api/
+src/server/
