@@ -17,7 +17,7 @@ export default function EntregasPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <div className="prose prose-gray max-w-none">
           <p className="text-gray-600 mb-8">
-            A <strong>LUFIT</strong> envia para todo o Brasil através de transportadoras parceiras. O prazo de entrega começa a contar a partir da confirmação do pagamento e varia de acordo com a região.
+            A <strong>LUFIT</strong> envia para todo o Brasil através das melhores transportadoras parceiras. Nossos fretes são os <strong>mais rápidos e com os melhores preços do mercado</strong>. O valor do frete é calculado automaticamente no checkout com base no CEP de entrega.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
@@ -35,6 +35,43 @@ export default function EntregasPage() {
               <Package className="w-8 h-8 text-lufit-teal mx-auto mb-3" />
               <h3 className="font-bold text-lufit-dark mb-1">Demais Regiões</h3>
               <p className="text-sm text-gray-500">5 a 12 dias úteis</p>
+            </div>
+          </div>
+
+          {/* Retirada na Loja */}
+          <div className="bg-lufit-dark rounded-xl p-6 sm:p-8 mb-10">
+            <h2 className="text-xl sm:text-2xl font-bold font-heading text-white mb-4 flex items-center gap-2">
+              <MapPin className="w-6 h-6 text-lufit-teal" />
+              RETIRADA NA LOJA FÍSICA
+            </h2>
+            <p className="text-white/80 mb-4">
+              Você também tem a opção de <strong className="text-white">retirar seu pedido pessoalmente em nossa loja física</strong> em Goiânia, sem pagar frete! Após a confirmação do pagamento, seu pedido será separado e você receberá um <strong className="text-lufit-teal">código de autorização de retirada</strong> via WhatsApp ou e-mail.
+            </p>
+            <div className="bg-white/10 rounded-lg p-4 mb-4">
+              <h3 className="font-bold text-white mb-2">Como funciona:</h3>
+              <ol className="text-white/80 text-sm space-y-1.5 list-decimal list-inside">
+                <li>Finalize sua compra e selecione <strong className="text-lufit-teal">"Retirada na Loja"</strong> como forma de entrega</li>
+                <li>Após a confirmação do pagamento, aguarde a notificação de separação do pedido</li>
+                <li>Receba seu <strong className="text-lufit-teal">código de autorização de retirada</strong></li>
+                <li>Dirija-se à nossa loja com seu <strong>documento de identificação</strong> e o código de autorização</li>
+                <li>Retire seu pedido sem filas e com atendimento exclusivo!</li>
+              </ol>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href="https://wa.me/5562993940034"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-lufit-teal text-lufit-dark font-bold px-6 py-3 rounded-lg hover:bg-lufit-teal/90 transition-colors text-sm"
+              >
+                Agendar Retirada pelo WhatsApp
+              </a>
+              <Link
+                to="/lojas"
+                className="inline-flex items-center justify-center gap-2 border border-white/30 text-white font-bold px-6 py-3 rounded-lg hover:bg-white/10 transition-colors text-sm"
+              >
+                Ver Endereço da Loja
+              </Link>
             </div>
           </div>
 

@@ -56,7 +56,7 @@ export default function PrivacidadePage() {
 
           <h2 className="text-xl font-bold text-lufit-dark mt-8 mb-4">6. CONTATO</h2>
           <p className="text-gray-600 mb-6">
-            Para exercer seus direitos ou esclarecer dúvidas, entre em contato pelo e-mail lufitmoda@gmail.com ou pelo WhatsApp (62) 98413-7182.
+            Para exercer seus direitos ou dúvidas, entre em contato pelo e-mail lufitmoda@gmail.com ou pelo WhatsApp (62) 99394-0034.
           </p>
 
           <p className="text-sm text-gray-500 mt-8">Última atualização: Maio de 2026.</p>

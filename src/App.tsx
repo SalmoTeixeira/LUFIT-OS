@@ -1,5 +1,5 @@
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
@@ -24,12 +24,30 @@ import AdminPage from "@/pages/AdminPage";
 import PdvPage from "@/pages/PdvPage";
 import SellerOnboardingPage from "@/pages/SellerOnboardingPage";
 import BecomeSellerPage from "@/pages/BecomeSellerPage";
+import SobrePage from "@/pages/SobrePage";
+import LojasPage from "@/pages/LojasPage";
+import AtendimentoPage from "@/pages/AtendimentoPage";
+import TrocasPage from "@/pages/TrocasPage";
+import EntregasPage from "@/pages/EntregasPage";
+import PagamentosPage from "@/pages/PagamentosPage";
+import MedidasPage from "@/pages/MedidasPage";
+import PrivacidadePage from "@/pages/PrivacidadePage";
+import TermosPage from "@/pages/TermosPage";
+import TrabalhePage from "@/pages/TrabalhePage";
+import AtacadoPage from "@/pages/AtacadoPage";
 import NotFoundPage from "@/pages/NotFoundPage";
+
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+  return null;
+}
 
 export default function App() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -49,25 +67,38 @@ export default function App() {
       <WishlistProvider>
         <RecentlyViewedProvider>
           <CouponProvider>
+            <ScrollToTop />
             {!hideLayout && <TopBar />}
             {!hideLayout && <Header />}
             <main className={hideLayout ? "" : "pt-[100px]"}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/product/:slug" element={<ProductPage />} />
-                <Route path="/category/:slug" element={<CategoryPage />} />
-                <Route path="/cart" element={<CartPage />} />
+                <Route path="/produto/:slug" element={<ProductPage />} />
+                <Route path="/categoria/:slug" element={<CategoryPage />} />
+                <Route path="/carrinho" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/order-success" element={<OrderSuccessPage />} />
-                <Route path="/search" element={<SearchPage />} />
+                <Route path="/pedido-sucesso" element={<OrderSuccessPage />} />
+                <Route path="/busca" element={<SearchPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/cadastro" element={<LoginPage />} />
-                <Route path="/wishlist" element={<WishlistPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/desejos" element={<WishlistPage />} />
+                <Route path="/perfil" element={<ProfilePage />} />
                 <Route path="/admin/*" element={<AdminPage />} />
                 <Route path="/pdv" element={<PdvPage />} />
-                <Route path="/become-seller" element={<BecomeSellerPage />} />
+                <Route path="/seja-vendedor" element={<BecomeSellerPage />} />
                 <Route path="/seller/*" element={<SellerOnboardingPage />} />
+                {/* Institucional - paginas individuais originais */}
+                <Route path="/sobre" element={<SobrePage />} />
+                <Route path="/lojas" element={<LojasPage />} />
+                <Route path="/trabalhe-conosco" element={<TrabalhePage />} />
+                <Route path="/privacidade" element={<PrivacidadePage />} />
+                <Route path="/termos" element={<TermosPage />} />
+                <Route path="/atendimento" element={<AtendimentoPage />} />
+                <Route path="/trocas" element={<TrocasPage />} />
+                <Route path="/entregas" element={<EntregasPage />} />
+                <Route path="/pagamentos" element={<PagamentosPage />} />
+                <Route path="/medidas" element={<MedidasPage />} />
+                <Route path="/atacado" element={<AtacadoPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>

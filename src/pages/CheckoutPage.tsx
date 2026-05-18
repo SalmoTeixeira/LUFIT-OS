@@ -113,7 +113,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStep(2)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200">Voltar</button>
-              <Link to="/order-success" className="flex-1 py-3 bg-[#2DD4A8] text-black font-bold rounded-xl text-center hover:bg-[#25b896] flex items-center justify-center gap-2">
+              <Link to="/pedido-sucesso" className="flex-1 py-3 bg-[#2DD4A8] text-black font-bold rounded-xl text-center hover:bg-[#25b896] flex items-center justify-center gap-2">
                 <CheckCircle className="w-5 h-5" />Finalizar Pedido
               </Link>
             </div>
