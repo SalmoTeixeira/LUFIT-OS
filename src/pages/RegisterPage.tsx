@@ -495,7 +495,7 @@ export default function RegisterPage() {
                   {/* Termos */}
                   <label className="flex items-start gap-2 text-sm cursor-pointer">
                     <input type="checkbox" required className="rounded accent-[#2DD4A8] mt-0.5 w-4 h-4" />
-                    <span className="text-xs text-[#A0A0B0]">Li e concordo com a <Link to="/privacidade" className="text-[#2DD4A8] hover:underline">Política de Privacidade</Link> e os <Link to="/termos" className="text-[#2DD4A8] hover:underline">Termos de Uso</Link>.</span>
+                    <span className="text-xs text-[#A0A0B0]">Li e concordo com a <Link to="/privacidade" className="text-[#2DD4A8] hover:underline">Política de Privacidade</Link> e os <Link to="/termos" className="text-[#2DD4A8] hover:underline">Termos Individuais de Uso</Link>.</span>
                   </label>
 
                   {/* Submit */}
