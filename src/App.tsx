@@ -19,6 +19,7 @@ import CheckoutPage from "@/pages/CheckoutPage";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import SearchPage from "@/pages/SearchPage";
 import LoginPage from "@/pages/LoginPage";
+import RegisterPage from "@/pages/RegisterPage";
 import WishlistPage from "@/pages/WishlistPage";
 import ProfilePage from "@/pages/ProfilePage";
 import AdminPage from "@/pages/AdminPage";
@@ -86,7 +87,7 @@ export default function App() {
                 <Route path="/pedido-sucesso" element={<OrderSuccessPage />} />
                 <Route path="/busca" element={<SearchPage />} />
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/cadastro" element={<LoginPage />} />
+                <Route path="/cadastro" element={<RegisterPage />} />
                 <Route path="/desejos" element={<WishlistPage />} />
                 <Route path="/perfil" element={<ProfilePage />} />
                 <Route path="/admin/*" element={<AdminPage />} />
