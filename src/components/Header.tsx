@@ -135,7 +135,7 @@ export default function Header() {
                 <div className={`flex items-center bg-white/10 rounded-full transition-all duration-300 ${searchOpen ? 'w-48 sm:w-64' : 'w-40 sm:w-56'}`}>
                   <input 
                     type="text" 
-                    placeholder="BUSCAR" 
+                    placeholder="Ex: Digite o que procura..." 
                     className="bg-transparent text-sm text-white placeholder:text-gray-400 uppercase outline-none w-full pl-4 pr-2 py-2"
                     value={searchQuery} 
                     onChange={e => setSearchQuery(e.target.value)} 
@@ -161,22 +161,23 @@ export default function Header() {
                   <User className="w-5 h-5 text-gray-300" />
                 </button>
                 {loginOpen && (
-                  <div className="absolute top-full right-0 mt-2 bg-white shadow-2xl border border-gray-100 rounded-xl py-2 w-44 z-50">
+                  <div className="absolute top-full right-0 mt-2 bg-white shadow-2xl border border-gray-100 rounded-xl py-3 w-48 z-[100]">
                     <Link 
                       to="/login" 
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#2DD4A8] transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#2DD4A8] transition-colors rounded-lg mx-1"
                       onClick={() => setLoginOpen(false)}
                     >
-                      <LogIn className="w-4 h-4" />
-                      Entrar
+                      <LogIn className="w-4 h-4 text-[#2DD4A8]" />
+                      Conecte-se
                     </Link>
+                    <div className="my-1 mx-3 border-b border-gray-100" />
                     <Link 
                       to="/cadastro" 
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#2DD4A8] transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#2DD4A8] transition-colors rounded-lg mx-1"
                       onClick={() => setLoginOpen(false)}
                     >
-                      <UserPlus className="w-4 h-4" />
-                      Cadastrar
+                      <UserPlus className="w-4 h-4 text-[#2DD4A8]" />
+                      Cadastro
                     </Link>
                   </div>
                 )}
