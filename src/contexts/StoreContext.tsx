@@ -51,6 +51,8 @@ interface StoreContextType {
   wholesaleGroups: WholesaleGroup[];
   discountTotal: number;
   finalTotal: number;
+  cartOpen: boolean;
+  setCartOpen: (open: boolean) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -131,6 +133,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(loadCart);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [customer, setCustomerState] = useState<CustomerProfile | null>(loadCustomer);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const setCustomer = useCallback((c: CustomerProfile | null) => {
     setCustomerState(c);
@@ -216,6 +219,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const finalTotal = useMemo(
     () => cartTotal - discountTotal,
+    cartOpen,
+    setCartOpen,
     [cartTotal, discountTotal]
   );
 
@@ -237,6 +242,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         cartCount,
         wholesaleGroups,
         discountTotal,
+    cartOpen,
+    setCartOpen,
         finalTotal,
       }}
     >

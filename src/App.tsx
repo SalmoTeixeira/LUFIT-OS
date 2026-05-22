@@ -1,15 +1,16 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useStore } from "@/contexts/StoreContext";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { RecentlyViewedProvider } from "@/contexts/RecentlyViewedContext";
 import { CouponProvider } from "@/contexts/CouponContext";
 import Header from "@/components/Header";
-import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
 import FloatingBar from "@/components/FloatingBar";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import CartDrawer from "@/components/CartDrawer";
 import HomePage from "@/pages/HomePage";
 import ProductPage from "@/pages/ProductPage";
 import CategoryPage from "@/pages/CategoryPage";
@@ -46,6 +47,13 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  const [cartOpen, setCartOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenCart = () => setCartOpen(true);
+    window.addEventListener('openCart', handleOpenCart);
+    return () => window.removeEventListener('openCart', handleOpenCart);
+  }, []);
   const location = useLocation();
 
   useEffect(() => {
@@ -67,7 +75,6 @@ export default function App() {
         <RecentlyViewedProvider>
           <CouponProvider>
             <ScrollToTop />
-            {!hideLayout && <TopBar />}
             {!hideLayout && <Header />}
             <main className={hideLayout ? "" : "pt-[100px]"}>
               <Routes>
@@ -100,6 +107,7 @@ export default function App() {
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
+            <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
             {!hideLayout && <Footer />}
             {!hideLayout && <FloatingBar />}
             {!hideLayout && <WhatsAppFloat />}
