@@ -112,7 +112,7 @@ export default function Header() {
                 <div key={item.label} className="relative">
                   {item.hasDropdown ? (
                     <button
-                      className={`flex items-center gap-0.5 px-2 py-2 text-[12px] xl:text-[13px] font-medium tracking-wide transition-colors rounded-md hover:bg-gray-50 whitespace-nowrap ${
+                      className={`flex items-center gap-0.5 px-1.5 py-1.5 text-[11px] xl:text-[12px] font-medium tracking-wide transition-colors rounded-md hover:bg-gray-50 whitespace-nowrap ${
                         item.highlight ? 'text-red-500' : item.label === 'Lupo' || item.label === 'Selene' ? 'text-gray-800 hover:text-lufit-teal font-bold' : 'text-gray-700 hover:text-lufit-teal'
                       }`}
                       onMouseEnter={() => setActiveDropdown(item.dropdownId || null)}
@@ -124,7 +124,7 @@ export default function Header() {
                   ) : (
                     <Link 
                       to={item.href} 
-                      className={`px-2 py-2 text-[12px] xl:text-[13px] font-medium tracking-wide transition-colors rounded-md hover:bg-gray-50 block whitespace-nowrap ${
+                      className={`px-1.5 py-1.5 text-[11px] xl:text-[12px] font-medium tracking-wide transition-colors rounded-md hover:bg-gray-50 block whitespace-nowrap ${
                         item.highlight ? 'text-red-500 hover:text-red-600' : 'text-gray-700 hover:text-lufit-teal'
                       }`}
                     >

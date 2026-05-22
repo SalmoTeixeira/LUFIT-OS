@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Phone, Mail, MapPin, Clock, Shield, User, ChevronDown, LogIn, UserPlus } from 'lucide-react';
+import { Instagram, Facebook, Music, Phone, Mail, MapPin, Clock, Shield, User, ChevronDown, LogIn, UserPlus } from 'lucide-react';
 
 function VisaIcon() {
   return (
@@ -190,7 +190,7 @@ export default function Footer() {
               <li><Link to="/lojas" className="text-sm text-gray-400 hover:text-lufit-teal transition-colors">Nossas Lojas</Link></li>
               <li><Link to="/trabalhe-conosco" className="text-sm text-gray-400 hover:text-lufit-teal transition-colors">Trabalhe Conosco</Link></li>
               <li><Link to="/privacidade" className="text-sm text-gray-400 hover:text-lufit-teal transition-colors">Política de Privacidade</Link></li>
-              <li><Link to="/termos" className="text-sm text-gray-400 hover:text-lufit-teal transition-colors">Termos de Uso</Link></li>
+              <li><Link to="/termos" className="text-sm text-gray-400 hover:text-lufit-teal transition-colors">Termos Individuais de Uso</Link></li>
             </ul>
           </div>
 
@@ -224,6 +224,8 @@ export default function Footer() {
                   <a href="https://wa.me/5562993940034" target="_blank" rel="noopener noreferrer" className="hover:text-lufit-teal transition-colors">Vendas: (62) 99394-0034</a>
                   <br />
                   <a href="https://wa.me/5562994490177" target="_blank" rel="noopener noreferrer" className="hover:text-lufit-teal transition-colors">(62) 99449-0177</a>
+                  <br />
+                  <a href="https://wa.me/5562993064773" target="_blank" rel="noopener noreferrer" className="hover:text-lufit-teal transition-colors">(62) 99306-4773</a>
                 </div>
               </li>
               <li className="flex items-center gap-2.5">
@@ -240,6 +242,9 @@ export default function Footer() {
               Acompanhe nossas novidades e promoções exclusivas nas redes sociais.
             </p>
             <div className="flex items-center gap-2">
+              <a href="https://www.facebook.com/share/1GsjDoUTT7/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-lufit-teal hover:text-lufit-dark transition-colors" title="Facebook">
+                <Facebook className="w-4 h-4" />
+              </a>
               <a href="https://www.instagram.com/lufitmodaa/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-lufit-teal hover:text-lufit-dark transition-colors">
                 <Instagram className="w-4 h-4" />
               </a>
