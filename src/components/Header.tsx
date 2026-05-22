@@ -216,16 +216,25 @@ export default function Header() {
               {menuItems.map(item => (
                 <div key={item.label} className="relative">
                   {item.hasDropdown ? (
-                    <button
-                      className={`flex items-center gap-0.5 px-2 py-2 text-[11px] xl:text-[12px] font-medium tracking-wide transition-colors rounded-md hover:bg-gray-50 whitespace-nowrap ${
-                        item.highlight ? 'text-red-500' : item.label === 'Lupo' || item.label === 'Selene' ? 'text-gray-800 hover:text-[#2DD4A8] font-bold' : 'text-gray-700 hover:text-[#2DD4A8]'
-                      }`}
-                      onMouseEnter={() => setActiveDropdown(item.dropdownId || null)}
-                      onClick={() => setActiveDropdown(activeDropdown === item.dropdownId ? null : item.dropdownId || null)}
-                    >
-                      {item.label}
-                      <ChevronDown className={`w-3 h-3 transition-transform ${activeDropdown === item.dropdownId ? 'rotate-180' : ''}`} />
-                    </button>
+                    <div className="flex items-center">
+                      <Link
+                        to={item.href}
+                        className={`px-2 py-2 text-[11px] xl:text-[12px] font-medium tracking-wide transition-colors rounded-l-md hover:bg-gray-50 whitespace-nowrap ${
+                          item.highlight ? 'text-red-500' : item.label === 'Lupo' || item.label === 'Selene' ? 'text-gray-800 hover:text-[#2DD4A8] font-bold' : 'text-gray-700 hover:text-[#2DD4A8]'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                      <button
+                        className={`px-1 py-2 text-[11px] xl:text-[12px] font-medium tracking-wide transition-colors rounded-r-md hover:bg-gray-50 ${
+                          item.highlight ? 'text-red-500' : 'text-gray-500 hover:text-[#2DD4A8]'
+                        }`}
+                        onMouseEnter={() => setActiveDropdown(item.dropdownId || null)}
+                        onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === item.dropdownId ? null : item.dropdownId || null); }}
+                      >
+                        <ChevronDown className={`w-3 h-3 transition-transform ${activeDropdown === item.dropdownId ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
                   ) : (
                     <Link 
                       to={item.href} 
@@ -268,13 +277,21 @@ export default function Header() {
               <div key={item.label}>
                 {item.hasDropdown ? (
                   <div>
-                    <button
-                      className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium border-b border-gray-50 ${item.highlight ? 'text-red-500' : 'text-gray-700'}`}
-                      onClick={() => setActiveDropdown(activeDropdown === item.dropdownId ? null : item.dropdownId || null)}
-                    >
-                      {item.label}
-                      <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === item.dropdownId ? 'rotate-180' : ''}`} />
-                    </button>
+                    <div className="flex items-center justify-between border-b border-gray-50">
+                      <Link
+                        to={item.href}
+                        className={`flex-1 px-4 py-3 text-sm font-medium ${item.highlight ? 'text-red-500' : 'text-gray-700'}`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                      <button
+                        className="px-4 py-3 text-gray-500"
+                        onClick={() => setActiveDropdown(activeDropdown === item.dropdownId ? null : item.dropdownId || null)}
+                      >
+                        <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === item.dropdownId ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
                     {item.dropdownId && activeDropdown === item.dropdownId && dropdowns[item.dropdownId] && (
                       <div className="bg-gray-50 px-4 py-2">
                         {dropdowns[item.dropdownId].items.map(sub => (
