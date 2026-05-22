@@ -37,11 +37,10 @@ import TrabalhePage from "@/pages/TrabalhePage";
 import AtacadoPage from "@/pages/AtacadoPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
-// Scroll to top on route change
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo(0, 0);
   }, [pathname]);
   return null;
 }
@@ -59,7 +58,7 @@ export default function App() {
 
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isPdvRoute = location.pathname === "/pdv";
-  const isSellerRoute = location.pathname.startsWith("/seller") || location.pathname === "/become-seller";
+  const isSellerRoute = location.pathname.startsWith("/seller") || location.pathname === "/seja-vendedor";
   const hideLayout = isAdminRoute || isPdvRoute || isSellerRoute;
 
   return (
@@ -73,7 +72,7 @@ export default function App() {
             <main className={hideLayout ? "" : "pt-[100px]"}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/produto/:slug" element={<ProductPage />} />
+                <Route path="/produto/:id" element={<ProductPage />} />
                 <Route path="/categoria/:slug" element={<CategoryPage />} />
                 <Route path="/carrinho" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
@@ -87,7 +86,6 @@ export default function App() {
                 <Route path="/pdv" element={<PdvPage />} />
                 <Route path="/seja-vendedor" element={<BecomeSellerPage />} />
                 <Route path="/seller/*" element={<SellerOnboardingPage />} />
-                {/* Institucional - paginas individuais originais */}
                 <Route path="/sobre" element={<SobrePage />} />
                 <Route path="/lojas" element={<LojasPage />} />
                 <Route path="/trabalhe-conosco" element={<TrabalhePage />} />
