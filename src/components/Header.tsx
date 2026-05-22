@@ -98,16 +98,13 @@ export default function Header() {
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            {/* Logo - hidden on desktop since it's in TopBar now */}
-            <Link to="/" className="shrink-0 flex-1 lg:flex-none flex justify-center lg:justify-start lg:hidden">
+            {/* Logo - left side */}
+            <Link to="/" className="shrink-0 mr-4">
               <img src="/logo-lufit-v2.png" alt="LUFIT Moda Praia e Fitness" className="h-11 sm:h-14 w-auto rounded-lg" />
             </Link>
-            
-            {/* Desktop spacer where logo was */}
-            <div className="hidden lg:block w-[1px]" />
 
-            {/* Desktop Nav - compact style */}
-            <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 mx-2" ref={navRef}>
+            {/* Desktop Nav - center */}
+            <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-1 flex-1" ref={navRef}>
               {menuItems.map(item => (
                 <div key={item.label} className="relative">
                   {item.hasDropdown ? (

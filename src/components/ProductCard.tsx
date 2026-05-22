@@ -14,13 +14,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [imgHover, setImgHover] = useState(false);
 
   const hasPromo = product.oldPrice && product.oldPrice > product.price;
-  const pixPrice = product.price * 0.9; // 10% desconto Pix
+  const pixPrice = product.price * 0.9;
 
   return (
-    <div className="group relative bg-white rounded-lg overflow-hidden shadow-card hover:shadow-hover transition-all duration-300">
+    <Link
+      to={`/produto/${product.id}`}
+      className="group relative bg-white rounded-lg overflow-hidden shadow-card hover:shadow-hover transition-all duration-300 block"
+    >
       {/* Image with hover flip effect */}
-      <Link
-        to={`/produto/${product.id}`}
+      <div
         className="block relative aspect-[3/4] overflow-hidden bg-gray-100"
         onMouseEnter={() => setImgHover(true)}
         onMouseLeave={() => setImgHover(false)}
@@ -44,7 +46,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         )}
 
-        {/* Minimal badges — NO % OFF tags */}
+        {/* Minimal badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1.5">
           {product.isNew && (
             <span className="bg-lufit-teal text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">
@@ -63,6 +65,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               toggleWishlist(product.id);
             }}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
@@ -74,15 +77,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
           </button>
         </div>
-      </Link>
+      </div>
 
       {/* Info */}
       <div className="p-3">
-        <Link to={`/produto/${product.id}`}>
-          <h3 className="text-sm font-medium text-lufit-dark line-clamp-2 min-h-[2.5rem] hover:text-lufit-teal transition-colors">
-            {product.name}
-          </h3>
-        </Link>
+        <h3 className="text-sm font-medium text-lufit-dark line-clamp-2 min-h-[2.5rem] group-hover:text-lufit-teal transition-colors">
+          {product.name}
+        </h3>
 
         {/* Rating */}
         <div className="flex items-center gap-1 mt-1.5">
@@ -104,7 +105,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-xs text-gray-500">({product.reviewCount})</span>
         </div>
 
-        {/* Price — clean, no pollution */}
+        {/* Price */}
         <div className="mt-2">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-bold text-lufit-dark">
@@ -116,33 +117,26 @@ export default function ProductCard({ product }: ProductCardProps) {
               </span>
             )}
           </div>
-          {/* Pix price line */}
           <p className="text-xs text-lufit-teal font-medium mt-0.5">
             R$ {pixPrice.toFixed(2).replace('.', ',')} no Pix
           </p>
-          {/* Installment info — sem juros até termos taxa Mercado Pago */}
-          <p className="text-[11px] text-gray-400 mt-0.5">
-            até 12x no cartão
-          </p>
+          <p className="text-[10px] text-gray-500">até 12x no cartão</p>
         </div>
 
-        {/* Sizes preview */}
-        <div className="flex gap-1 mt-2">
-          {product.sizes.slice(0, 4).map((size) => (
-            <span
-              key={size}
-              className="text-[10px] font-medium text-gray-500 border border-gray-200 rounded px-1.5 py-0.5"
-            >
-              {size}
-            </span>
-          ))}
-          {product.sizes.length > 4 && (
-            <span className="text-[10px] text-gray-400">
-              +{product.sizes.length - 4}
-            </span>
-          )}
-        </div>
+        {/* Sizes */}
+        {product.sizes && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {product.sizes.map((size) => (
+              <span
+                key={size}
+                className="text-[10px] border border-gray-200 rounded px-1.5 py-0.5 text-gray-600"
+              >
+                {size}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </Link>
   );
 }

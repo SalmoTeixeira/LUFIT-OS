@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 export default function TopBar() {
   return (
     <div className="bg-lufit-dark text-white text-[11px] sm:text-xs border-b border-[#1E1E2E]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-1.5 sm:py-2 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-1.5 sm:py-2 flex items-center">
         {/* Telefones de Vendas */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <span className="text-gray-400 text-[10px]">Vendas:</span>
@@ -19,11 +19,7 @@ export default function TopBar() {
             (62) 99306-4773
           </a>
         </div>
-        {/* Atendimento */}
-        <div className="hidden sm:flex items-center gap-1 text-gray-400 text-[10px]">
-          <span>Atendimento</span>
-          <span className="text-green-400 font-medium">WhatsApp</span>
-        </div>
+
       </div>
     </div>
   );
