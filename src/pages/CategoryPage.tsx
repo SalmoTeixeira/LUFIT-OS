@@ -116,6 +116,7 @@ export default function CategoryPage() {
             src={banner.image} 
             alt={banner.title}
             className="w-full h-full object-cover object-top"
+            style={{ objectPosition: banner.slug === 'moda-praia' ? '50% 15%' : banner.slug === 'masculino' ? '50% 25%' : undefined }}
           />
           <div 
             className="absolute inset-0" 
