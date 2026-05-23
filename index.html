@@ -1,9 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LUFIT Moda Praia e Fitness</title>
+    <!-- Anti-cache headers -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script>
+      // Força reload se houver nova versao
+      (function() {
+        var buildTime = new Date().getTime();
+        var lastVisit = localStorage.getItem('lufit_last_visit');
+        if (lastVisit && (buildTime - parseInt(lastVisit)) < 5000) {
+          // Mesma sessao, ok
+        } else {
+          localStorage.setItem('lufit_last_visit', buildTime.toString());
+        }
+        // Adiciona versao nos assets
+        window.LUFIT_BUILD = buildTime;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
