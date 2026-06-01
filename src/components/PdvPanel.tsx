@@ -295,7 +295,7 @@ export default function PdvPanel() {
                     <input type="text" value={discountValue} onChange={e => setDiscountValue(e.target.value)} placeholder="Desconto" className="flex-1 h-9 bg-black/20 border border-white/10 rounded-lg px-3 text-sm focus:border-[#2DD4A8] focus:outline-none" />
                   </div>
                   {discountNum > 0 && <div className="flex justify-between text-sm"><span className="text-red-400">Desconto</span><span className="text-red-400">-{fmtMoney(discountNum)}</span></div>}
-                  {seller && <div className="flex justify-between text-xs"><span className="text-gray-500">Comissão {seller.commissionPercent}%</span><span className="text-[#2DD4A8]">{fmtMoney(commissionAmount)}</span></div>}
+                  {/* Comissão removida do PDV - só aparece no Admin Financeiro */}
                   <div className="flex justify-between text-xl font-bold pt-2 border-t border-white/10"><span>Total</span><span className="text-[#2DD4A8]">{fmtMoney(total)}</span></div>
                 </div>
 

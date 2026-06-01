@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CreditCard, QrCode, Truck, MapPin, User, Phone, Mail, ChevronRight, Shield, CheckCircle } from 'lucide-react';
+import { useStore } from '@/contexts/StoreContext';
 
 const BRAZILIAN_STATES = [
   { uf: 'AC', name: 'Acre' }, { uf: 'AL', name: 'Alagoas' }, { uf: 'AP', name: 'Amapá' },
@@ -15,16 +16,50 @@ const BRAZILIAN_STATES = [
   { uf: 'TO', name: 'Tocantins' },
 ];
 
+const LAST_ORDER_KEY = 'lufit_last_order';
+
+function loadLastOrder() {
+  try {
+    const raw = localStorage.getItem(LAST_ORDER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export default function CheckoutPage() {
+  const { customer } = useStore();
+  const lastOrder = loadLastOrder();
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'boleto'>('pix');
-  const [formData, setFormData] = useState({
-    fullName: '', email: '', phone: '', cpf: '',
-    cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: 'GO',
+
+  // Preenche automaticamente: dados do customer logado + último pedido
+  const getInitialForm = () => ({
+    fullName: customer?.name || lastOrder?.fullName || '',
+    email: customer?.email || lastOrder?.email || '',
+    phone: customer?.phone || lastOrder?.phone || '',
+    cpf: lastOrder?.cpf || '',
+    cep: lastOrder?.cep || '',
+    street: lastOrder?.street || '',
+    number: lastOrder?.number || '',
+    complement: lastOrder?.complement || '',
+    neighborhood: lastOrder?.neighborhood || '',
+    city: lastOrder?.city || '',
+    state: lastOrder?.state || 'GO',
   });
+
+  const [formData, setFormData] = useState(getInitialForm);
+
+  // Re-preenche se o customer logar/deslogar
+  useEffect(() => {
+    setFormData(getInitialForm());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer?.name, customer?.email, customer?.phone]);
 
   const handleInput = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const saveOrderData = () => {
+    localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(formData));
   };
 
   const isStep1Valid = formData.fullName && formData.email && formData.phone && formData.cpf;
@@ -113,7 +148,11 @@ export default function CheckoutPage() {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStep(2)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200">Voltar</button>
-              <Link to="/pedido-sucesso" className="flex-1 py-3 bg-[#2DD4A8] text-black font-bold rounded-xl text-center hover:bg-[#25b896] flex items-center justify-center gap-2">
+              <Link
+                to="/pedido-sucesso"
+                onClick={saveOrderData}
+                className="flex-1 py-3 bg-[#2DD4A8] text-black font-bold rounded-xl text-center hover:bg-[#25b896] flex items-center justify-center gap-2"
+              >
                 <CheckCircle className="w-5 h-5" />Finalizar Pedido
               </Link>
             </div>
