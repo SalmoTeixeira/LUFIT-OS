@@ -1,23 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Heart, Share2, Truck, RotateCcw, Ruler, ChevronLeft, ChevronRight, Star, ShoppingBag, Minus, Plus, Shield, Store, Tag, CheckCircle2, AlertCircle, X, Sparkles } from 'lucide-react';
 import { getProductById, getRelatedProducts } from '@/data/products';
+import { useSupabaseProductById } from '@/hooks/useSupabaseProducts';
+import { supabase } from '@/lib/supabase';
 import { useStore } from '@/contexts/StoreContext';
 import ProductCard from '@/components/ProductCard';
 
-/* ── Mock stock per product (simulate real ERP stock) ── */
-function getMockStock(productId: string, size: string, color: string): number {
-  const base = 15 + (productId.charCodeAt(0) % 40);
-  const sizeMod = size === 'P' ? 3 : size === 'M' ? 2 : size === 'G' ? 1 : 0;
-  const colorMod = color.length % 5;
-  return Math.max(0, base - sizeMod - colorMod);
-}
-
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
-  const product = getProductById(id || '');
+  const { product: supaProduct, isLoading: supaLoading } = useSupabaseProductById(id);
+  const mockProduct = getProductById(id || '');
+  // Usar Supabase se disponivel, senao mock
+  const product = supaProduct || mockProduct;
   const relatedProducts = getRelatedProducts(id || '', 4);
   const { addToCart, toggleWishlist, isInWishlist, customer, cart } = useStore();
+  
+  // Estado para estoque do Supabase
+  const [stockQty, setStockQty] = useState<number | null>(null);
+  const [stockLoading, setStockLoading] = useState(false);
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
@@ -42,13 +43,50 @@ export default function ProductPage() {
     );
   }
 
-  const inWishlist = isInWishlist(product.id);
-  const hasPromo = product.oldPrice && product.oldPrice > product.price;
+  const inWishlist = isInWishlist(product?.id || '');
+  const hasPromo = product?.oldPrice && product?.oldPrice > product?.price;
 
   const isWholesale = customer?.isWholesale ?? false;
-  const stockQty = selectedSize && selectedColor
-    ? getMockStock(product.id, selectedSize, selectedColor)
-    : null;
+  
+  // Buscar estoque REAL do Supabase
+  useEffect(() => {
+    if (!supaProduct?.sku) {
+      setStockQty(null);
+      return;
+    }
+    
+    async function fetchStock() {
+      setStockLoading(true);
+      try {
+        // Passo 1: Buscar UUID do produto no Supabase pelo SKU
+        const { data: prodRow } = await supabase
+          .from('products')
+          .select('id')
+          .eq('sku', supaProduct.sku)
+          .maybeSingle();
+        
+        if (!prodRow?.id) {
+          setStockQty(null);
+          return;
+        }
+        
+        // Passo 2: Buscar estoque pelo UUID do produto
+        const { data: invRow } = await supabase
+          .from('inventory')
+          .select('quantity')
+          .eq('product_id', prodRow.id)
+          .maybeSingle();
+        
+        setStockQty(invRow?.quantity ?? null);
+      } catch {
+        setStockQty(null);
+      } finally {
+        setStockLoading(false);
+      }
+    }
+    
+    fetchStock();
+  }, [supaProduct?.sku]);
 
   // How many of this product in cart
   const qtyInCart = cart

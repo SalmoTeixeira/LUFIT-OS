@@ -299,3 +299,63 @@ export const getRelatedProducts = (productId: string, limit: number = 4): Produc
   if (!product) return [];
   return products.filter(p => p.category === product.category && p.id !== productId).slice(0, limit);
 };
+
+// ===== INJECAO SUPABASE =====
+// Tenta carregar produtos do Supabase, senao mantem mock
+let supabaseLoaded = false
+
+async function loadFromSupabase() {
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      'https://dgzgqblkcewqqfmqqzbs.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnemdxYmxrY2V3cXFmbXFxemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNDY3MjMsImV4cCI6MjA5NDYyMjcyM30.aLbqJk7dG_lLJPFo5U5eEb9dKYkUHXCxFLBTbKnFDNo'
+    )
+
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+
+    if (error || !data || data.length === 0) {
+      console.log('[Products] Supabase vazio ou erro, usando mock local')
+      return
+    }
+
+    const mapped: Product[] = data.map((row: any) => ({
+      id: row.legacy_id || row.id,
+      name: row.name,
+      price: Number(row.price) || 0,
+      oldPrice: row.old_price ? Number(row.old_price) : undefined,
+      image: row.image || '/produtos/placeholder.jpg',
+      images: Array.isArray(row.images) && row.images.length > 0
+        ? row.images
+        : [row.image || '/produtos/placeholder.jpg'],
+      category: row.category || 'geral',
+      subcategory: row.subcategory || '',
+      sizes: Array.isArray(row.sizes) ? row.sizes : ['P', 'M', 'G', 'GG'],
+      colors: Array.isArray(row.colors) && row.colors.length > 0
+        ? row.colors
+        : [{ name: 'Preto', hex: '#000000' }],
+      description: row.description || '',
+      specifications: Array.isArray(row.specifications) ? row.specifications : [],
+      rating: Number(row.rating) || 5,
+      reviewCount: Number(row.review_count) || 0,
+      isNew: row.is_new || false,
+      isSale: row.is_sale || false,
+      sku: row.sku || row.id,
+    }))
+
+    // Substituir array de produtos
+    ;(products as Product[]).splice(0, products.length, ...mapped)
+    supabaseLoaded = true
+    console.log(`[Products] ${mapped.length} produtos carregados do Supabase!`)
+  } catch (err: any) {
+    console.log('[Products] Usando mock local (Supabase nao disponivel)')
+  }
+}
+
+// Iniciar carregamento assincrono
+loadFromSupabase()
+export { supabaseLoaded }
+// ===== FIM INJECAO SUPABASE =====
