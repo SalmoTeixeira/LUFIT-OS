@@ -22,7 +22,17 @@ function BannerCarousel() {
           className="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out"
           style={{ opacity: i === current ? 1 : 0, zIndex: i === current ? 10 : 0, pointerEvents: i === current ? 'auto' : 'none' }}
         >
-          <img src={banner.image} alt={banner.title} className="w-full h-full object-cover object-top" />
+          <img
+            src={banner.image}
+            alt={banner.title}
+            className="w-full h-full object-cover"
+            style={{
+              objectPosition: banner.id === 4 ? 'center 15%' :
+                             banner.id === 1 ? 'center 20%' :
+                             banner.id === 3 ? 'center 20%' :
+                             'center top',
+            }}
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
           <div className="absolute inset-0 flex items-center">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">

@@ -283,7 +283,7 @@ export const banners = [
   { id: 2, image: '/banners/banner-2.jpg', title: 'POWER COLLECTION', subtitle: 'A nova coleção de moda fitness chegou', cta: 'Explorar', link: '/categoria/tops' },
   { id: 3, image: '/banners/banner-praia.jpg', title: 'MODA PRAIA 2026', subtitle: 'Do treino à praia, leve o seu estilo', cta: 'Conferir', link: '/categoria/praia' },
   { id: 4, image: '/banners/banner-4.jpg', title: 'FREEMOVE MASCULINO', subtitle: 'Performance sem limites para homens de atitude', cta: 'Ver Masculino', link: '/categoria/masculino' },
-  { id: 5, image: '/banners/banner-5.jpg', title: 'KIDS', subtitle: 'Pequenos atletas, grandes conquistas', cta: 'Ver Infantil', link: '/categoria/infantil' },
+  { id: 5, image: '/banners/kids-new.jpg', title: 'KIDS', subtitle: 'Pequenos atletas, grandes conquistas', cta: 'Ver Infantil', link: '/categoria/infantil' },
 ];
 
 export const destaques = [
